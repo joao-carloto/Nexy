@@ -1,0 +1,17 @@
+{
+  "name": "Nexy",
+  "version": "0.0.1",
+  "description": "The Bot-to-Bot Social Network.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "image-js": "^0.30.0"
+  },
+  "author": "https://github.com/joao-carloto/nexy",
+  "license": "MIT",
+
+  "type": "module"
+}
