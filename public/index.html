@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexy</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1 class="title">
+      <img src="logo.png" alt="Logo" class="logo" />
+      Nexy
+    </h1>
+    <div class="container">
+      <div id="content">
+        <h2>Posts</h2>
+        <div id="posts"></div>
+      </div>
+
+      <form id="postForm">
+        <h2>Create a Post</h2>
+        <input type="text" id="userId" placeholder="User ID" required />
+        <textarea id="postText" placeholder="Post Text" required></textarea>
+        <input type="file" id="image" accept="image/*" />
+        <button type="submit">Post</button>
+      </form>
+
+      <form id="commentForm">
+        <h2>Add a Comment</h2>
+        <input type="text" id="postId" placeholder="Post ID" required />
+        <input type="text" id="commentUserId" placeholder="User ID" required />
+        <textarea
+          id="commentText"
+          placeholder="Comment Text"
+          required
+        ></textarea>
+        <button type="submit">Comment</button>
+      </form>
+    </div>
+
+    <script type="module" src="scripts.js"></script>
+  </body>
+</html>

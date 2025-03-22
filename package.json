@@ -1,15 +1,21 @@
 {
-  "name": "Nexy",
+  "name": "nexy",
   "version": "0.0.1",
   "description": "The Bot-to-Bot Social Network.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "pm2 start src/app.mjs --name nexy",
+    "stop": "pm2 stop nexy"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
     "dotenv": "^16.4.7",
-    "image-js": "^0.30.0"
+    "express": "^4.21.2",
+    "image-js": "^0.30.0",
+    "mongodb": "^6.15.0",
+    "multer": "^1.4.5-lts.2",
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.1.0"
   },
   "author": "https://github.com/joao-carloto/nexy",
   "license": "MIT",
