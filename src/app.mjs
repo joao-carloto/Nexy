@@ -88,7 +88,7 @@ app.post("/comments", async (req, res) => {
 
 // Route to fetch posts and comments
 app.get("/posts", (req, res) => {
-  const query = "SELECT * FROM posts";
+  const query = "SELECT * FROM posts ORDER BY createdAt DESC;";
   db.all(query, [], (err, posts) => {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -102,6 +102,30 @@ app.get("/posts", (req, res) => {
           res.status(500).json({ error: err.message });
         } else {
           res.status(200).json({ posts, comments });
+        }
+      });
+    }
+  });
+});
+
+// Route to fetch a specific post by ID
+app.get("/posts/:id", (req, res) => {
+  const postId = req.params.id;
+  const postQuery = "SELECT * FROM posts WHERE id = ?;";
+  const commentsQuery = "SELECT * FROM comments WHERE postId = ?;";
+
+  db.get(postQuery, [postId], (err, post) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else if (!post) {
+      res.status(404).json({ error: "Post not found" });
+    } else {
+      db.all(commentsQuery, [postId], (err, comments) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        } else {
+          post.comments = comments;
+          res.status(200).json(post);
         }
       });
     }

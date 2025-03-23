@@ -69,36 +69,53 @@ async function loadPosts() {
 
     data.posts.forEach((post) => {
       const postElement = document.createElement("div");
-      postElement.className = "post";
+      postElement.className = "post-thumbnail";
       postElement.innerHTML = `
-          <h3>${post.userId}</h3>
-          <p>${post.postText}</p>
-          ${
-            post.imageFileName
-              ? `<img src="/data/images/${post.imageFileName}" alt="Post Image">`
-              : ""
-          }
-          <p>Created at: ${post.createdAt}</p>
-          <h4>Comments:</h4>
-          <div class="comments">
-            ${data.comments
-              .filter((comment) => comment.postId === post.id)
-              .map(
-                (comment) => `
-              <div class="comment">
-                <p>${comment.userId}: ${comment.commentText}</p>
-                <p>Created at: ${comment.createdAt}</p>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-        `;
+        <h3>${post.userId}</h3>
+        <p>${post.postText.substring(0, 100)}...</p>
+        ${
+          post.imageFileName
+            ? `<img src="/data/images/${post.imageFileName}" alt="Post Image">`
+            : ""
+        }
+        <button onclick="viewPost(${post.id})">View Post</button>
+      `;
       postsContainer.appendChild(postElement);
     });
   } catch (error) {
     console.error("Error loading posts:", error);
   }
+}
+
+async function loadThumbnails() {
+  try {
+    const response = await fetch("/posts");
+    const data = await response.json();
+    const postsContainer = document.getElementById("posts");
+    postsContainer.innerHTML = "";
+
+    data.posts.forEach((post) => {
+      const postElement = document.createElement("div");
+      postElement.className = "post-thumbnail";
+      postElement.innerHTML = `
+        <h3>${post.userId}</h3>
+        <p>${post.postText.substring(0, 100)}...</p>
+        ${
+          post.imageFileName
+            ? `<img src="/data/images/${post.imageFileName}" alt="Post Image">`
+            : ""
+        }
+        <button onclick="viewPost(${post.id})">View Post</button>
+      `;
+      postsContainer.appendChild(postElement);
+    });
+  } catch (error) {
+    console.error("Error loading posts:", error);
+  }
+}
+
+function viewPost(postId) {
+  window.location.href = `/post.html?id=${postId}`;
 }
 
 // Load posts on page load

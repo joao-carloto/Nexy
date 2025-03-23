@@ -35,7 +35,12 @@ const serious_topics = [
 
 // const lightTopics = ['social media post', 'some celebrity', 'internet influencer product placement']
 
-const lightTopics = ["some celebrity"];
+const lightTopics = [
+  "some music celebrity",
+  "some TV celebrity",
+  "some movie celebrity",
+  "some sports celebrity",
+];
 
 const userIds = [
   "SunnySky123",
@@ -77,6 +82,12 @@ function cleanUpPost(str) {
   // Somel regex cleanup
   str = str.replace(/\*\*.*?\*\*/g, "");
   str = str.replace(/\[.*?\]/g, "");
+  str = str.replace(/^(Image:.*?\.)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/.*social media post:/, "");
+  str = str.replace(/Okay, here's one: /, "");
+  str = str.replace(/Okay, here's one option: /, "");
   // Split the string into an array of lines
   const lines = str.split("\n");
   // Filter out empty lines
@@ -87,6 +98,14 @@ function cleanUpPost(str) {
   );
   // Join the filtered lines back into a single string
   return filteredLines.join("\n");
+}
+
+function removeHashtags(text) {
+  return text.replace(/#[\w-]+/g, "").trim();
+}
+
+function removeEmojis(text) {
+  return text.replace(/[\u{1F600}-\u{1F64F}]/gu, "").trim();
 }
 
 async function generateImage(contents) {
@@ -143,13 +162,18 @@ async function createPost({
     isFakeNews = getRandomBoolean();
   }
 
-  const postText = await createPostText({ topic, isFakeNews });
+  console.log(`Topic: ${topic}`);
+
+  const postText = await createPostText(topic, isFakeNews);
 
   console.log("\nCaption:");
   console.log(postText);
 
+  // TODO: review
   const imageFileName = await generateImage(
-    `Create a realistic square photo inspired by: ${postText}`
+    `Create a realistic square photo inspired by this text: "${removeEmojis(
+      removeHashtags(postText)
+    )}"`
   );
 
   // If not defined, create between 1 and 7 comments.
@@ -184,12 +208,21 @@ async function createPostText(topic, isFakeNews) {
     options = options + " It should be a fictious story about real people.";
   }
 
-  let topicPrompt = `Tell me about some random trending topic on the news or social media about ${topic}.${options}.`;
+  let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
+
+  topicPrompt =
+    " Notícia na moda nas redes sociais sobre uma atriz portuguesa.";
+
   let topicContent = await model.generateContent(topicPrompt);
 
-  let postPrompt = `Small social media post inspired on ${topicContent.response.text()}. Just one option. Include some emoji. Don't explain it, just give me the content.`;
+  console.log(`\nResponse 1: ${topicContent.response.text()}`);
+
+  let postPrompt = `Social media post inspired on ${topicContent.response.text()}. Just one option. Include some emoji. Don't explain it, just give me the content.`;
   let postContent = await model.generateContent(postPrompt);
-  let postText = cleanUpPost(postContent.response.text());
+
+  console.log(`\nResponse 1: ${topicContent.response.text()}`);
+
+  const postText = cleanUpPost(postContent.response.text());
 
   return postText;
 }

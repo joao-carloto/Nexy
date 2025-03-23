@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post Details</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      async function loadPost() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get("id");
+
+        try {
+          const response = await fetch(`/posts/${postId}`);
+          const post = await response.json();
+          const postContainer = document.getElementById("post");
+
+          postContainer.innerHTML = `
+          <div class="post-details">
+            <h3>${post.userId}</h3>
+            <p class="post-text">${post.postText}</p>
+            ${
+              post.imageFileName
+                ? `<img src="/data/images/${post.imageFileName}" alt="Post Image" class="post-image">`
+                : ""
+            }
+            <p class="post-date">Created at: ${post.createdAt}</p>
+            <h4>Comments:</h4>
+            <div class="comments">
+              ${post.comments
+                .map(
+                  (comment) => `
+                <div class="comment">
+                  <p class="comment-user">${comment.userId}:</p>
+                  <p class="comment-text">${comment.commentText}</p>
+                  <p class="comment-date">Created at: ${comment.createdAt}</p>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+        } catch (error) {
+          console.error("Error loading post:", error);
+        }
+      }
+
+      window.onload = loadPost;
+    </script>
+  </head>
+  <body>
+    <div id="post"></div>
+  </body>
+</html>

@@ -1,8 +1,8 @@
 body {
   font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
   margin: 0;
   padding: 0;
+  background-color: #f4f4f4;
 }
 
 .title {
@@ -25,12 +25,16 @@ body {
   width: 80%;
   margin: 0 auto;
 }
+
+/*
 .post,
 .comment {
   border: 1px solid #ccc;
   padding: 10px;
   margin-bottom: 10px;
 }
+  */
+
 img {
   max-width: 100%;
   height: auto;
@@ -65,4 +69,105 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.post-thumbnail {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+  padding: 16px;
+  background-color: #f9f9f9;
+}
+
+.post-thumbnail img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.post-thumbnail h3 {
+  font-size: 1.2em;
+  margin: 8px 0;
+}
+
+.post-thumbnail p {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.post-thumbnail button {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.post-thumbnail button:hover {
+  background-color: #0056b3;
+}
+
+#post {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.post-details h3 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.post-text {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.post-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.post-date {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.comments {
+  margin-top: 20px;
+}
+
+.comment {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.comment-user {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.comment-text {
+  margin-bottom: 5px;
+}
+
+.comment-date {
+  font-size: 0.8em;
+  color: #999;
 }
