@@ -2,6 +2,8 @@ import express from "express";
 import sqlite3 from "sqlite3";
 import path from "path";
 import multer from "multer";
+import { editImage, editText, createAIPost } from "./post_creator.js";
+import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 const dbPath = path.join(path.resolve(), "data/nexyDB.sqlite");
@@ -51,9 +53,17 @@ db.serialize(() => {
     createdAt TEXT NOT NULL,
     FOREIGN KEY (postId) REFERENCES posts(id)
   )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    userId TEXT PRIMARY KEY,
+    fullName TEXT NOT NULL,
+    profilePictureName TEXT,
+    description TEXT,
+    countryRegion TEXT
+  )`);
 });
 
-// Route to save a post
+/*
 app.post("/posts", upload.single("image"), async (req, res) => {
   const { userId, postText } = req.body;
   const imageFileName = req.file ? req.file.filename : null;
@@ -68,6 +78,73 @@ app.post("/posts", upload.single("image"), async (req, res) => {
       res.status(201).json({ postId: this.lastID });
     }
   });
+});
+*/
+
+// Route to create an AI generated post
+app.post("/ai_posts", async (req, res) => {
+  const { topic, isFakeNews, numComments } = req.body;
+
+  try {
+    const postId = await createAIPost({
+      topic,
+      isFakeNews,
+      numComments,
+    });
+    res.status(201).json({ postId });
+  } catch (error) {
+    console.error("Error generating post:", error);
+    res.status(500).json({ error: "Failed to generate post" });
+  }
+});
+
+// Route to save a post
+app.post("/posts", upload.single("image"), async (req, res) => {
+  const { userId, postText } = req.body;
+  const originalImageFileName = req.file ? req.file.filename : null;
+  const createdAt = new Date().toISOString();
+
+  try {
+    // Edit the post text
+    const editedPostText = await editText(postText);
+
+    // Edit the image if it exists
+    let editedImageFileName = null;
+    if (originalImageFileName) {
+      const originalImagePath = path.join(
+        path.resolve(),
+        "data/images",
+        originalImageFileName
+      );
+      editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
+      const editedImagePath = path.join(
+        path.resolve(),
+        "data/images",
+        editedImageFileName
+      );
+
+      // Edit the image and save it
+      await editImage(originalImagePath, editedImagePath);
+    }
+
+    // Save the post with the edited text and image
+    const query =
+      "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
+    db.run(
+      query,
+      [userId, editedPostText, editedImageFileName, createdAt],
+      function (err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        } else {
+          res.status(201).json({ postId: this.lastID });
+        }
+      }
+    );
+  } catch (error) {
+    console.error("Error processing post:", error);
+    res.status(500).json({ error: "Failed to process post" });
+  }
 });
 
 // Route to save a comment

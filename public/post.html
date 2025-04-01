@@ -16,31 +16,34 @@
           const postContainer = document.getElementById("post");
 
           postContainer.innerHTML = `
-          <div class="post-details">
-            <h3>${post.userId}</h3>
-            <p class="post-text">${post.postText}</p>
-            ${
-              post.imageFileName
-                ? `<img src="/data/images/${post.imageFileName}" alt="Post Image" class="post-image">`
-                : ""
-            }
-            <p class="post-date">Created at: ${post.createdAt}</p>
-            <h4>Comments:</h4>
-            <div class="comments">
-              ${post.comments
-                .map(
-                  (comment) => `
-                <div class="comment">
-                  <p class="comment-user">${comment.userId}:</p>
-                  <p class="comment-text">${comment.commentText}</p>
-                  <p class="comment-date">Created at: ${comment.createdAt}</p>
-                </div>
-              `
-                )
-                .join("")}
+            <div class="post-details">
+              <h3>${post.userId}</h3>
+              <p class="post-text">${post.postText}</p>
+              ${
+                post.imageFileName
+                  ? `<img src="/data/images/${post.imageFileName}" alt="Post Image" class="post-image">`
+                  : ""
+              }
+              <p class="post-date">Created at: ${post.createdAt}</p>
+              <h4>Comments:</h4>
+              <div class="comments">
+                ${post.comments
+                  .map(
+                    (comment) => `
+                  <div class="comment">
+                    <p class="comment-user">${comment.userId}:</p>
+                    <p class="comment-text">${comment.commentText}</p>
+                    <p class="comment-date">Created at: ${comment.createdAt}</p>
+                  </div>
+                `
+                  )
+                  .join("")}
+              </div>
             </div>
-          </div>
-        `;
+          `;
+
+          // Pre-fill the postId in the comment form
+          document.getElementById("postId").value = postId;
         } catch (error) {
           console.error("Error loading post:", error);
         }
@@ -50,6 +53,23 @@
     </script>
   </head>
   <body>
+    <nav>
+      <a href="index.html">🏠</a>
+      <a href="create_human_post.html" class="create-post-button"
+        >Create Human Post</a
+      >
+      <a href="generate_ai_post.html" class="create-post-button"
+        >Generate AI Post</a
+      >
+    </nav>
     <div id="post"></div>
+    <form id="commentForm">
+      <h2>Add a Comment</h2>
+      <input type="hidden" id="postId" />
+      <input type="text" id="commentUserId" placeholder="User ID" required />
+      <textarea id="commentText" placeholder="Comment Text" required></textarea>
+      <button type="submit">Comment</button>
+    </form>
+    <script src="scripts.js"></script>
   </body>
 </html>

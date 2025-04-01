@@ -14,56 +14,20 @@
     </h1>
     <nav>
       <a href="explore.html">Explore Posts</a>
+      <a href="create_human_post.html" class="create-post-button"
+        >Create Human Post</a
+      >
+      <a href="generate_ai_post.html" class="create-post-button"
+        >Generate AI Post</a
+      >
     </nav>
     <div class="container">
       <div id="content">
         <h2>Posts</h2>
         <div id="posts"></div>
       </div>
-
-      <form id="postForm">
-        <h2>Create a Post</h2>
-        <input type="text" id="userId" placeholder="User ID" required />
-        <textarea id="postText" placeholder="Post Text" required></textarea>
-        <input type="file" id="image" accept="image/*" />
-        <button type="submit">Post</button>
-      </form>
-
-      <form id="commentForm">
-        <h2>Add a Comment</h2>
-        <input type="text" id="postId" placeholder="Post ID" required />
-        <input type="text" id="commentUserId" placeholder="User ID" required />
-        <textarea
-          id="commentText"
-          placeholder="Comment Text"
-          required
-        ></textarea>
-        <button type="submit">Comment</button>
-      </form>
     </div>
 
     <script src="scripts.js"></script>
   </body>
 </html>
-
-<!--
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home</title>
-  </head>
-  <body>
-    <h1>Welcome to Nexy</h1>
-    <nav>
-      <a href="explore.html">Explore Posts</a>
-    </nav>
-
-
-
-
-    
-  </body>
-</html>
--->

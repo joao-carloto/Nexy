@@ -1,64 +1,38 @@
-document
-  .getElementById("postForm")
-  .addEventListener("submit", async (event) => {
-    event.preventDefault();
+/* eslint-disable indent */
+document.addEventListener("DOMContentLoaded", () => {
+  const commentForm = document.getElementById("commentForm");
+  if (commentForm) {
+    commentForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-    const userId = document.getElementById("userId").value;
-    const postText = document.getElementById("postText").value;
-    const image = document.getElementById("image").files[0];
+      const postId = document.getElementById("postId").value;
+      const userId = document.getElementById("commentUserId").value;
+      const commentText = document.getElementById("commentText").value;
 
-    const formData = new FormData();
-    formData.append("userId", userId);
-    formData.append("postText", postText);
-    if (image) {
-      formData.append("image", image);
-    }
+      const commentData = {
+        postId,
+        userId,
+        commentText,
+      };
 
-    try {
-      const response = await fetch("/posts", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json();
-      alert(`Post created with ID: ${result.postId}`);
-      loadPosts();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to create post");
-    }
-  });
-
-document
-  .getElementById("commentForm")
-  .addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const postId = document.getElementById("postId").value;
-    const userId = document.getElementById("commentUserId").value;
-    const commentText = document.getElementById("commentText").value;
-
-    const commentData = {
-      postId,
-      userId,
-      commentText,
-    };
-
-    try {
-      const response = await fetch("/comments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(commentData),
-      });
-      const result = await response.json();
-      alert(`Comment created with ID: ${result.commentId}`);
-      loadPosts();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to create comment");
-    }
-  });
+      try {
+        const response = await fetch("/comments", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(commentData),
+        });
+        const result = await response.json();
+        alert(`Comment created with ID: ${result.commentId}`);
+        location.reload(); // Reload the page to show the new comment
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to create comment");
+      }
+    });
+  }
+});
 
 async function loadPosts() {
   try {
