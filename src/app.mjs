@@ -2,11 +2,14 @@ import express from "express";
 import sqlite3 from "sqlite3";
 import path from "path";
 import multer from "multer";
-import { editImage, editText, createAIPost } from "./post_creator.js";
+import { createAIPost } from "./post_creator.js";
+import { editText } from "./text_creator.js";
+import { editImage, resizeImage } from "./image_creator.js";
 import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 const dbPath = path.join(path.resolve(), "data/nexyDB.sqlite");
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error("Error opening database:", err.message);
@@ -26,7 +29,12 @@ app.use(
   express.static(path.join(path.resolve(), "data/images"))
 );
 
-// Set up multer for file uploads
+app.use(
+  "/data/profile_pictures",
+  express.static(path.join(path.resolve(), "data/profile_pictures"))
+);
+
+// Set up multer for image storage
 const storage = multer.diskStorage({
   destination: path.join(path.resolve(), "data/images"),
   filename: (req, file, cb) => {
@@ -34,6 +42,14 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+
+const profilePictureStorage = multer.diskStorage({
+  destination: path.join(path.resolve(), "data/profile_pictures"),
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const uploadProfilePicture = multer({ storage: profilePictureStorage });
 
 // Initialize database tables
 db.serialize(() => {
@@ -62,24 +78,6 @@ db.serialize(() => {
     countryRegion TEXT
   )`);
 });
-
-/*
-app.post("/posts", upload.single("image"), async (req, res) => {
-  const { userId, postText } = req.body;
-  const imageFileName = req.file ? req.file.filename : null;
-  const createdAt = new Date().toISOString();
-
-  const query =
-    "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
-  db.run(query, [userId, postText, imageFileName, createdAt], function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ postId: this.lastID });
-    }
-  });
-});
-*/
 
 // Route to create an AI generated post
 app.post("/ai_posts", async (req, res) => {
@@ -125,6 +123,15 @@ app.post("/posts", upload.single("image"), async (req, res) => {
 
       // Edit the image and save it
       await editImage(originalImagePath, editedImagePath);
+      // Create thumbnail for the edited image
+
+      await resizeImage(
+        editedImagePath,
+        "./data/images",
+        "./data/thumbnails/images",
+        150,
+        150
+      );
     }
 
     // Save the post with the edited text and image
@@ -205,6 +212,26 @@ app.get("/posts/:id", (req, res) => {
           res.status(200).json(post);
         }
       });
+    }
+  });
+});
+
+app.get("/random-user", (req, res) => {
+  const query = `
+    SELECT userId, fullName, profilePictureName, description, countryRegion
+    FROM users
+    ORDER BY RANDOM()
+    LIMIT 1
+  `;
+
+  db.get(query, (err, user) => {
+    if (err) {
+      console.error("Error fetching random user:", err.message);
+      res.status(500).json({ error: "Failed to fetch random user" });
+    } else if (!user) {
+      res.status(404).json({ error: "No users found" });
+    } else {
+      res.status(200).json(user);
     }
   });
 });

@@ -1,0 +1,98 @@
+import dotenv from "dotenv";
+import { getRandomElement } from "./utils.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Load environment variables from .env file
+dotenv.config();
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const tones = ["angry", "neutral", "cheerful"];
+
+async function createPostText(topic, isFakeNews) {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    // TODO: use this?
+    // systemInstruction: "You are a very dumb person.",
+  });
+
+  let options = "";
+
+  if (isFakeNews) {
+    options = options + " It should be a fictious story about real people.";
+  }
+
+  let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
+  let topicContent = await model.generateContent(topicPrompt);
+  console.log(`\nResponse 1: ${topicContent.response.text()}`);
+
+  let postPrompt = `Social media post inspired on this text: "${topicContent.response.text()}". Just one option. Include some emoji. Don't explain it, just give me the content.`;
+  let postContent = await model.generateContent(postPrompt);
+  console.log(`\nResponse 1: ${topicContent.response.text()}`);
+
+  const postText = cleanUpPost(postContent.response.text());
+  return postText;
+}
+
+async function editText(originalPostText, tone = undefined) {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    // TODO: use this?
+    // systemInstruction: "You are a very dumb person.",
+  });
+  let options = "";
+  // If not defined, pick a tone.
+  if (tone === undefined) {
+    tone = getRandomElement(tones);
+  }
+  options = options + ` The text should have a ${tone} tone.`;
+  const postPrompt = `Rewrite the following text: "${originalPostText}".${options}. Add a mention to the fact that you don't like llamas. Don't explain it, just give me the content.`;
+  const postContent = await model.generateContent(postPrompt);
+  const postText = postContent.response.text();
+
+  console.log(postText);
+
+  return postText;
+}
+
+async function createCommentText(postText, tone = undefined) {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    // TODO: use this?
+    // systemInstruction: "You are a very dumb person.",
+  });
+  let options = "";
+  // If not defined, pick a tone.
+  if (tone === undefined) {
+    tone = getRandomElement(tones);
+  }
+  options = options + ` The comment should have a ${tone} tone.`;
+  const commentPrompt = `Small social media comment responding to ${postText}. Just one option. Include some emoji.${options} Don't explain it, just give me the content.`;
+  const commentContent = await model.generateContent(commentPrompt);
+  const commentText = commentContent.response.text();
+  return commentText;
+}
+
+function cleanUpPost(str) {
+  // Somel regex cleanup
+  str = str.replace(/\*\*.*?\*\*/g, "");
+  str = str.replace(/\[.*?\]/g, "");
+  str = str.replace(/^(Image:.*?\.)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/.*social media post:/, "");
+  str = str.replace(/Okay, here's one: /, "");
+  str = str.replace(/Okay, here's one option: /, "");
+  // Split the string into an array of lines
+  const lines = str.split("\n");
+  // Filter out empty lines
+  const nonEmptyLines = lines.filter((line) => line.trim() !== "");
+  // Filter out lines that contain the specified content
+  const filteredLines = nonEmptyLines.filter(
+    (line) => !line.includes("Okay, here's a")
+  );
+  // Join the filtered lines back into a single string
+  return filteredLines.join("\n");
+}
+
+export { createPostText, editText, createCommentText, cleanUpPost };

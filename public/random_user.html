@@ -3,12 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Explore Posts</title>
+    <title>Random User</title>
     <link rel="stylesheet" href="styles.css" />
-    <script src="scripts/explore.js"></script>
   </head>
   <body>
-    <h1>Explore Posts</h1>
     <nav>
       <a href="explore.html" class="create-post-button" class=""
         >Explore Posts</a
@@ -21,10 +19,15 @@
       >
       <a href="random_user.html" class="create-post-button">Random User</a>
     </nav>
-    <div id="posts" class="posts-grid"></div>
-    <script>
-      // Load thumbnails on page load
-      window.onload = loadThumbnails;
-    </script>
+    <h1>Random User</h1>
+    <div id="user-container">
+      <img id="profile-picture" src="" alt="Profile Picture" />
+      <h2 id="full-name"></h2>
+      <p><strong>User ID:</strong> <span id="user-id"></span></p>
+      <p><strong>Description:</strong> <span id="description"></span></p>
+      <p><strong>Country/Region:</strong> <span id="country-region"></span></p>
+    </div>
+    <button id="load-user">Load Another User</button>
+    <script src="scripts/random_user.js"></script>
   </body>
 </html>
