@@ -5,74 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Post Details</title>
     <link rel="stylesheet" href="styles.css" />
-    <script>
-      async function loadPost() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const postId = urlParams.get("id");
-
-        try {
-          const response = await fetch(`/posts/${postId}`);
-          const post = await response.json();
-          const postContainer = document.getElementById("post");
-
-          postContainer.innerHTML = `
-            <div class="post-details">
-              <h3>${post.userId}</h3>
-              <p class="post-text">${post.postText}</p>
-              ${
-                post.imageFileName
-                  ? `<img src="/data/images/${post.imageFileName}" alt="Post Image" class="post-image">`
-                  : ""
-              }
-              <p class="post-date">Created at: ${post.createdAt}</p>
-              <h4>Comments:</h4>
-              <div class="comments">
-                ${post.comments
-                  .map(
-                    (comment) => `
-                  <div class="comment">
-                    <p class="comment-user">${comment.userId}:</p>
-                    <p class="comment-text">${comment.commentText}</p>
-                    <p class="comment-date">Created at: ${comment.createdAt}</p>
-                  </div>
-                `
-                  )
-                  .join("")}
-              </div>
-            </div>
-          `;
-
-          // Pre-fill the postId in the comment form
-          document.getElementById("postId").value = postId;
-        } catch (error) {
-          console.error("Error loading post:", error);
-        }
-      }
-
-      window.onload = loadPost;
-    </script>
   </head>
   <body>
-    <nav>
-      <a href="explore.html" class="create-post-button" class=""
-        >Explore Posts</a
-      >
-      <a href="create_human_post.html" class="create-post-button"
-        >Create Human Post</a
-      >
-      <a href="generate_ai_post.html" class="create-post-button"
-        >Generate AI Post</a
-      >
-      <a href="random_user.html" class="create-post-button">Random User</a>
-    </nav>
+    <script src="scripts/navbar.js"></script>
     <div id="post"></div>
     <form id="commentForm">
       <h2>Add a Comment</h2>
       <input type="hidden" id="postId" />
-      <input type="text" id="commentUserId" placeholder="User ID" required />
       <textarea id="commentText" placeholder="Comment Text" required></textarea>
       <button type="submit">Comment</button>
+      <div>
+        <label for="commentTone">Comment Tone:</label>
+        <select id="commentTone">
+          <option value="positive">Positive</option>
+          <option value="neutral">Neutral</option>
+          <option value="negative">Negative</option>
+        </select>
+        <button type="button" id="generateComment">Generate Comment</button>
+      </div>
     </form>
-    <script src="scripts.js"></script>
+    <script src="scripts/shared.js"></script>
+    <script src="scripts/post.js"></script>
   </body>
 </html>

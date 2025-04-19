@@ -1,4 +1,4 @@
-async function loadThumbnails() {
+async function loadPostsWithDeleteButtons() {
   try {
     const response = await fetch("/posts");
     const data = await response.json();
@@ -22,8 +22,8 @@ async function loadThumbnails() {
               src="/data/thumbnails/images/${thumbnailFileName}" 
               alt="Post Thumbnail" 
               class="thumbnail-image"
-              onclick="viewPost(${post.id})"
             >
+            <button class="delete-post-button" onclick="deletePost(${post.id})">Delete</button>
           `;
         postsContainer.appendChild(postElement);
       }
@@ -33,6 +33,28 @@ async function loadThumbnails() {
   }
 }
 
-function viewPost(postId) {
-  window.location.href = `/post.html?id=${postId}`;
+async function deletePost(postId) {
+  if (
+    !confirm(
+      "Are you sure you want to delete this post? This action cannot be undone."
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/posts/${postId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      alert("Post deleted successfully!");
+      loadPostsWithDeleteButtons(); // Reload the posts after deletion
+    } else {
+      throw new Error("Failed to delete post");
+    }
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    alert("Failed to delete post. Please try again.");
+  }
 }

@@ -1,19 +1,22 @@
 import dotenv from "dotenv";
+import process from "process";
 import { getRandomElement } from "./utils.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { describeImage } from "./image_creator.js";
 
 // Load environment variables from .env file
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const tones = ["angry", "neutral", "cheerful"];
+const tones = ["positive", "neutral", "negative"];
 
 async function createPostText(topic, isFakeNews) {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
     // TODO: use this?
     // systemInstruction: "You are a very dumb person.",
+    temperature: 2.0,
   });
 
   let options = "";
@@ -22,6 +25,7 @@ async function createPostText(topic, isFakeNews) {
     options = options + " It should be a fictious story about real people.";
   }
 
+  // TODO: remove this?
   let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
   let topicContent = await model.generateContent(topicPrompt);
   console.log(`\nResponse 1: ${topicContent.response.text()}`);
@@ -34,19 +38,12 @@ async function createPostText(topic, isFakeNews) {
   return postText;
 }
 
-async function editText(originalPostText, tone = undefined) {
+async function editText(originalPostText) {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    // TODO: use this?
-    // systemInstruction: "You are a very dumb person.",
+    temperature: 2.0,
   });
-  let options = "";
-  // If not defined, pick a tone.
-  if (tone === undefined) {
-    tone = getRandomElement(tones);
-  }
-  options = options + ` The text should have a ${tone} tone.`;
-  const postPrompt = `Rewrite the following text: "${originalPostText}".${options}. Add a mention to the fact that you don't like llamas. Don't explain it, just give me the content.`;
+  const postPrompt = `Write a small text that digrees with this one: "${originalPostText}".`;
   const postContent = await model.generateContent(postPrompt);
   const postText = postContent.response.text();
 
@@ -60,6 +57,7 @@ async function createCommentText(postText, tone = undefined) {
     model: "gemini-2.0-flash",
     // TODO: use this?
     // systemInstruction: "You are a very dumb person.",
+    temperature: 2.0,
   });
   let options = "";
   // If not defined, pick a tone.
@@ -95,4 +93,22 @@ function cleanUpPost(str) {
   return filteredLines.join("\n");
 }
 
-export { createPostText, editText, createCommentText, cleanUpPost };
+async function mockImage(imagePath) {
+  const description = await describeImage(imagePath);
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    temperature: 2.0,
+  });
+
+  const prompt = `Create a small text making fun of an image described in this manner: ${description}. Don't explain it, just give me the content.`;
+  const content = await model.generateContent(prompt);
+  const mockingText = content.response.text();
+
+  console.log("");
+  console.log(mockingText);
+
+  return mockingText;
+}
+
+export { createPostText, editText, createCommentText, cleanUpPost, mockImage };

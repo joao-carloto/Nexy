@@ -1,17 +1,27 @@
-import fs from "fs";
 import dotenv from "dotenv";
+import process from "process";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
-import { fileURLToPath } from "url";
 import sqlite3 from "sqlite3";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import { generateImage, editImage, createUserImage } from "./image_creator.js";
-import { getRandomElement, getRandomBoolean } from "./utils.js";
+import {
+  generateImage,
+  createUserImage,
+  editImage,
+  resizeImage,
+} from "./image_creator.js";
+import {
+  getRandomElement,
+  getRandomBoolean,
+  getRandomUserIdFromDB,
+} from "./utils.js";
 import {
   createPostText,
   createCommentText,
   cleanUpPost,
+  mockImage,
+  editText,
 } from "./text_creator.js";
 
 const db = new sqlite3.Database("./data/nexyDB.sqlite");
@@ -20,10 +30,6 @@ const db = new sqlite3.Database("./data/nexyDB.sqlite");
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// Define __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const serious_topics = [
   "Economy",
@@ -51,6 +57,7 @@ const lightTopics = [
   "some sports celebrity",
 ];
 
+// TODO: remove
 const userIds = [
   "SunnySky123",
   "MoonlightMagic",
@@ -89,7 +96,7 @@ async function createAIPost({
   numComments = undefined,
 }) {
   if (userId === undefined) {
-    userId = getRandomElement(userIds);
+    userId = getRandomElement(userIds); // TODO: Remove this. Get user from DB
   }
 
   if (topic === undefined) {
@@ -123,19 +130,17 @@ async function createAIPost({
   }
 
   const postId = await savePost(userId, postText, imageFileName);
-  // TODO: uncomment
-  // for (let i = 0; i < numComments; i++) {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < numComments; i++) {
     const commentText = cleanUpPost(await createCommentText(postText));
 
     console.log("\nComment:");
     console.log(commentText);
 
-    const commentUserId = getRandomElement(userIds);
+    const commentUserId = await getRandomUserIdFromDB();
     saveComment(postId, commentUserId, commentText);
   }
 
-  console.log(`2 Post created with id: ${postId}`);
+  console.log(`Post created with id: ${postId}`);
 
   // Return the post ID
   return postId;
@@ -227,7 +232,89 @@ async function createUser() {
   });
 }
 
-export { createAIPost };
+async function createHumanPost(userId, postText, originalImageFileName) {
+  const createdAt = new Date().toISOString();
+
+  try {
+    // Validate input
+    if (!userId || !postText) {
+      throw new Error("User ID and post text are required.");
+    }
+
+    // Edit the post text
+    let editedPostText = await editText(postText);
+
+    // Edit the image if it exists
+    let originalImagePath = null;
+    let mockingImageText = null;
+    if (originalImageFileName) {
+      originalImagePath = path.join(
+        path.resolve(),
+        "data/images",
+        originalImageFileName
+      );
+
+      try {
+        mockingImageText = await mockImage(originalImagePath);
+      } catch (error) {
+        throw new Error("Failed to mock the image.");
+      }
+    }
+
+    if (mockingImageText) {
+      editedPostText = editedPostText + "\n" + mockingImageText;
+    }
+
+    const editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
+    const editedImagePath = path.join(
+      path.resolve(),
+      "data/images",
+      editedImageFileName
+    );
+
+    // Edit the image and save it
+    try {
+      await editImage(originalImagePath, editedImagePath);
+    } catch (error) {
+      throw new Error("Failed to edit the image.");
+    }
+
+    // Create thumbnail for the edited image
+    try {
+      await resizeImage(
+        editedImageFileName,
+        "./data/images",
+        "./data/thumbnails/images",
+        150,
+        150
+      );
+    } catch (error) {
+      throw new Error("Failed to create a thumbnail for the image.");
+    }
+
+    // Save the post with the edited text and image
+    return new Promise((resolve, reject) => {
+      const query =
+        "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
+      db.run(
+        query,
+        [userId, editedPostText, editedImageFileName, createdAt],
+        function (err) {
+          if (err) {
+            reject(new Error("Failed to save the post to the database."));
+          } else {
+            resolve({ postId: this.lastID });
+          }
+        }
+      );
+    });
+  } catch (error) {
+    console.error("Error in createHumanPost:", error.message);
+    throw error; // Re-throw the error to handle it in the calling function
+  }
+}
+
+export { createAIPost, createHumanPost };
 
 // TODO: remove
 console.clear();
@@ -245,4 +332,6 @@ distortPostText(
 );
 */
 
-createAIPost({});
+// createHumanPost("TUMBA", " I like ice-cream!", "1743606767632.png");
+
+// createAIPost({});

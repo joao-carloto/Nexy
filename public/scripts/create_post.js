@@ -2,8 +2,7 @@ document
   .getElementById("postForm")
   .addEventListener("submit", async (event) => {
     event.preventDefault();
-
-    const userId = document.getElementById("userId").value;
+    const userId = await ensureUserId();
     const postText = document.getElementById("postText").value;
     const image = document.getElementById("image").files[0];
 

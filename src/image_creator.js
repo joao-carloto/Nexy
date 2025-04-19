@@ -1,7 +1,9 @@
 import fs from "fs";
+import { Buffer } from "buffer";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
+import process from "process";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Image } from "image-js";
@@ -18,9 +20,11 @@ const __dirname = path.dirname(__filename);
 async function generateImage(contents) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
+    // model: "gemini-2.0-flash-exp-image-generation",
     model: "gemini-2.0-flash-exp-image-generation",
     generationConfig: {
       responseModalities: ["Text", "Image"],
+      temperature: 2.0,
     },
   });
 
@@ -40,6 +44,15 @@ async function generateImage(contents) {
 
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
+
+        await resizeImage(
+          imageFileName,
+          "./data/images",
+          "./data/thumbnails/images",
+          200,
+          200
+        );
+
         return imageFileName;
       }
     }
@@ -55,7 +68,7 @@ async function editImage(inputImagePath, outputImagePath) {
 
   const contents = [
     {
-      text: "Hi, This is a picture of me. Can you add a llama next to me? And also, I want to have a clown nose.",
+      text: "Add some piegon to this image.",
     },
     {
       inlineData: {
@@ -70,6 +83,7 @@ async function editImage(inputImagePath, outputImagePath) {
     generationConfig: {
       responseModalities: ["Text", "Image"],
     },
+    temperature: 2.0,
   });
 
   try {
@@ -95,9 +109,10 @@ async function createUserImage(inspirationText) {
     generationConfig: {
       responseModalities: ["Text", "Image"],
     },
+    temperature: 2.0,
   });
 
-  const contents = `Create a realistic square photo of a person. The photo should be well-lit and in focus. The person should be looking directly at the camera. Use this as inspiration: "${inspirationText}".`;
+  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. Use this as inspiration: "${inspirationText}".`;
   // "Create a user profile for a social media platform. Include a username, full name, profile picture, and a short bio. The username should be unique and not contain any special characters. The profile picture should be a realistic image of a person. The bio should be a short description of the user's interests and hobbies. Provide text results in array formt.";
 
   try {
@@ -120,6 +135,15 @@ async function createUserImage(inspirationText) {
 
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
+
+        await resizeImage(
+          imageFileName,
+          "./data/profile_pictures",
+          "./data/thumbnails/profile_pictures",
+          200,
+          200
+        );
+
         return imageFileName;
       }
     }
@@ -174,8 +198,6 @@ async function resizeImage(file, inputFolder, outputFolder, width, height) {
   }
 }
 
-export { createUserImage, generateImage, editImage, resizeImage, resizeImages };
-
 /*
 resizeImage(
   "0b499181-f7a7-4ca7-88a2-88127468b8e9.png",
@@ -186,9 +208,44 @@ resizeImage(
 );
 */
 
-resizeImages(
-  "./data/profile_pictures",
-  "./data/thumbnails/profile_pictures",
-  150,
-  150
+// Converts local file information to base64
+function fileToGenerativePart(path, mimeType) {
+  return {
+    inlineData: {
+      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
+      mimeType,
+    },
+  };
+}
+
+async function describeImage(imagePath) {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const prompt = "Describe this image.";
+
+  const imageParts = [fileToGenerativePart(imagePath, "image/png")];
+
+  const generatedContent = await model.generateContent([prompt, ...imageParts]);
+
+  console.log(generatedContent.response.text());
+
+  return generatedContent.response.text();
+}
+
+export {
+  createUserImage,
+  generateImage,
+  editImage,
+  resizeImage,
+  resizeImages,
+  describeImage,
+};
+
+/*
+editImage(
+  "C:\\Users\\joao-carloto\\Pictures\\unnamed - Copy.png",
+  "edited.png"
 );
+*/
+
+// resizeImages("./data/images", "./data/thumbnails/images", 200, 200);

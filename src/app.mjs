@@ -1,11 +1,11 @@
+import fs from "fs";
+import process from "process";
 import express from "express";
 import sqlite3 from "sqlite3";
 import path from "path";
 import multer from "multer";
-import { createAIPost } from "./post_creator.js";
-import { editText } from "./text_creator.js";
-import { editImage, resizeImage } from "./image_creator.js";
-import { v4 as uuidv4 } from "uuid";
+import { createAIPost, createHumanPost } from "./post_creator.js";
+import { createCommentText } from "./text_creator.js";
 
 const app = express();
 const dbPath = path.join(path.resolve(), "data/nexyDB.sqlite");
@@ -34,6 +34,11 @@ app.use(
   express.static(path.join(path.resolve(), "data/profile_pictures"))
 );
 
+app.use(
+  "/data/thumbnails/images",
+  express.static(path.join(path.resolve(), "data/thumbnails/images"))
+);
+
 // Set up multer for image storage
 const storage = multer.diskStorage({
   destination: path.join(path.resolve(), "data/images"),
@@ -42,14 +47,6 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
-
-const profilePictureStorage = multer.diskStorage({
-  destination: path.join(path.resolve(), "data/profile_pictures"),
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-const uploadProfilePicture = multer({ storage: profilePictureStorage });
 
 // Initialize database tables
 db.serialize(() => {
@@ -100,54 +97,8 @@ app.post("/ai_posts", async (req, res) => {
 app.post("/posts", upload.single("image"), async (req, res) => {
   const { userId, postText } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
-  const createdAt = new Date().toISOString();
-
   try {
-    // Edit the post text
-    const editedPostText = await editText(postText);
-
-    // Edit the image if it exists
-    let editedImageFileName = null;
-    if (originalImageFileName) {
-      const originalImagePath = path.join(
-        path.resolve(),
-        "data/images",
-        originalImageFileName
-      );
-      editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
-      const editedImagePath = path.join(
-        path.resolve(),
-        "data/images",
-        editedImageFileName
-      );
-
-      // Edit the image and save it
-      await editImage(originalImagePath, editedImagePath);
-      // Create thumbnail for the edited image
-
-      await resizeImage(
-        editedImagePath,
-        "./data/images",
-        "./data/thumbnails/images",
-        150,
-        150
-      );
-    }
-
-    // Save the post with the edited text and image
-    const query =
-      "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
-    db.run(
-      query,
-      [userId, editedPostText, editedImageFileName, createdAt],
-      function (err) {
-        if (err) {
-          res.status(500).json({ error: err.message });
-        } else {
-          res.status(201).json({ postId: this.lastID });
-        }
-      }
-    );
+    createHumanPost(userId, postText, originalImageFileName);
   } catch (error) {
     console.error("Error processing post:", error);
     res.status(500).json({ error: "Failed to process post" });
@@ -236,13 +187,97 @@ app.get("/random-user", (req, res) => {
   });
 });
 
-// Route to serve the index.html file
-app.get("/", (req, res) => {
-  res.sendFile(path.join(path.resolve(), "public/index.html"));
+app.delete("/posts/:id", (req, res) => {
+  const postId = req.params.id;
+
+  // Query to delete the post's comments
+  const deleteCommentsQuery = "DELETE FROM comments WHERE postId = ?";
+  db.run(deleteCommentsQuery, [postId], (err) => {
+    if (err) {
+      console.error("Error deleting comments:", err.message);
+      return res.status(500).json({ error: "Failed to delete comments" });
+    }
+
+    // Query to get the post's image file name
+    const getImageQuery = "SELECT imageFileName FROM posts WHERE id = ?";
+    db.get(getImageQuery, [postId], (err, row) => {
+      if (err) {
+        console.error("Error fetching post image:", err.message);
+        return res.status(500).json({ error: "Failed to fetch post image" });
+      }
+
+      if (row && row.imageFileName) {
+        const imageFileName = row.imageFileName;
+        const thumbnailFileName = imageFileName.replace(
+          /(\.[\w\d_-]+)$/i,
+          "-thumbnail$1"
+        );
+
+        // Delete the image file
+        const imagePath = path.join(
+          path.resolve(),
+          "data/images",
+          imageFileName
+        );
+        const thumbnailPath = path.join(
+          path.resolve(),
+          "data/thumbnails/images",
+          thumbnailFileName
+        );
+
+        fs.unlink(imagePath, (err) => {
+          if (err) console.error("Error deleting image file:", err.message);
+        });
+
+        fs.unlink(thumbnailPath, (err) => {
+          if (err) console.error("Error deleting thumbnail file:", err.message);
+        });
+      }
+
+      // Query to delete the post
+      const deletePostQuery = "DELETE FROM posts WHERE id = ?";
+      db.run(deletePostQuery, [postId], (err) => {
+        if (err) {
+          console.error("Error deleting post:", err.message);
+          return res.status(500).json({ error: "Failed to delete post" });
+        }
+
+        res.status(200).json({ message: "Post deleted successfully" });
+      });
+    });
+  });
+});
+
+app.post("/generate-comment", async (req, res) => {
+  const { postId, tone } = req.body;
+
+  try {
+    // Fetch the post text from the database
+    const query = "SELECT postText FROM posts WHERE id = ?";
+    db.get(query, [postId], async (err, row) => {
+      if (err) {
+        console.error("Error fetching post text:", err.message);
+        return res.status(500).json({ error: "Failed to fetch post text" });
+      }
+
+      if (!row) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+
+      const postText = row.postText;
+
+      // Generate the comment text
+      const commentText = await createCommentText(postText, tone);
+      res.status(200).json({ commentText });
+    });
+  } catch (error) {
+    console.error("Error generating comment:", error.message);
+    res.status(500).json({ error: "Failed to generate comment" });
+  }
 });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Server is running on http://0.0.0.0:3000");
 });

@@ -22,7 +22,7 @@ document
 
       const result = await response.json();
       alert(`Post created with ID: ${result.postId}`);
-      window.location.href = "index.html"; // Redirect to the main page after creating the post
+      window.location.href = `post.html?id=${result.postId}`; // Redirect to the post page after creating the post
     } catch (error) {
       console.error("Error generating post:", error);
       alert("Failed to generate post");

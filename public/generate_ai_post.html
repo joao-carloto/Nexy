@@ -7,27 +7,20 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <nav>
-      <a href="explore.html" class="create-post-button" class=""
-        >Explore Posts</a
-      >
-      <a href="create_human_post.html" class="create-post-button"
-        >Create Human Post</a
-      >
-      <a href="generate_ai_post.html" class="create-post-button"
-        >Generate AI Post</a
-      >
-      <a href="random_user.html" class="create-post-button">Random User</a>
-    </nav>
+    <script src="scripts/navbar.js"></script>
     <h1>Generate a Post</h1>
     <form id="generateAIPostForm">
       <label for="topic">Topic:</label>
       <input type="text" id="topic" placeholder="Enter a topic (optional)" />
+      <br />
+      <br />
       <label for="isFakeNews">Fake News:</label>
       <select id="isFakeNews">
         <option value="true">Yes</option>
         <option value="false">No</option>
       </select>
+      <br />
+      <br />
       <label for="numComments">Number of Comments:</label>
       <input
         type="number"
@@ -37,6 +30,7 @@
       <button type="submit">Generate Post</button>
     </form>
     <div id="result"></div>
+    <script src="scripts/shared.js"></script>
     <script src="scripts/generate_ai_post.js"></script>
   </body>
 </html>

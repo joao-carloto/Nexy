@@ -7,25 +7,14 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <nav>
-      <a href="explore.html" class="create-post-button" class=""
-        >Explore Posts</a
-      >
-      <a href="create_human_post.html" class="create-post-button"
-        >Create Human Post</a
-      >
-      <a href="generate_ai_post.html" class="create-post-button"
-        >Generate AI Post</a
-      >
-      <a href="random_user.html" class="create-post-button">Random User</a>
-    </nav>
+    <script src="scripts/navbar.js"></script>
     <h1>Create a Post</h1>
     <form id="postForm">
-      <input type="text" id="userId" placeholder="User ID" required />
       <textarea id="postText" placeholder="Post Text" required></textarea>
       <input type="file" id="image" accept="image/*" />
       <button type="submit">Post</button>
     </form>
+    <script src="scripts/shared.js"></script>
     <script src="scripts/create_post.js"></script>
   </body>
 </html>

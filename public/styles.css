@@ -44,6 +44,7 @@ img {
 h1,
 h2 {
   text-align: center;
+  color: #f4f3f1;
 }
 
 form {
@@ -186,4 +187,66 @@ button:hover {
 
 .create-post-button:hover {
   background-color: #0056b3;
+}
+
+.posts-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.post-thumbnail {
+  cursor: pointer;
+}
+
+.thumbnail-image {
+  width: 200px; /*Adjust thumbnail size */
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px; /* Optional: Rounded corners */
+  transition: transform 0.2s ease;
+}
+
+.thumbnail-image:hover {
+  transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+.delete-post-button {
+  display: block;
+  margin: 10px auto;
+  padding: 8px 16px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease;
+}
+
+.delete-post-button:hover {
+  background-color: #cc0000;
+}
+
+.svg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px; /* Increased from 40px to 60px (50% bigger) */
+  height: 60px; /* Increased from 40px to 60px (50% bigger) */
+  border-radius: 50%;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.svg-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+.svg-button svg {
+  width: 36px; /* Increased from 24px to 36px (50% bigger) */
+  height: 36px; /* Increased from 24px to 36px (50% bigger) */
+  stroke: #f4f3f1; /* Keep the stroke color consistent */
 }
