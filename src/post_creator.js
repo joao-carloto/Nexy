@@ -194,13 +194,17 @@ async function createUser() {
 
   console.log(contentText);
 
-  // Parse the generated content (assuming it's in the format: "userId, fullName, bio")
+  // Parse the generated content (assuming it's in the format: "userId, fullName, description")
   const [userId, fullName, description] = contentText
     .split(",")
     .map((item) => item.trim());
 
   // Generate a profile picture
-  const profilePictureName = await createUserImage(description);
+  const profilePictureName = await createUserImage(
+    userId,
+    fullName,
+    description
+  );
 
   // Persist the user in the database
   return new Promise((resolve, reject) => {
@@ -335,3 +339,5 @@ distortPostText(
 // createHumanPost("TUMBA", " I like ice-cream!", "1743606767632.png");
 
 // createAIPost({});
+
+createUser();

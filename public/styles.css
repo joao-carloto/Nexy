@@ -246,7 +246,73 @@ button:hover {
 }
 
 .svg-button svg {
-  width: 36px; /* Increased from 24px to 36px (50% bigger) */
-  height: 36px; /* Increased from 24px to 36px (50% bigger) */
+  width: 40px; /* Increased from 24px to 36px (50% bigger) */
+  height: 40px; /* Increased from 24px to 36px (50% bigger) */
   stroke: #f4f3f1; /* Keep the stroke color consistent */
+}
+
+#random-user-thumbnail {
+  width: 40px; /* Match the button size */
+  height: 40px; /* Match the button size */
+  border-radius: 50%; /* Make the image circular */
+  object-fit: cover; /* Ensure the image fits within the circle */
+  border: 2px solid #f4f3f1; /* Optional: Add a border around the image */
+}
+
+/* General navbar styles */
+nav {
+  display: flex;
+  flex-direction: column; /* Default: vertical column */
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%; /* Full height for vertical layout */
+  width: 80px; /* Adjust width as needed */
+  background-color: #2d4554; /* Navbar background color */
+  padding: 10px 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+nav a {
+  margin: 10px auto;
+  text-align: center;
+}
+
+.svg-button {
+  margin: 10px auto;
+}
+
+/* Adjust content for vertical navbar */
+body {
+  margin-left: 80px; /* Add margin to the left to account for the vertical navbar */
+}
+
+/* Horizontal navbar for narrow screens */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: row; /* Horizontal layout */
+    position: fixed;
+    bottom: 0; /* Position at the bottom of the screen */
+    top: auto; /* Ensure the navbar is not stuck at the top */
+    left: 0;
+    height: 60px; /* Adjust height for horizontal layout */
+    width: 100%; /* Full width for horizontal layout */
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  nav a {
+    margin: 0 auto;
+    flex: 1; /* Distribute buttons evenly */
+  }
+
+  .svg-button {
+    margin: 0 auto;
+  }
+
+  /* Adjust content for horizontal navbar */
+  body {
+    margin-left: 0; /* Remove left margin for horizontal layout */
+    margin-bottom: 80px; /* Add margin to the bottom to account for the horizontal navbar */
+  }
 }

@@ -102,7 +102,7 @@ async function editImage(inputImagePath, outputImagePath) {
   }
 }
 
-async function createUserImage(inspirationText) {
+async function createUserImage(userId, fullName, description) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash-exp-image-generation",
@@ -112,7 +112,7 @@ async function createUserImage(inspirationText) {
     temperature: 2.0,
   });
 
-  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. Use this as inspiration: "${inspirationText}".`;
+  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. The name of the person is ${fullName}. Use this bio as inspiration: "${description}". The photo should be a close-up of the person's face, with a neutral background. The person should be smiling and looking directly at the camera. The photo should be in color and have good lighting. The person should be wearing casual clothing. The photo should be in PNG format.`;
   // "Create a user profile for a social media platform. Include a username, full name, profile picture, and a short bio. The username should be unique and not contain any special characters. The profile picture should be a realistic image of a person. The bio should be a short description of the user's interests and hobbies. Provide text results in array formt.";
 
   try {
@@ -125,7 +125,7 @@ async function createUserImage(inspirationText) {
         const imageData = part.inlineData.data;
         const buffer = Buffer.from(imageData, "base64");
 
-        const imageFileName = uuidv4() + ".png";
+        const imageFileName = userId + ".png";
 
         const imagePath = path.join(
           __dirname,

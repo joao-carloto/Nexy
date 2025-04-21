@@ -39,6 +39,11 @@ app.use(
   express.static(path.join(path.resolve(), "data/thumbnails/images"))
 );
 
+app.use(
+  "/data/thumbnails/profile-pictures",
+  express.static(path.join(path.resolve(), "data/thumbnails/profile_pictures"))
+);
+
 // Set up multer for image storage
 const storage = multer.diskStorage({
   destination: path.join(path.resolve(), "data/images"),

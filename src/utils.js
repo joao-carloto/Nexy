@@ -38,14 +38,4 @@ async function getRandomUserIdFromDB() {
   });
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toISOString().split(".")[0].replace("T", " ");
-}
-
-export {
-  getRandomElement,
-  getRandomBoolean,
-  getRandomUserIdFromDB,
-  formatDate,
-};
+export { getRandomElement, getRandomBoolean, getRandomUserIdFromDB };
