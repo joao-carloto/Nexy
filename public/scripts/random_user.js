@@ -57,6 +57,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const user = await fetchRandomUser();
     if (user) {
       displayUser(user);
+
+      const thumbnailElement = document.getElementById("random-user-thumbnail");
+
+      if (user.userId) {
+        // Set the thumbnail source based on the userId
+        thumbnailElement.src = `/data/thumbnails/profile-pictures/${user.userId}-thumbnail.png`;
+      } else {
+        // Set a default placeholder image if no userId is found
+        thumbnailElement.src = "data/thumbnails/profile-pictures/default.png";
+      }
     }
   });
 });

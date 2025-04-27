@@ -4,6 +4,8 @@ body {
   padding: 0;
   /*background-color: #f4f4f4;*/
   background-color: #2d4554;
+  margin-left: 90px; /* Add margin to the left to account for the vertical navbar */
+  margin-right: 30px;
 }
 
 .title {
@@ -47,13 +49,13 @@ h2 {
   color: #f4f3f1;
 }
 
-form {
-  margin-bottom: 20px;
+.button-container {
+  text-align: right;
+  margin-right: 30px;
 }
 
 input,
-textarea,
-button {
+textarea {
   display: block;
   width: 100%;
   margin-bottom: 10px;
@@ -62,15 +64,9 @@ button {
   border-radius: 5px;
 }
 
-button {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
+.num-comments-input {
+  width: 300px;
+  display: inline-block;
 }
 
 .posts-grid {
@@ -105,13 +101,11 @@ button:hover {
   color: #666;
 }
 
-.post-thumbnail button {
-  margin-top: 8px;
-  padding: 8px 16px;
-  background-color: #007bff;
+.post-thumbnail {
+  background-color: #f9f9f9;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
 }
 
@@ -174,21 +168,6 @@ button:hover {
   color: #999;
 }
 
-.create-post-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  text-decoration: none;
-  border-radius: 5px;
-  font-size: 1em;
-  margin-left: 10px;
-}
-
-.create-post-button:hover {
-  background-color: #0056b3;
-}
-
 .posts-container {
   display: flex;
   flex-wrap: wrap;
@@ -229,15 +208,40 @@ button:hover {
   background-color: #cc0000;
 }
 
+input,
+textarea,
+button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
 .svg-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 60px; /* Increased from 40px to 60px (50% bigger) */
-  height: 60px; /* Increased from 40px to 60px (50% bigger) */
+  width: 60px; /* Increased from 40px to 60px */
+  height: 60px; /* Increased from 40px to 60px*/
   border-radius: 50%;
   text-decoration: none;
   transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 10px auto;
+  background-color: #2d4554;
+  border: none;
 }
 
 .svg-button:hover {
@@ -246,9 +250,30 @@ button:hover {
 }
 
 .svg-button svg {
-  width: 40px; /* Increased from 24px to 36px (50% bigger) */
-  height: 40px; /* Increased from 24px to 36px (50% bigger) */
+  width: 40px; /* Increased from 24px to 36px*/
+  height: 40px; /* Increased from 24px to 36px*/
   stroke: #f4f3f1; /* Keep the stroke color consistent */
+}
+
+select {
+  width: 100px; /* Make it responsive */
+  padding: 10px; /* Add padding for better usability */
+  color: #2d4554; /* Text color */
+  background-color: #f5f5f5; /* Light background */
+  border: 2px solid #2d4554; /* Border color matching the theme */
+  border-radius: 5px; /* Rounded corners */
+  outline: none; /* Remove default outline */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+select:focus {
+  border-color: #007bff; /* Highlight border on focus */
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add a subtle glow */
+}
+
+select:hover {
+  background-color: #e9ecef; /* Slightly darker background on hover */
+  cursor: pointer; /* Change cursor to pointer */
 }
 
 #random-user-thumbnail {
@@ -279,15 +304,6 @@ nav a {
   text-align: center;
 }
 
-.svg-button {
-  margin: 10px auto;
-}
-
-/* Adjust content for vertical navbar */
-body {
-  margin-left: 80px; /* Add margin to the left to account for the vertical navbar */
-}
-
 /* Horizontal navbar for narrow screens */
 @media (max-width: 768px) {
   nav {
@@ -306,13 +322,9 @@ body {
     flex: 1; /* Distribute buttons evenly */
   }
 
-  .svg-button {
-    margin: 0 auto;
-  }
-
   /* Adjust content for horizontal navbar */
   body {
-    margin-left: 0; /* Remove left margin for horizontal layout */
+    margin-left: 10px; /* Remove left margin for horizontal layout */
     margin-bottom: 80px; /* Add margin to the bottom to account for the horizontal navbar */
   }
 }

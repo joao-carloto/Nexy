@@ -10,9 +10,7 @@
     <script src="scripts/navbar.js"></script>
     <h1>Generate a Post</h1>
     <form id="generateAIPostForm">
-      <label for="topic">Topic:</label>
       <input type="text" id="topic" placeholder="Enter a topic (optional)" />
-      <br />
       <br />
       <label for="isFakeNews">Fake News:</label>
       <select id="isFakeNews">
@@ -21,13 +19,36 @@
       </select>
       <br />
       <br />
-      <label for="numComments">Number of Comments:</label>
       <input
+        class="num-comments-input"
         type="number"
         id="numComments"
         placeholder="Enter number of comments (optional)"
       />
-      <button type="submit">Generate Post</button>
+      <div class="button-container">
+        <button
+          type="submit"
+          class="svg-button"
+          aria-label="Generate Post"
+          title="Click to generate a post"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#F4F3F1"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="feather feather-send"
+          >
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
     </form>
     <div id="result"></div>
     <script src="scripts/shared.js"></script>
