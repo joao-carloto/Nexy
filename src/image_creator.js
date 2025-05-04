@@ -38,13 +38,27 @@ async function generateImage(contents) {
         const imageData = part.inlineData.data;
         const buffer = Buffer.from(imageData, "base64");
 
-        const imageFileName = uuidv4() + ".png";
+        const uuid = uuidv4();
+        const imageFileName = uuid + ".png";
 
         const imagePath = path.join(__dirname, "../data/images", imageFileName);
 
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
 
+        const fileExt = path.extname(imageFileName);
+        const thumbnailFileName = `${uuid}-thumbnail${fileExt}`;
+
+        await resizeImage(
+          imageFileName,
+          "./data/images",
+          "./data/thumbnails/images",
+          thumbnailFileName,
+          200,
+          null
+        );
+
+        /*
         await resizeImage(
           imageFileName,
           "./data/images",
@@ -52,6 +66,7 @@ async function generateImage(contents) {
           200,
           200
         );
+        */
 
         return imageFileName;
       }
@@ -72,7 +87,7 @@ async function editImage(inputImagePath, outputImagePath) {
     },
     {
       inlineData: {
-        mimeType: "image/png",
+        mimeType: "image/jpeg",
         data: base64Image,
       },
     },
@@ -112,7 +127,7 @@ async function createUserImage(userId, fullName, description) {
     temperature: 2.0,
   });
 
-  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. The name of the person is ${fullName}. Use this bio as inspiration: "${description}". The photo should be a close-up of the person's face, with a neutral background. The person should be smiling and looking directly at the camera. The photo should be in color and have good lighting. The person should be wearing casual clothing. The photo should be in PNG format.`;
+  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
   // "Create a user profile for a social media platform. Include a username, full name, profile picture, and a short bio. The username should be unique and not contain any special characters. The profile picture should be a realistic image of a person. The bio should be a short description of the user's interests and hobbies. Provide text results in array formt.";
 
   try {
@@ -136,12 +151,15 @@ async function createUserImage(userId, fullName, description) {
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
 
+        const thumbnailFileName = `${userId}-thumbnail.png`;
+
         await resizeImage(
           imageFileName,
           "./data/profile_pictures",
           "./data/thumbnails/profile_pictures",
+          thumbnailFileName,
           200,
-          200
+          null
         );
 
         return imageFileName;
@@ -161,31 +179,56 @@ async function resizeImages(inputFolder, outputFolder, width, height) {
   // Read all files in the input folder
   const files = fs.readdirSync(inputFolder);
 
-  for (const file of files) {
+  for (const imageFileName of files) {
     // Skip non-image files
-    if (!/\.(jpg|jpeg|png|gif)$/i.test(file)) {
+    if (!/\.(jpg|jpeg|png|gif)$/i.test(imageFileName)) {
       continue;
     }
     // Resize the image
-    resizeImage(file, inputFolder, outputFolder, width, height);
+
+    resizeImage(imageFileName, inputFolder, outputFolder, null, width, height);
   }
 }
 
-async function resizeImage(file, inputFolder, outputFolder, width, height) {
+async function resizeImage(
+  inputFileName,
+  inputFolder,
+  outputFolder,
+  outputFileName = null,
+  width = null,
+  height = null
+) {
   // Ensure the output folder exists
   if (!fs.existsSync(outputFolder)) {
     fs.mkdirSync(outputFolder, { recursive: true });
   }
-  const inputFilePath = path.join(inputFolder, file);
+  const inputFilePath = path.join(inputFolder, inputFileName);
 
+  /*
   const fileNameWithoutExt = path.parse(file).name;
   const fileExt = path.extname(file);
   const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
   const outputFilePath = path.join(outputFolder, thumbnailFileName);
+  */
+
+  if (outputFileName === null) {
+    outputFileName = inputFileName;
+  }
+
+  const outputFilePath = path.join(outputFolder, outputFileName);
 
   try {
     // Load the image
     const image = await Image.load(inputFilePath);
+
+    // Calculate the missing dimension while retaining the aspect ratio
+    if (width && !height) {
+      height = Math.round((image.height / image.width) * width);
+    } else if (height && !width) {
+      width = Math.round((image.width / image.height) * height);
+    } else if (!width && !height) {
+      throw new Error("Either width or height must be provided.");
+    }
 
     // Resize the image
     const resizedImage = image.resize({ width, height });
@@ -194,7 +237,7 @@ async function resizeImage(file, inputFolder, outputFolder, width, height) {
     await resizedImage.save(outputFilePath);
     console.log(`Resized and saved: ${outputFilePath}`);
   } catch (error) {
-    console.error(`Failed to process ${file}:`, error);
+    console.error(`Failed to process ${inputFileName}:`, error);
   }
 }
 
@@ -223,7 +266,7 @@ async function describeImage(imagePath) {
 
   const prompt = "Describe this image.";
 
-  const imageParts = [fileToGenerativePart(imagePath, "image/png")];
+  const imageParts = [fileToGenerativePart(imagePath, "image/jpg")];
 
   const generatedContent = await model.generateContent([prompt, ...imageParts]);
 
@@ -241,11 +284,13 @@ export {
   describeImage,
 };
 
-/*
-editImage(
-  "C:\\Users\\joao-carloto\\Pictures\\unnamed - Copy.png",
-  "edited.png"
-);
-*/
+// editImage("C:/Users/joao-carloto/Downloads/img_2.jpg", "edited.png");
 
 // resizeImages("./data/images", "./data/thumbnails/images", 200, 200);
+
+/*
+The strange thing is that they happen randomly. I am sure I am not hitting the rate limits or any other networking restrictions.
+
+What worked for me—I’ve wrapped Gemini’s calls (like sendMessage and generateContent) with this simple withRetry function: withRetry.js · GitHub
+
+*/

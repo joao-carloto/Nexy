@@ -188,7 +188,7 @@ async function createUser() {
   });
 
   const prompt =
-    "Create a random username, full user name, and a short bio. The userId should not contain any special characters. The bio should be a short description of the user's unusual interests and hobbies written in the first person. Provide results separated by commas. Single result.";
+    "Create a random username, full user name, and a short bio. The username should not contain any special characters. The bio should be a short description of the user's unusual interests and hobbies written in the first person. Provide results separated by commas. Single result.";
   const content = await model.generateContent(prompt);
   const contentText = content.response.text();
 
@@ -248,7 +248,6 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     // Edit the post text
     let editedPostText = await editText(postText);
 
-    // Edit the image if it exists
     let originalImagePath = null;
     let mockingImageText = null;
     if (originalImageFileName) {
@@ -258,6 +257,21 @@ async function createHumanPost(userId, postText, originalImageFileName) {
         originalImageFileName
       );
 
+      // Resize the image.
+      try {
+        await resizeImage(
+          originalImageFileName,
+          "data/images",
+          "data/images",
+          null,
+          1080,
+          null
+        );
+      } catch (error) {
+        throw new Error("Failed to resize the image.");
+      }
+
+      // Create text making fun of the image content.
       try {
         mockingImageText = await mockImage(originalImagePath);
       } catch (error) {
@@ -284,13 +298,19 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     }
 
     // Create thumbnail for the edited image
+
+    const fileNameWithoutExt = path.parse(editedImageFileName).name;
+    const fileExt = path.extname(editedImageFileName);
+    const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
+
     try {
       await resizeImage(
         editedImageFileName,
         "./data/images",
         "./data/thumbnails/images",
+        thumbnailFileName,
         150,
-        150
+        null
       );
     } catch (error) {
       throw new Error("Failed to create a thumbnail for the image.");
@@ -326,7 +346,7 @@ console.clear();
 // TODO: remove
 // editImage("C:\\Users\\joao-carloto\\Pictures\\unnamed.png", "edited.png");
 
-// createPost({topic: "Economy", isFakeNews: true})
+// createAIPost({ topic: "Economy", isFakeNews: true });
 
 // createPost({});
 

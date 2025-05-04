@@ -128,22 +128,19 @@ app.post("/comments", async (req, res) => {
 
 // Route to fetch posts and comments
 app.get("/posts", (req, res) => {
-  const query = "SELECT * FROM posts ORDER BY createdAt DESC;";
-  db.all(query, [], (err, posts) => {
+  const { search = "", limit = 10 } = req.query; // Default to no search and limit to 10 posts
+
+  const query = `
+  SELECT * FROM posts
+  WHERE LOWER(postText) LIKE LOWER(?) 
+  ORDER BY createdAt DESC
+  LIMIT ?
+`;
+  db.all(query, [`%${search}%`, parseInt(limit, 10)], (err, posts) => {
     if (err) {
       res.status(500).json({ error: err.message });
     } else {
-      const postIds = posts.map((post) => post.id);
-      const commentsQuery = `SELECT * FROM comments WHERE postId IN (${postIds.join(
-        ","
-      )})`;
-      db.all(commentsQuery, [], (err, comments) => {
-        if (err) {
-          res.status(500).json({ error: err.message });
-        } else {
-          res.status(200).json({ posts, comments });
-        }
-      });
+      res.status(200).json({ posts });
     }
   });
 });

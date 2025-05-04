@@ -1,6 +1,15 @@
-async function loadThumbnails() {
+let currentSearch = ""; // Store the current search term
+let currentLimit = 10; // Default limit for the number of posts
+let debounceTimeout; // Timeout ID for debounce
+
+async function loadThumbnails(search = "", limit = 100) {
   try {
-    const response = await fetch("/posts");
+    currentSearch = search; // Update the current search term
+    currentLimit = limit; // Update the current limit
+
+    const response = await fetch(
+      `/posts?search=${encodeURIComponent(search)}&limit=${limit}`
+    );
     const data = await response.json();
     const postsContainer = document.getElementById("posts");
     postsContainer.innerHTML = "";
@@ -33,6 +42,21 @@ async function loadThumbnails() {
   }
 }
 
+function debounce(func, delay) {
+  return function (...args) {
+    clearTimeout(debounceTimeout); // Clear the previous timeout
+    debounceTimeout = setTimeout(() => func(...args), delay); // Set a new timeout
+  };
+}
+
+const filterPosts = debounce(() => {
+  const searchText = document.getElementById("searchBox").value;
+  loadThumbnails(searchText, currentLimit); // Reload posts with the search term
+}, 300); // 300ms delay
+
 function viewPost(postId) {
   window.location.href = `/post.html?id=${postId}`;
 }
+
+// Load thumbnails on page load
+loadThumbnails();

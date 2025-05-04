@@ -5,16 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Explore Posts</title>
     <link rel="stylesheet" href="styles.css" />
-    <script src="scripts/explore.js"></script>
   </head>
   <body>
     <script src="scripts/navbar.js"></script>
     <h1>Explore Posts</h1>
+    <input
+      type="text"
+      id="searchBox"
+      placeholder="Search posts..."
+      oninput="filterPosts()"
+    />
     <div id="posts" class="posts-container"></div>
     <script src="scripts/shared.js"></script>
+
+    <!--
     <script>
       // Load thumbnails on page load
       window.onload = loadThumbnails;
     </script>
+    -->
+    <script src="scripts/explore.js"></script>
   </body>
 </html>
