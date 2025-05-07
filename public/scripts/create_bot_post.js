@@ -1,5 +1,5 @@
 document
-  .getElementById("generateAIPostForm")
+  .getElementById("postForm")
   .addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -7,8 +7,12 @@ document
     const isFakeNews = document.getElementById("isFakeNews").value === "true";
     const numComments = document.getElementById("numComments").value;
 
+    // Show the loading overlay
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    loadingOverlay.classList.remove("hidden");
+
     try {
-      const response = await fetch("/ai_posts", {
+      const response = await fetch("/create_bot_post", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -21,10 +25,16 @@ document
       });
 
       const result = await response.json();
-      alert(`Post created with ID: ${result.postId}`);
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create AI post");
+      }
       window.location.href = `post.html?id=${result.postId}`; // Redirect to the post page after creating the post
     } catch (error) {
-      console.error("Error generating post:", error);
-      alert("Failed to generate post");
+      console.error("Error:", error);
+      alert(`Failed to create post: ${error.message}`);
+    } finally {
+      // Hide the loading overlay
+      loadingOverlay.classList.add("hidden");
     }
   });

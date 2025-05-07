@@ -14,7 +14,13 @@
       <input type="file" id="image" accept="image/*" />
       <button type="submit">Post</button>
     </form>
-    <script src="scripts/shared.js"></script>
-    <script src="scripts/create_post.js"></script>
+
+    <!-- Glass panel and spinner -->
+    <div id="loadingOverlay" class="hidden">
+      <div class="spinner"></div>
+      <p class="loading-message">Your overlords are working. Stay put...</p>
+    </div>
+
+    <script src="scripts/create_human_post.js"></script>
   </body>
 </html>

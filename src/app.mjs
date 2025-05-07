@@ -82,7 +82,7 @@ db.serialize(() => {
 });
 
 // Route to create an AI generated post
-app.post("/ai_posts", async (req, res) => {
+app.post("/create_bot_post", async (req, res) => {
   const { topic, isFakeNews, numComments } = req.body;
 
   try {
@@ -99,14 +99,24 @@ app.post("/ai_posts", async (req, res) => {
 });
 
 // Route to save a post
-app.post("/posts", upload.single("image"), async (req, res) => {
+app.post("/create_human_post", upload.single("image"), async (req, res) => {
   const { userId, postText } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
   try {
-    createHumanPost(userId, postText, originalImageFileName);
+    // Call the createHumanPost function
+    const result = await createHumanPost(
+      userId,
+      postText,
+      originalImageFileName
+    );
+
+    // Send a success response back to the client
+    res.status(200).json({ success: true, postId: result.postId });
   } catch (error) {
-    console.error("Error processing post:", error);
-    res.status(500).json({ error: "Failed to process post" });
+    console.error("Error creating human post:", error.message);
+
+    // Send an error response back to the client
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

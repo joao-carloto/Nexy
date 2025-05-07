@@ -58,3 +58,5 @@ async function deletePost(postId) {
     alert("Failed to delete post. Please try again.");
   }
 }
+
+loadPostsWithDeleteButtons();

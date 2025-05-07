@@ -280,7 +280,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     }
 
     if (mockingImageText) {
-      editedPostText = editedPostText + "\n" + mockingImageText;
+      editedPostText = editedPostText + "</br>" + mockingImageText;
     }
 
     const editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
@@ -294,7 +294,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     try {
       await editImage(originalImagePath, editedImagePath);
     } catch (error) {
-      throw new Error("Failed to edit the image.");
+      throw new Error("Failed to edit the image: " + error.message); // TODO: turn on the VPN message "gemini-2.0-flash-exp-image-generation is not found"
     }
 
     // Create thumbnail for the edited image
@@ -360,4 +360,4 @@ distortPostText(
 
 // createAIPost({});
 
-createUser();
+// createUser();
