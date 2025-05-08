@@ -136,4 +136,4 @@ dist
 .pnp.*
 
 # Data (sqlite and images)
-data/
+# data

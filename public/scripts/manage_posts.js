@@ -1,6 +1,8 @@
 async function loadPostsWithDeleteButtons() {
   try {
-    const response = await fetch("/posts");
+    const response = await fetch(
+      `/posts?search=${encodeURIComponent("")}&limit=1000`
+    );
     const data = await response.json();
     const postsContainer = document.getElementById("posts");
     postsContainer.innerHTML = "";
@@ -48,7 +50,7 @@ async function deletePost(postId) {
     });
 
     if (response.ok) {
-      alert("Post deleted successfully!");
+      // alert("Post deleted successfully!");
       loadPostsWithDeleteButtons(); // Reload the posts after deletion
     } else {
       throw new Error("Failed to delete post");
