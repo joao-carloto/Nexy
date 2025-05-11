@@ -1,5 +1,16 @@
 document
   .getElementById("postForm")
+  .addEventListener("submit", function (event) {
+    const imageInput = document.getElementById("image");
+    if (!imageInput.files || imageInput.files.length === 0) {
+      event.preventDefault(); // Prevent form submission
+      alert("Please select an image before submitting.");
+      imageInput.focus(); // Focus the file input
+    }
+  });
+
+document
+  .getElementById("postForm")
   .addEventListener("submit", async (event) => {
     event.preventDefault();
     const postText = document.getElementById("postText").value;
@@ -43,3 +54,20 @@ document
       loadingOverlay.classList.add("hidden");
     }
   });
+
+document
+  .getElementById("postForm")
+  .addEventListener("submit", function (event) {
+    const imageInput = document.getElementById("image");
+    if (!imageInput.files || imageInput.files.length === 0) {
+      event.preventDefault(); // Prevent form submission
+      alert("Please select an image before submitting.");
+      imageInput.focus(); // Focus the file input
+    }
+  });
+
+document.getElementById("image").addEventListener("change", function (event) {
+  const fileNameSpan = document.getElementById("fileName");
+  const file = event.target.files[0];
+  fileNameSpan.textContent = file ? file.name : "No file chosen";
+});

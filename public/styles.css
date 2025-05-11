@@ -4,7 +4,7 @@ body {
   padding: 0;
   /*background-color: #f4f4f4;*/
   background-color: #2d4554;
-  margin-left: 90px; /* Add margin to the left to account for the vertical navbar */
+  margin-left: 300px; /* Add margin to the left to account for the vertical navbar */
   margin-right: 30px;
 }
 
@@ -233,10 +233,9 @@ button:hover {
 .svg-button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 60px; /* Increased from 40px to 60px */
+  width: 200px; /* Increased from 40px to 60px */
   height: 60px; /* Increased from 40px to 60px*/
-  border-radius: 50%;
+  border-radius: 8px;
   text-decoration: none;
   transition: background-color 0.3s ease, transform 0.2s ease;
   margin: 10px auto;
@@ -276,7 +275,7 @@ select:hover {
   cursor: pointer; /* Change cursor to pointer */
 }
 
-#random-user-thumbnail {
+#random-bot-thumbnail {
   width: 40px; /* Match the button size */
   height: 40px; /* Match the button size */
   border-radius: 50%; /* Make the image circular */
@@ -292,16 +291,47 @@ nav {
   top: 0;
   left: 0;
   height: 100%; /* Full height for vertical layout */
-  width: 80px; /* Adjust width as needed */
+  width: 230px; /* Adjust width as needed */
   background-color: #2d4554; /* Navbar background color */
   padding: 10px 0;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  gap: 20px;
+  align-items: flex-start; /* Align items to the left */
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
-nav a {
-  margin: 10px auto;
-  text-align: center;
+/* Navbar item */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between icon and text */
+  text-decoration: none; /* Remove underline from links */
+  color: #f4f3f1; /* Match the icon color */
+  font-size: 1rem;
+  transition: color 0.3s ease;
+  width: 85%; /* Ensure the button spans the full width */
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* SVG icon */
+.nav-item svg {
+  width: 36px; /* Adjust icon size */
+  height: 36px; /* Adjust icon size */
+}
+
+/* Text next to the icon */
+.nav-text {
+  white-space: nowrap; /* Prevent text wrapping */
+  color: #f4f3f1;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.nav-item:hover {
+  color: #007bff; /* Change color on hover */
 }
 
 /* Horizontal navbar for narrow screens */
@@ -315,6 +345,10 @@ nav a {
     height: 60px; /* Adjust height for horizontal layout */
     width: 100%; /* Full width for horizontal layout */
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-text {
+    display: none; /* Hide text in mobile mode */
   }
 
   nav a {
@@ -375,4 +409,100 @@ nav a {
 /* Hidden class to hide the overlay */
 .hidden {
   display: none !important; /* Force display: none to override other styles */
+}
+
+/* General form container styling */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+/* Textarea styling */
+#postText {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: none;
+}
+
+/* Custom file input container */
+.file-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Custom file input label */
+.custom-file-label {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Submit button styling */
+.submit-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #28a745;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}
+
+/* Auxiliary text styling */
+.loading-message {
+  font-size: 1.2rem;
+  color: #333; /* Match the h1 color */
+  text-align: center;
+}
+
+.file-name {
+  margin-top: 5px;
+  font-size: 0.9rem;
+  color: #555; /* Light gray text */
+  text-align: center;
+}
+
+#image {
+  opacity: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+  width: 90%;
+}
+
+.profile-picture {
+  display: block; /* Ensure the image behaves like a block element */
+  margin: 0 auto; /* Center the image horizontally */
+  width: 800px; /* Adjust size as needed */
+  border-radius: 8px; /* Circular profile picture */
 }

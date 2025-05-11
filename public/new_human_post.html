@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Post</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <script src="scripts/navbar.js"></script>
+    <h1>New Human Post</h1>
+    <form id="postForm" class="form-container">
+      <textarea
+        id="postText"
+        placeholder="Write your post here..."
+        required
+      ></textarea>
+
+      <!-- Custom file input -->
+      <div class="file-input-container">
+        <label for="image" class="custom-file-label">Choose an image</label>
+        <input type="file" id="image" name="image" accept="image/*" required />
+        <span id="fileName" class="file-name">No file chosen</span>
+      </div>
+      <button type="submit" class="submit-button">SUBMIT</button>
+    </form>
+
+    <!-- Glass panel and spinner -->
+    <div id="loadingOverlay" class="hidden">
+      <div class="spinner"></div>
+      <p class="loading-message">Your overlords are working. Stay put...</p>
+    </div>
+
+    <script src="scripts/new_human_post.js"></script>
+  </body>
+</html>

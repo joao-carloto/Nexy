@@ -2,7 +2,7 @@ let currentSearch = ""; // Store the current search term
 let currentLimit = 10; // Default limit for the number of posts
 let debounceTimeout; // Timeout ID for debounce
 
-async function loadThumbnails(search = "", limit = 100) {
+async function loadThumbnails(search = "", limit = 1000) {
   try {
     currentSearch = search; // Update the current search term
     currentLimit = limit; // Update the current limit

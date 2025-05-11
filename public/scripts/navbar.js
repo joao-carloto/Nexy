@@ -35,7 +35,7 @@ async function loadNavbar() {
     ? JSON.parse(localStorage.getItem("randomUser")).userId
     : null;
 
-  const thumbnailElement = document.getElementById("random-user-thumbnail");
+  const thumbnailElement = document.getElementById("random-bot-thumbnail");
 
   if (userId) {
     // Set the thumbnail source based on the userId

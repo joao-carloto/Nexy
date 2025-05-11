@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fullName.textContent = user.fullName;
     userId.textContent = user.userId;
     description.textContent = user.description;
-    countryRegion.textContent = user.countryRegion;
   }
 
   // Function to fetch a random user from the server
@@ -58,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user) {
       displayUser(user);
 
-      const thumbnailElement = document.getElementById("random-user-thumbnail");
+      const thumbnailElement = document.getElementById("random-bot-thumbnail");
 
       if (user.userId) {
         // Set the thumbnail source based on the userId
