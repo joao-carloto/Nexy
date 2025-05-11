@@ -2,7 +2,6 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  /*background-color: #f4f4f4;*/
   background-color: #2d4554;
   margin-left: 300px; /* Add margin to the left to account for the vertical navbar */
   margin-right: 30px;
@@ -10,18 +9,20 @@ body {
 
 .title {
   font-family: serif;
-  font-size: 48px; /* Adjust the size as needed */
-  text-align: center;
+  font-size: 90px; /* Adjust the size as needed */
+  text-align: left; /* Align the title to the left of the body */
   margin-top: 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* Adjust flex alignment for left alignment */
+  color: #f4f3f1;
 }
 
 .logo {
-  width: 142px; /* Adjust the size as needed */
+  width: 90px; /* Adjust the size as needed */
   height: auto;
   margin-right: 10px; /* Adjust the spacing as needed */
+  border-radius: 8px; /* Optional: Make the logo circular */
 }
 
 .container {
@@ -420,9 +421,7 @@ nav {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  color: #f4f3f1;
 }
 
 /* Textarea styling */
@@ -482,7 +481,6 @@ nav {
 .file-name {
   margin-top: 5px;
   font-size: 0.9rem;
-  color: #555; /* Light gray text */
   text-align: center;
 }
 
