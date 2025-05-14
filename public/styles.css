@@ -3,18 +3,18 @@ body {
   margin: 0;
   padding: 0;
   background-color: #2d4554;
-  margin-left: 300px; /* Add margin to the left to account for the vertical navbar */
-  margin-right: 30px;
+  margin-left: 260px; /* Match the navbar and a bit more*/
+  box-sizing: border-box;
 }
 
 .title {
   font-family: serif;
   font-size: 90px; /* Adjust the size as needed */
-  text-align: left; /* Align the title to the left of the body */
+  text-align: center; /* Align the title to the center of the body */
   margin-top: 20px;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Adjust flex alignment for left alignment */
+  justify-content: center; /* Adjust flex alignment for center alignment */
   color: #f4f3f1;
 }
 
@@ -311,10 +311,10 @@ nav {
   text-decoration: none; /* Remove underline from links */
   color: #f4f3f1; /* Match the icon color */
   font-size: 1rem;
-  transition: color 0.3s ease;
   width: 85%; /* Ensure the button spans the full width */
   padding-left: 10px;
   padding-right: 10px;
+  transition: transform 0.2s ease;
 }
 
 /* SVG icon */
@@ -337,30 +337,54 @@ nav {
 
 /* Horizontal navbar for narrow screens */
 @media (max-width: 768px) {
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
   nav {
-    flex-direction: row; /* Horizontal layout */
+    flex-direction: row;
     position: fixed;
-    bottom: 0; /* Position at the bottom of the screen */
-    top: auto; /* Ensure the navbar is not stuck at the top */
+    align-items: center;
+    bottom: 0;
+    top: auto;
     left: 0;
-    height: 60px; /* Adjust height for horizontal layout */
-    width: 100%; /* Full width for horizontal layout */
+    height: 50px;
+    width: 100%;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
   }
 
+  .nav-item {
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    padding: 0;
+    margin: 0 auto;
+  }
+
+  .nav-item svg {
+    display: block;
+    margin: auto;
+  }
+
   .nav-text {
-    display: none; /* Hide text in mobile mode */
+    display: none;
   }
 
   nav a {
     margin: 0 auto;
-    flex: 1; /* Distribute buttons evenly */
+    flex: 1;
   }
 
-  /* Adjust content for horizontal navbar */
   body {
-    margin-left: 10px; /* Remove left margin for horizontal layout */
-    margin-bottom: 80px; /* Add margin to the bottom to account for the horizontal navbar */
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 80px;
+    padding: 0 12px;
   }
 }
 

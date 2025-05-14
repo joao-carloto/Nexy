@@ -7,7 +7,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const commentForm = document.getElementById("commentForm");
   const commentText = document.getElementById("commentText");
   const commentTone = document.getElementById("commentTone");
-  const generateCommentButton = document.getElementById("generateComment");
+  const addBotCommentButton = document.getElementById("addBotComment");
+
+  // Show glasspanel overlay
+  function showLoadingOverlay(message = "Generating bot comment...") {
+    const overlay = document.getElementById("loadingOverlay");
+    if (overlay) {
+      overlay.classList.remove("hidden");
+      const msg = overlay.querySelector(".loading-message");
+      if (msg) msg.textContent = message;
+    }
+  }
+
+  // Hide glasspanel overlay
+  function hideLoadingOverlay() {
+    const overlay = document.getElementById("loadingOverlay");
+    if (overlay) overlay.classList.add("hidden");
+  }
 
   // Load the post details
   async function loadPost() {
@@ -57,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Generate a comment and add it automatically
   async function generateAndAddComment() {
+    showLoadingOverlay();
     const postId = document.getElementById("postId").value;
     const tone = commentTone.value;
     const userId = localStorage.getItem("randomUser")
@@ -64,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : null;
 
     if (!userId) {
+      hideLoadingOverlay();
       alert("No user selected. Please select a user first.");
       return;
     }
@@ -94,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (addCommentResponse.ok) {
-        alert("Comment added successfully!");
+        // alert("Comment added successfully!"); // Removed success alert
         loadPost(); // Reload the post to show the new comment
       } else {
         throw new Error("Failed to add comment");
@@ -102,6 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error generating or adding comment:", error);
       alert("Failed to generate or add comment. Please try again.");
+    } finally {
+      hideLoadingOverlay();
     }
   }
 
@@ -143,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Attach event listeners
-  generateCommentButton.addEventListener("click", generateAndAddComment);
+  addBotCommentButton.addEventListener("click", generateAndAddComment);
   commentForm.addEventListener("submit", addManualComment);
 
   // Load the post on page load

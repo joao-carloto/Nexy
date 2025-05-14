@@ -13,46 +13,31 @@
     </h1>
     <script src="scripts/navbar.js"></script>
     <h1>New Bot Post</h1>
-    <form id="postForm">
-      <input type="text" id="topic" placeholder="Enter a topic (optional)" />
-      <br />
-      <label for="isFakeNews">Fake News:</label>
-      <select id="isFakeNews">
-        <option value="true">Yes</option>
-        <option value="false">Maybe</option>
-      </select>
-      <br />
-      <br />
-      <input
-        class="num-comments-input"
-        type="number"
-        id="numComments"
-        placeholder="Enter number of comments (optional)"
-      />
-      <div class="button-container">
-        <button
-          type="submit"
-          class="svg-button"
-          aria-label="Generate Post"
-          title="Click to generate a post"
+    <form id="postForm" class="form-container">
+      <textarea
+        id="topic"
+        placeholder="Enter a topic (optional)"
+        rows="4"
+        class="post-text"
+      ></textarea>
+      <div>
+        <label for="isFakeNews" style="margin: 0; white-space: nowrap"
+          >Fake News:</label
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#F4F3F1"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="feather feather-send"
-          >
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
+        <select id="isFakeNews">
+          <option value="false">Maybe</option>
+          <option value="true">Yes</option>
+        </select>
+        <input
+          class="num-comments-input"
+          type="number"
+          id="numComments"
+          placeholder="Number of comments (optional)"
+          style="margin-left: 10px; width: 210px"
+          min="0"
+        />
       </div>
+      <button type="submit" class="submit-button">SUBMIT</button>
     </form>
 
     <!-- Glass panel and spinner -->

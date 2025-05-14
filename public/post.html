@@ -13,6 +13,10 @@
     </h1>
     <script src="scripts/navbar.js"></script>
     <div id="post"></div>
+    <div id="loadingOverlay" class="hidden">
+      <div class="spinner"></div>
+      <div class="loading-message">Generating bot comment...</div>
+    </div>
     <form id="commentForm">
       <h2>Add a Comment</h2>
       <input type="hidden" id="postId" />
@@ -25,7 +29,7 @@
           <option value="neutral">Neutral</option>
           <option value="negative">Negative</option>
         </select>
-        <button type="button" id="generateComment">Generate Comment</button>
+        <button type="button" id="addBotComment">Add Bot Comment</button>
       </div>
     </form>
     <script src="scripts/post.js"></script>

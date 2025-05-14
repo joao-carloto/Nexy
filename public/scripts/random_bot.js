@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const fullName = document.getElementById("full-name");
   const userId = document.getElementById("user-id");
   const description = document.getElementById("description");
-  const countryRegion = document.getElementById("country-region");
   const loadUserButton = document.getElementById("load-user");
 
   // Function to display user information
