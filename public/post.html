@@ -17,21 +17,33 @@
       <div class="spinner"></div>
       <div class="loading-message">Generating bot comment...</div>
     </div>
-    <form id="commentForm">
-      <h2>Add a Comment</h2>
-      <input type="hidden" id="postId" />
-      <textarea id="commentText" placeholder="Comment Text" required></textarea>
-      <button type="submit">Comment</button>
-      <div>
-        <label for="commentTone">Comment Tone:</label>
-        <select id="commentTone">
-          <option value="positive">Positive</option>
-          <option value="neutral">Neutral</option>
-          <option value="negative">Negative</option>
-        </select>
-        <button type="button" id="addBotComment">Add Bot Comment</button>
-      </div>
-    </form>
+    <div id="comments" class="form-container">
+      <div id="commentList"></div>
+      <form id="commentForm">
+        <h2>Add a Human Comment</h2>
+        <input type="hidden" id="postId" />
+        <textarea
+          id="commentText"
+          placeholder="Comment Text"
+          required
+          maxlength="500"
+        ></textarea>
+        <button type="submit" class="submit-button">SUBMIT</button>
+        <div>
+          <h2>Add a Bot Comment</h2>
+          <label for="commentTone">Comment Tone:</label>
+          <select id="commentTone">
+            <option value="positive">Positive</option>
+            <option value="neutral">Neutral</option>
+            <option value="negative">Negative</option>
+          </select>
+          <div style="height: 20px"></div>
+          <button type="button" id="addBotComment" class="submit-button">
+            SUBMIT
+          </button>
+        </div>
+      </form>
+    </div>
     <script src="scripts/post.js"></script>
   </body>
 </html>

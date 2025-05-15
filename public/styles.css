@@ -55,6 +55,7 @@ h2 {
   margin-right: 30px;
 }
 
+/*
 input,
 textarea {
   display: block;
@@ -64,6 +65,7 @@ textarea {
   border: 1px solid #ccc;
   border-radius: 5px;
 }
+  */
 
 .num-comments-input {
   width: 300px;
@@ -214,7 +216,7 @@ textarea,
 button {
   display: block;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -448,7 +450,27 @@ nav {
   color: #f4f3f1;
 }
 
+.form-container form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/*
+.form-container input,
+.form-container textarea,
+.form-container select,
+.form-container button {
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+  */
+
 /* Textarea styling */
+/*
 #postText {
   width: 100%;
   height: 100px;
@@ -458,6 +480,7 @@ nav {
   border-radius: 4px;
   resize: none;
 }
+  */
 
 /* Custom file input container */
 .file-input-container {
@@ -489,6 +512,7 @@ nav {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  width: 300px;
 }
 
 .submit-button:hover {
@@ -527,4 +551,11 @@ nav {
   margin: 0 auto; /* Center the image horizontally */
   width: 800px; /* Adjust size as needed */
   border-radius: 8px; /* Circular profile picture */
+}
+
+#user-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
