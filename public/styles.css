@@ -55,64 +55,57 @@ h2 {
   margin-right: 30px;
 }
 
-/*
-input,
-textarea {
-  display: block;
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-  */
-
 .num-comments-input {
   width: 300px;
   display: inline-block;
 }
 
 .posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 16px;
+  align-items: flex-start;
 }
 
-.post-thumbnail {
+.post-thumbnail,
+.post-frame {
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
   text-align: center;
   padding: 16px;
   background-color: #f9f9f9;
+  display: inline-block;
+  vertical-align: top;
+  height: auto;
+  color: inherit;
+  border: 1px solid #ccc;
+  cursor: pointer;
 }
 
-.post-thumbnail img {
+.post-thumbnail,
+.post-frame img {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
 }
 
-.post-thumbnail h3 {
+.post-frame {
+  max-width: 800px;
+}
+
+.post-frame h3 {
   font-size: 1.2em;
   margin: 8px 0;
 }
 
-.post-thumbnail p {
+.post-frame p {
   font-size: 0.9em;
   color: #666;
 }
 
-.post-thumbnail {
-  background-color: #f9f9f9;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.post-thumbnail button:hover {
+.post-frame button:hover {
   background-color: #0056b3;
 }
 
@@ -140,6 +133,13 @@ textarea {
   height: auto;
   border-radius: 8px;
   margin-bottom: 20px;
+}
+
+/* Center only the .post-image inside .post-details */
+.post-details .post-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .post-date {
@@ -178,20 +178,16 @@ textarea {
   justify-content: center;
 }
 
-.post-thumbnail {
-  cursor: pointer;
-}
-
 .thumbnail-image {
-  width: 200px; /*Adjust thumbnail size */
+  width: 200px;
   height: 200px;
   object-fit: cover;
-  border-radius: 8px; /* Optional: Rounded corners */
+  border-radius: 8px;
   transition: transform 0.2s ease;
 }
 
 .thumbnail-image:hover {
-  transform: scale(1.05); /* Slight zoom effect on hover */
+  transform: scale(1.05);
 }
 
 .delete-post-button {
@@ -216,6 +212,7 @@ textarea,
 button {
   display: block;
   width: 100%;
+  margin-top: 20px;
   margin-bottom: 20px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -258,7 +255,6 @@ button:hover {
 }
 
 select {
-  width: 100px; /* Make it responsive */
   padding: 10px; /* Add padding for better usability */
   color: #2d4554; /* Text color */
   background-color: #f5f5f5; /* Light background */
@@ -266,6 +262,14 @@ select {
   border-radius: 5px; /* Rounded corners */
   outline: none; /* Remove default outline */
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+select #commentTone {
+  width: 100px;
+}
+
+select #isFakeNews {
+  width: 110px;
 }
 
 select:focus {
@@ -337,7 +341,59 @@ nav {
   color: #007bff; /* Change color on hover */
 }
 
-/* Horizontal navbar for narrow screens */
+/* Title bar with centered content and right-aligned help button */
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.title-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  font-family: serif;
+  font-size: 90px;
+  color: #f4f3f1;
+}
+
+.help-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 24px 0 0;
+  display: flex;
+  align-items: center;
+  height: 48px; /* Match SVG viewBox height */
+  min-width: 48px;
+  box-sizing: content-box;
+  outline: none;
+  transition: background 0.2s;
+}
+
+.help-button:focus,
+.help-button:active {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.help-button svg {
+  display: block;
+  stroke: #f4f3f1;
+  width: 40px;
+  height: 40px;
+  margin: auto;
+}
+
 @media (max-width: 768px) {
   html,
   body {
@@ -387,6 +443,36 @@ nav {
     margin-right: 0;
     margin-bottom: 80px;
     padding: 0 12px;
+  }
+
+  .title-bar {
+    margin-top: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: auto;
+  }
+  .title-center {
+    font-size: 40px;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 0;
+  }
+  .help-button {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    /*transform: translateY(-50%);*/
+    padding: 0 12px 0 0;
+    margin-bottom: 0;
+    align-self: auto;
+    height: 40px;
+    min-width: 40px;
+  }
+  .help-button svg {
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -443,7 +529,6 @@ nav {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;

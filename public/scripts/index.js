@@ -9,7 +9,7 @@ async function loadPosts() {
     data.posts.forEach((post) => {
       if (post.imageFileName) {
         const postElement = document.createElement("div");
-        postElement.className = "post-thumbnail";
+        postElement.className = "post-frame";
         postElement.innerHTML = `
         <h3>${post.userId}</h3>
         <p>${post.postText.substring(0, 100)}...</p>
