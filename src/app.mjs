@@ -5,7 +5,8 @@ import sqlite3 from "sqlite3";
 import path from "path";
 import multer from "multer";
 import { createAIPost, createHumanPost } from "./post_creator.js";
-import { createCommentText } from "./text_creator.js";
+import { createCommentText, createCommentReply } from "./text_creator.js";
+import { getPostTextFromDB, getRandomUserIdFromDB } from "./utils.js";
 
 const app = express();
 const dbPath = path.join(path.resolve(), "data/nexyDB.sqlite");
@@ -134,6 +135,58 @@ app.post("/comments", async (req, res) => {
       res.status(201).json({ commentId: this.lastID });
     }
   });
+});
+
+// Route to save a human comment and generate a bot reply
+app.post("/human_comment", async (req, res) => {
+  const { postId, userId, commentText } = req.body;
+  const createdAt = new Date().toISOString();
+
+  const insertCommentQuery =
+    "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
+
+  // Insert the human comment first
+  db.run(
+    insertCommentQuery,
+    [postId, userId, commentText, createdAt],
+    async function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      const humanCommentId = this.lastID;
+      // Now generate the bot reply
+      try {
+        const post_text = await getPostTextFromDB(postId);
+        const reply = await createCommentReply(post_text, commentText);
+        const randomUserId = await getRandomUserIdFromDB();
+        const botCreatedAt = new Date().toISOString();
+        db.run(
+          insertCommentQuery,
+          [
+            postId,
+            randomUserId,
+            `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
+            botCreatedAt,
+          ],
+          function (botErr) {
+            if (botErr) {
+              // Still return success for the human comment, but include bot error
+              return res
+                .status(201)
+                .json({ commentId: humanCommentId, botError: botErr.message });
+            }
+            const botReplyId = this.lastID;
+            res.status(201).json({ commentId: humanCommentId, botReplyId });
+          }
+        );
+      } catch (e) {
+        // If bot reply fails, still return success for the human comment
+        res
+          .status(201)
+          .json({ commentId: humanCommentId, botError: e.message });
+      }
+    }
+  );
 });
 
 // Route to fetch posts and comments

@@ -102,6 +102,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const { commentText } = await response.json();
 
+      // TODO: Makes no sense to go back and forth between the server and client
+
       // Add the generated comment to the post
       const addCommentResponse = await fetch("/comments", {
         method: "POST",
@@ -126,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Add a comment manually
-  async function addManualComment(event) {
+  async function addHumanComment(event) {
     event.preventDefault();
 
     const postId = document.getElementById("postId").value;
@@ -141,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const response = await fetch("/comments", {
+      const response = await fetch("/human_comment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,17 +156,17 @@ document.addEventListener("DOMContentLoaded", () => {
         commentText.value = ""; // Clear the comment text
         loadPost(); // Reload the post to show the new comment
       } else {
-        throw new Error("Failed to add comment");
+        throw new Error("Failed to add comment: " + response.statusText);
       }
     } catch (error) {
       console.error("Error adding comment:", error);
-      alert("Failed to add comment. Please try again.");
+      alert("Failed to add comment. Please try again." + error);
     }
   }
 
   // Attach event listeners
   addBotCommentButton.addEventListener("click", generateAndAddComment);
-  commentForm.addEventListener("submit", addManualComment);
+  commentForm.addEventListener("submit", addHumanComment);
 
   // Load the post on page load
   loadPost();

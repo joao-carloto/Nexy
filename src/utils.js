@@ -38,4 +38,30 @@ async function getRandomUserIdFromDB() {
   });
 }
 
-export { getRandomElement, getRandomBoolean, getRandomUserIdFromDB };
+// Get post text according to postId
+async function getPostTextFromDB(postId) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT postText
+      FROM posts
+      WHERE id = ?
+    `;
+
+    db.get(query, [postId], (err, row) => {
+      if (err) {
+        console.error("Error fetching post text from database:", err.message);
+        reject(new Error("Failed to fetch post text from the database."));
+      } else if (!row) {
+        reject(new Error("No post found with the given ID."));
+      } else {
+        resolve(row.postText);
+      }
+    });
+  });
+}
+export {
+  getRandomElement,
+  getRandomBoolean,
+  getRandomUserIdFromDB,
+  getPostTextFromDB,
+};

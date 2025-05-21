@@ -71,6 +71,21 @@ async function createCommentText(postText, tone = undefined) {
   return commentText;
 }
 
+async function createCommentReply(postText, postCommentText) {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    temperature: 2.0,
+  });
+
+  const commentPrompt = `Small social media comment responding in a confrontational manner to this comment: "${postCommentText}", made on this social media post: "${postText}". Just one option. Include some emoji. Don't explain it, just give me the content.`;
+  const commentContent = await model.generateContent(commentPrompt);
+  const commentText = commentContent.response.text();
+
+  console.log(commentText);
+
+  return commentText;
+}
+
 function cleanUpPost(str) {
   // Somel regex cleanup
   str = str.replace(/\*\*.*?\*\*/g, "");
@@ -79,18 +94,24 @@ function cleanUpPost(str) {
   str = str.replace(/^(Option.*?:)(\s|$)/, "");
   str = str.replace(/^(Option.*?:)(\s|$)/, "");
   str = str.replace(/.*social media post:/, "");
-  str = str.replace(/Okay, here's one: /, "");
-  str = str.replace(/Okay, here's one option: /, "");
+
+  str = str.split(": ", 1)[1];
+
+  // str = str.replace(/Okay, here's one: /, "");
+  // str = str.replace(/Okay, here's one option: /, "");
+
   // Split the string into an array of lines
   const lines = str.split("\n");
   // Filter out empty lines
   const nonEmptyLines = lines.filter((line) => line.trim() !== "");
+
   // Filter out lines that contain the specified content
-  const filteredLines = nonEmptyLines.filter(
-    (line) => !line.includes("Okay, here's a")
-  );
+  // const filteredLines = nonEmptyLines.filter( (line) => !line.includes("Okay, here's a") );
+
   // Join the filtered lines back into a single string
-  return filteredLines.join("\n");
+  // return filteredLines.join("\n");
+
+  return nonEmptyLines.join("\n");
 }
 
 async function mockImage(imagePath) {
@@ -111,4 +132,16 @@ async function mockImage(imagePath) {
   return mockingText;
 }
 
-export { createPostText, editText, createCommentText, cleanUpPost, mockImage };
+export {
+  createPostText,
+  editText,
+  createCommentText,
+  createCommentReply,
+  cleanUpPost,
+  mockImage,
+};
+
+createCommentReply(
+  "BYD takes the EV 👑! Goodbye Tesla? 👋🚗⚡️.",
+  "BYD \"wins\"? 🙄 Quantity over quality. Still can't touch Tesla's tech. 😴 Good luck with that. 🗑️" // TODO: Beware of ""
+);

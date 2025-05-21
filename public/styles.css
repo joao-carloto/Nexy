@@ -1,10 +1,16 @@
+body,
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #2d4554;
   margin-left: 260px; /* Match the navbar and a bit more*/
-  box-sizing: border-box;
 }
 
 .title {
@@ -245,6 +251,7 @@ button:hover {
 
 .svg-button:hover {
   background-color: #0056b3;
+
   transform: scale(1.1);
 }
 
@@ -359,28 +366,30 @@ nav {
   font-family: serif;
   font-size: 90px;
   color: #f4f3f1;
+  padding-right: 50px;
 }
 
 .help-button {
   position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 60px;
+  /* top: 50%;*/
+  /*transform: translateY(-50%);*/
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0 24px 0 0;
+  /* padding: 0 24px 0 0*/
   display: flex;
   align-items: center;
   height: 48px; /* Match SVG viewBox height */
-  min-width: 48px;
+  width: 48px;
   box-sizing: content-box;
   outline: none;
   transition: background 0.2s;
 }
 
 .help-button:focus,
-.help-button:active {
+.help-button:active,
+.help-button:hover {
   outline: none;
   border: none;
   box-shadow: none;
@@ -414,7 +423,7 @@ nav {
   }
 
   .nav-item {
-    border-radius: 100%;
+    /* border-radius: 100%; */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -453,26 +462,37 @@ nav {
     position: relative;
     height: auto;
   }
+  /*
   .title-center {
     font-size: 40px;
     width: 100%;
     justify-content: center;
     margin-bottom: 0;
   }
+
+  
   .help-button {
     position: absolute;
     right: 0;
     top: 50%;
-    /*transform: translateY(-50%);*/
     padding: 0 12px 0 0;
     margin-bottom: 0;
     align-self: auto;
     height: 40px;
     min-width: 40px;
   }
+      
   .help-button svg {
     width: 28px;
     height: 28px;
+  }
+    */
+  .logo {
+    width: 70px;
+  }
+
+  .help-button {
+    right: 0;
   }
 }
 
