@@ -88,8 +88,10 @@ app.post("/create_bot_post", async (req, res) => {
   // All fields are optional
   if (typeof topic !== "string") topic = "";
   if (typeof isFakeNews === "undefined") isFakeNews = false;
-  if (typeof numComments === "undefined" || isNaN(Number(numComments)))
-    numComments = 0;
+  // If numComments is not set or invalid, pick a random number between 1 and 5
+  if (typeof numComments === "undefined" || isNaN(Number(numComments))) {
+    numComments = Math.floor(Math.random() * 5) + 1;
+  }
   console.log("/create_bot_post received:", { topic, isFakeNews, numComments });
   try {
     const postId = await createAIPost({
