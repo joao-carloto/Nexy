@@ -84,8 +84,13 @@ db.serialize(() => {
 
 // Route to create an AI generated post
 app.post("/create_bot_post", async (req, res) => {
-  const { topic, isFakeNews, numComments } = req.body;
-
+  let { topic, isFakeNews, numComments } = req.body;
+  // All fields are optional
+  if (typeof topic !== "string") topic = "";
+  if (typeof isFakeNews === "undefined") isFakeNews = false;
+  if (typeof numComments === "undefined" || isNaN(Number(numComments)))
+    numComments = 0;
+  console.log("/create_bot_post received:", { topic, isFakeNews, numComments });
   try {
     const postId = await createAIPost({
       topic,
@@ -94,8 +99,10 @@ app.post("/create_bot_post", async (req, res) => {
     });
     res.status(201).json({ postId });
   } catch (error) {
-    console.error("Error generating post:", error);
-    res.status(500).json({ error: "Failed to generate post" });
+    console.error("Error generating bot post:", error);
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to generate bot post" });
   }
 });
 

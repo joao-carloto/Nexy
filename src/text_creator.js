@@ -87,23 +87,27 @@ async function createCommentReply(postText, postCommentText) {
 }
 
 function cleanUpPost(str) {
-  // Somel regex cleanup
-  str = str.replace(/\*\*.*?\*\*/g, "");
-  str = str.replace(/\[.*?\]/g, "");
-  str = str.replace(/^(Image:.*?\.)(\s|$)/, "");
-  str = str.replace(/^(Option.*?:)(\s|$)/, "");
-  str = str.replace(/^(Option.*?:)(\s|$)/, "");
-  str = str.replace(/.*social media post:/, "");
-
-  str = str.split(": ", 1)[1];
-
-  // str = str.replace(/Okay, here's one: /, "");
-  // str = str.replace(/Okay, here's one option: /, "");
-
   // Split the string into an array of lines
   const lines = str.split("\n");
   // Filter out empty lines
   const nonEmptyLines = lines.filter((line) => line.trim() !== "");
+
+  // Somel regex cleanup
+  str = str.replace(/\*\*.*?\*\*/g, "");
+  str = str.replace(/\[.*?\]/g, "");
+
+  /*
+  str = str.replace(/^(Image:.*?\.)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/.*social media post:/, "");
+  */
+
+  // Remove explanations of content
+  str = str.split(": ", 1)[1];
+
+  // str = str.replace(/Okay, here's one: /, "");
+  // str = str.replace(/Okay, here's one option: /, "");
 
   // Filter out lines that contain the specified content
   // const filteredLines = nonEmptyLines.filter( (line) => !line.includes("Okay, here's a") );
@@ -140,8 +144,3 @@ export {
   cleanUpPost,
   mockImage,
 };
-
-createCommentReply(
-  "BYD takes the EV 👑! Goodbye Tesla? 👋🚗⚡️.",
-  "BYD \"wins\"? 🙄 Quantity over quality. Still can't touch Tesla's tech. 😴 Good luck with that. 🗑️" // TODO: Beware of ""
-);
