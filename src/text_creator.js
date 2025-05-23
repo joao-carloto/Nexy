@@ -9,7 +9,7 @@ dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const tones = ["positive", "neutral", "negative"];
+const tones = ["positive", "neutral", "confrontational"];
 
 async function createPostText(topic, isFakeNews) {
   const model = genAI.getGenerativeModel({
@@ -79,7 +79,7 @@ async function createCommentReply(postText, postCommentText) {
 
   const commentPrompt = `Small social media comment responding in a confrontational manner to this comment: "${postCommentText}", made on this social media post: "${postText}". Just one option. Include some emoji. Don't explain it, just give me the content.`;
   const commentContent = await model.generateContent(commentPrompt);
-  const commentText = commentContent.response.text();
+  const commentText = cleanUpPost(commentContent.response.text());
 
   console.log(commentText);
 
