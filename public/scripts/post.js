@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function addHumanComment(event) {
     event.preventDefault();
 
-    showLoadingOverlay("Wait. Someone's reading your comment.");
+    showLoadingOverlay("Wait. Someone's answering to your comment.");
 
     const postId = document.getElementById("postId").value;
     const userId = localStorage.getItem("randomUser")

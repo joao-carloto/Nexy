@@ -115,6 +115,9 @@ function cleanUpPost(str) {
   // Join the filtered lines back into a single string
   str = filteredLines.join("\n");
 
+  // Remove explanations of content
+  // str = str.split(": ", 1)[1];
+
   // remove quotes
   str = str.replace(/['"]/g, "");
 
