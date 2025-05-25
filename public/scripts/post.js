@@ -131,6 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function addHumanComment(event) {
     event.preventDefault();
 
+    showLoadingOverlay("Wait. Someone's reading your comment.");
+
     const postId = document.getElementById("postId").value;
     const userId = localStorage.getItem("randomUser")
       ? JSON.parse(localStorage.getItem("randomUser")).userId
@@ -138,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const commentTextValue = commentText.value;
 
     if (!userId) {
+      hideLoadingOverlay();
       alert("No user selected. Please select a user first.");
       return;
     }
@@ -152,7 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (response.ok) {
-        alert("Comment added successfully!");
         commentText.value = ""; // Clear the comment text
         loadPost(); // Reload the post to show the new comment
       } else {
@@ -161,6 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error adding comment:", error);
       alert("Failed to add comment. Please try again." + error);
+    } finally {
+      hideLoadingOverlay();
     }
   }
 

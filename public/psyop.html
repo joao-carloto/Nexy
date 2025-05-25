@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New PsyOp</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="logo.png" />
+  </head>
+  <body>
+    <script src="scripts/title.js"></script>
+    <script src="scripts/navbar.js"></script>
+    <div id="title-container"></div>
+    <div id="navbar-container"></div>
+    <h1>New PsyOp (coming soon)</h1>
+    <div class="form-container">
+      <form id="psyopForm">
+        <textarea
+          id="objective"
+          name="objective"
+          maxlength="500"
+          placeholder="Define the objective of the PsyOp"
+          rows="4"
+          class="post-text"
+        ></textarea>
+        <input
+          type="text"
+          id="target"
+          name="target"
+          maxlength="100"
+          placeholder="Define the target audience"
+          class="post-text"
+        />
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1em;
+          "
+        >
+          <label for="strategy" style="margin: 0; white-space: nowrap"
+            >Strategy</label
+          >
+          <select id="strategy" name="strategy">
+            <option value="Mixed" selected>Mixed</option>
+            <option value="White">White</option>
+            <option value="Grey">Grey</option>
+            <option value="Black">Black</option>
+          </select>
+        </div>
+        <button type="submit" class="submit-button">SUBMIT</button>
+      </form>
+    </div>
+    <script src="scripts/title.js"></script>
+    <script src="scripts/navbar.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("psyopForm");
+        if (form) {
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            alert('Stay tunned to Nexy for the new upcoming feature "PsyOp!"');
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

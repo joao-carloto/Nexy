@@ -23,6 +23,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
 app.use(express.json());
 
 // Serve static files
+// Redirect root to explore.html
+app.get("/", (req, res) => {
+  res.redirect("/explore.html");
+});
 app.use(express.static(path.join(path.resolve(), "public")));
 
 app.use(
@@ -200,7 +204,7 @@ app.post("/human_comment", async (req, res) => {
 
 // Route to fetch posts and comments
 app.get("/posts", (req, res) => {
-  const { search = "", limit = 10 } = req.query; // Default to no search and limit to 10 posts
+  const { search = "", limit = 20 } = req.query; // Default to no search and limit to 10 posts
 
   const query = `
   SELECT * FROM posts

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Post</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="logo.png" />
   </head>
   <body>
     <script src="scripts/navbar.js"></script>
@@ -24,7 +25,13 @@
       <!-- Custom file input -->
       <div class="file-input-container">
         <label for="image" class="custom-file-label">Choose an image</label>
-        <input type="file" id="image" name="image" accept="image/*" required />
+        <input
+          type="file"
+          id="image"
+          name="image"
+          accept="image/jpeg, image/png"
+          required
+        />
         <span id="fileName" class="file-name">No file chosen</span>
       </div>
       <button type="submit" class="submit-button">SUBMIT</button>

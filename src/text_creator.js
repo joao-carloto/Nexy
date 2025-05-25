@@ -9,7 +9,7 @@ dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const tones = ["positive", "neutral", "confrontational"];
+const tones = ["positive", "neutral", "negative"];
 
 async function createPostText(topic, isFakeNews) {
   const model = genAI.getGenerativeModel({
@@ -87,35 +87,38 @@ async function createCommentReply(postText, postCommentText) {
 }
 
 function cleanUpPost(str) {
+  // Somel regex cleanup
+  str = str.replace(/\*\*.*?\*\*/g, "");
+  str = str.replace(/\[.*?\]/g, "");
+
+  str = str.replace(/^(Image:.*?\.)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/^(Option.*?:)(\s|$)/, "");
+  str = str.replace(/.*social media post:/, "");
+
+  str = str.replace(/Okay, here's one: /, "");
+  str = str.replace(/Okay, here's one option: /, "");
+
+  // Remove explanations of content
+  // str = str.split(": ", 1)[1];
+
   // Split the string into an array of lines
   const lines = str.split("\n");
   // Filter out empty lines
   const nonEmptyLines = lines.filter((line) => line.trim() !== "");
 
-  // Somel regex cleanup
-  str = str.replace(/\*\*.*?\*\*/g, "");
-  str = str.replace(/\[.*?\]/g, "");
-
-  /*
-  str = str.replace(/^(Image:.*?\.)(\s|$)/, "");
-  str = str.replace(/^(Option.*?:)(\s|$)/, "");
-  str = str.replace(/^(Option.*?:)(\s|$)/, "");
-  str = str.replace(/.*social media post:/, "");
-  */
-
-  // Remove explanations of content
-  str = str.split(": ", 1)[1];
-
-  // str = str.replace(/Okay, here's one: /, "");
-  // str = str.replace(/Okay, here's one option: /, "");
-
   // Filter out lines that contain the specified content
-  // const filteredLines = nonEmptyLines.filter( (line) => !line.includes("Okay, here's a") );
+  const filteredLines = nonEmptyLines.filter(
+    (line) => !line.includes("Okay, here's a")
+  );
 
   // Join the filtered lines back into a single string
-  // return filteredLines.join("\n");
+  str = filteredLines.join("\n");
 
-  return nonEmptyLines.join("\n");
+  // remove quotes
+  str = str.replace(/['"]/g, "");
+
+  return str;
 }
 
 async function mockImage(imagePath) {
