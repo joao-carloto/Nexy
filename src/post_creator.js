@@ -10,6 +10,7 @@ import {
   createUserImage,
   editImage,
   resizeImage,
+  cropAndResizeToThumbnail,
 } from "./image_creator.js";
 import {
   getRandomElement,
@@ -304,13 +305,12 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
 
     try {
-      await resizeImage(
+      await cropAndResizeToThumbnail(
         editedImageFileName,
         "./data/images",
         "./data/thumbnails/images",
         thumbnailFileName,
-        150,
-        null
+        200
       );
     } catch (error) {
       throw new Error("Failed to create a thumbnail for the image.");

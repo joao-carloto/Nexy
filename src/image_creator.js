@@ -7,6 +7,7 @@ import process from "process";
 import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Image } from "image-js";
+import sharp from "sharp";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -21,7 +22,7 @@ async function generateImage(contents) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
     // model: "gemini-2.0-flash-exp-image-generation",
-    model: "gemini-2.0-flash-exp-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     generationConfig: {
       responseModalities: ["Text", "Image"],
       temperature: 2.0,
@@ -49,6 +50,7 @@ async function generateImage(contents) {
         const fileExt = path.extname(imageFileName);
         const thumbnailFileName = `${uuid}-thumbnail${fileExt}`;
 
+        /*
         await resizeImage(
           imageFileName,
           "./data/images",
@@ -57,16 +59,16 @@ async function generateImage(contents) {
           200,
           null
         );
+        */
 
-        /*
-        await resizeImage(
+        await cropAndResizeToThumbnail(
           imageFileName,
           "./data/images",
           "./data/thumbnails/images",
+          thumbnailFileName,
           200,
-          200
+          null
         );
-        */
 
         return imageFileName;
       }
@@ -94,7 +96,7 @@ async function editImage(inputImagePath, outputImagePath) {
   ];
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     generationConfig: {
       responseModalities: ["Text", "Image"],
     },
@@ -120,7 +122,7 @@ async function editImage(inputImagePath, outputImagePath) {
 async function createUserImage(userId, fullName, description) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     generationConfig: {
       responseModalities: ["Text", "Image"],
     },
@@ -190,6 +192,44 @@ async function resizeImages(inputFolder, outputFolder, width, height) {
   }
 }
 
+async function cropAndResizeToThumbnail(
+  inputFileName,
+  inputFolder,
+  outputFolder,
+  outputFileName = null,
+  thumbnailSize = 200
+) {
+  // Ensure the output folder exists
+  if (!fs.existsSync(outputFolder)) {
+    fs.mkdirSync(outputFolder, { recursive: true });
+  }
+  const inputFilePath = path.join(inputFolder, inputFileName);
+
+  if (outputFileName === null) {
+    outputFileName = inputFileName;
+  }
+
+  const outputFilePath = path.join(outputFolder, outputFileName);
+
+  // Use sharp to crop to square and then resize
+  const image = sharp(inputFilePath).ensureAlpha();
+  const metadata = await image.metadata();
+
+  let size = Math.min(metadata.width, metadata.height);
+  let left = Math.floor((metadata.width - size) / 2);
+  let top = Math.floor((metadata.height - size) / 2);
+
+  // Defensive: if image is already square, skip extract
+  let pipeline = image;
+  if (metadata.width !== metadata.height) {
+    pipeline = pipeline.extract({ left, top, width: size, height: size });
+  }
+
+  await pipeline
+    .resize(thumbnailSize, thumbnailSize, { fit: "cover", position: "centre" })
+    .toFile(outputFilePath);
+}
+
 async function resizeImage(
   inputFileName,
   inputFolder,
@@ -203,13 +243,6 @@ async function resizeImage(
     fs.mkdirSync(outputFolder, { recursive: true });
   }
   const inputFilePath = path.join(inputFolder, inputFileName);
-
-  /*
-  const fileNameWithoutExt = path.parse(file).name;
-  const fileExt = path.extname(file);
-  const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
-  const outputFilePath = path.join(outputFolder, thumbnailFileName);
-  */
 
   if (outputFileName === null) {
     outputFileName = inputFileName;
@@ -240,16 +273,6 @@ async function resizeImage(
     console.error(`Failed to process ${inputFileName}:`, error);
   }
 }
-
-/*
-resizeImage(
-  "0b499181-f7a7-4ca7-88a2-88127468b8e9.png",
-  "./data/images",
-  "./data/thumbnails/images",
-  150,
-  150
-);
-*/
 
 // Converts local file information to base64
 function fileToGenerativePart(path, mimeType) {
@@ -282,6 +305,7 @@ export {
   resizeImage,
   resizeImages,
   describeImage,
+  cropAndResizeToThumbnail,
 };
 
 // editImage("C:/Users/joao-carloto/Downloads/img_2.jpg", "edited.png");
@@ -293,4 +317,11 @@ The strange thing is that they happen randomly. I am sure I am not hitting the r
 
 What worked for me—I’ve wrapped Gemini’s calls (like sendMessage and generateContent) with this simple withRetry function: withRetry.js · GitHub
 
+
+
+cropAndResizeToThumbnail(
+  "dec98590-23b4-42b9-80fa-0a21110d5779.png",
+  "./data/images",
+  "./data/thumbnails/images"
+);
 */

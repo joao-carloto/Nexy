@@ -49,7 +49,7 @@ async function editText(originalPostText) {
 
   console.log(postText);
 
-  return postText;
+  return cleanUpPost(postText);
 }
 
 async function createCommentText(postText, tone = undefined) {
@@ -139,7 +139,7 @@ async function mockImage(imagePath) {
   console.log("");
   console.log(mockingText);
 
-  return mockingText;
+  return cleanUpPost(mockingText);
 }
 
 export {
