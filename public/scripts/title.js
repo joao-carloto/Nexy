@@ -10,4 +10,13 @@ document.addEventListener("DOMContentLoaded", function () {
         container.innerHTML = html;
       });
   }
+
+  // Help button logic
+  document.addEventListener("click", function (event) {
+    // Use event delegation to catch help button clicks even after dynamic load
+    if (event.target.closest && event.target.closest(".help-button")) {
+      event.preventDefault();
+      window.open("NEXY.pdf", "_blank");
+    }
+  });
 });

@@ -108,7 +108,9 @@ app.post("/create_bot_post", async (req, res) => {
     console.error("Error generating bot post:", error);
     res
       .status(500)
-      .json({ error: error.message || "Failed to generate bot post" });
+      .json({
+        error: error.message || String(error) || "Failed to generate bot post",
+      });
   }
 });
 

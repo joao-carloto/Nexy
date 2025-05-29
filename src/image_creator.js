@@ -31,11 +31,12 @@ async function generateImage(contents) {
 
   try {
     const response = await model.generateContent(contents);
+    let foundImage = false;
     for (const part of response.response.candidates[0].content.parts) {
-      // Based on the part type, either show the text or save the image
       if (part.text) {
         console.log(part.text);
       } else if (part.inlineData) {
+        foundImage = true;
         const imageData = part.inlineData.data;
         const buffer = Buffer.from(imageData, "base64");
 
@@ -50,17 +51,6 @@ async function generateImage(contents) {
         const fileExt = path.extname(imageFileName);
         const thumbnailFileName = `${uuid}-thumbnail${fileExt}`;
 
-        /*
-        await resizeImage(
-          imageFileName,
-          "./data/images",
-          "./data/thumbnails/images",
-          thumbnailFileName,
-          200,
-          null
-        );
-        */
-
         await cropAndResizeToThumbnail(
           imageFileName,
           "./data/images",
@@ -73,8 +63,12 @@ async function generateImage(contents) {
         return imageFileName;
       }
     }
+    if (!foundImage) {
+      throw new Error("Gemini API did not return an image.");
+    }
   } catch (error) {
     console.error("Error generating content:", error);
+    throw error;
   }
 }
 

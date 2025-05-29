@@ -17,19 +17,20 @@ document
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          topic: topic || undefined,
-          isFakeNews,
-          numComments: numComments ? parseInt(numComments) : undefined,
-        }),
+        body: JSON.stringify({ topic, isFakeNews, numComments }),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create AI post");
+      if (response.ok) {
+        const result = await response.json();
+        window.location.href = `post.html?id=${result.postId}`; // Redirect to the post page after creating the post
+      } else {
+        const errorData = await response.json();
+        alert(
+          "Failed to create bot post: " +
+            (errorData.error || response.statusText)
+        );
+        throw new Error(errorData.error || response.statusText);
       }
-      window.location.href = `post.html?id=${result.postId}`; // Redirect to the post page after creating the post
     } catch (error) {
       console.error("Error:", error);
       alert(`Failed to create post: ${error.message}`);
