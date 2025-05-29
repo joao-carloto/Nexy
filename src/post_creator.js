@@ -118,7 +118,6 @@ async function createAIPost({
   console.log("\nCaption:");
   console.log(postText);
 
-  // TODO: review
   const imageFileName = await generateImage(
     `Create a realistic square photo inspired by this text: "${removeEmojis(
       removeHashtags(postText)
@@ -126,8 +125,15 @@ async function createAIPost({
   );
 
   // If not defined, create between 1 and 7 comments.
-  if (numComments === undefined) {
+  if (
+    numComments === undefined ||
+    isNaN(Number(numComments)) ||
+    numComments === "" ||
+    numComments === null
+  ) {
     numComments = Math.floor(Math.random() * 7) + 1;
+  } else {
+    numComments = Number(numComments);
   }
 
   const postId = await savePost(userId, postText, imageFileName);
@@ -138,7 +144,7 @@ async function createAIPost({
     console.log(commentText);
 
     const commentUserId = await getRandomUserIdFromDB();
-    saveComment(postId, commentUserId, commentText);
+    await saveComment(postId, commentUserId, commentText);
   }
 
   console.log(`Post created with id: ${postId}`);
