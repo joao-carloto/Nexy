@@ -208,7 +208,7 @@ app.post("/human_comment", async (req, res) => {
 
 // Route to fetch posts and comments
 app.get("/posts", (req, res) => {
-  const { search = "", limit = 30 } = req.query; // Default to no search and limit to 20 posts
+  const { search = "", limit = 20 } = req.query; // Default to no search and limit to 20 posts
 
   const query = `
   SELECT * FROM posts
