@@ -142,6 +142,24 @@ async function mockImage(imagePath) {
   return cleanUpPost(mockingText);
 }
 
+async function mockPost(originalText, imagePath) {
+  const description = await describeImage(imagePath);
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    temperature: 2.0,
+  });
+
+  const prompt = `Create a small text making fun of a social media post with the following text: "${originalText}" and with an associated image described in this manner: "${description}". Don't explain it, just give me the content.`;
+  const content = await model.generateContent(prompt);
+  const mockingText = content.response.text();
+
+  console.log("");
+  console.log(mockingText);
+
+  return cleanUpPost(mockingText);
+}
+
 export {
   createPostText,
   editText,
@@ -149,4 +167,5 @@ export {
   createCommentReply,
   cleanUpPost,
   mockImage,
+  mockPost,
 };

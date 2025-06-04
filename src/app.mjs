@@ -106,11 +106,9 @@ app.post("/create_bot_post", async (req, res) => {
     res.status(201).json({ postId });
   } catch (error) {
     console.error("Error generating bot post:", error);
-    res
-      .status(500)
-      .json({
-        error: error.message || String(error) || "Failed to generate bot post",
-      });
+    res.status(500).json({
+      error: error.message || String(error) || "Failed to generate bot post",
+    });
   }
 });
 
@@ -173,13 +171,17 @@ app.post("/human_comment", async (req, res) => {
       try {
         const post_text = await getPostTextFromDB(postId);
         const reply = await createCommentReply(post_text, commentText);
-        const randomUserId = await getRandomUserIdFromDB();
+        let randomOponentId = null;
+        while (randomOponentId === null || randomOponentId === userId) {
+          randomOponentId = await getRandomUserIdFromDB();
+        }
+        await getRandomUserIdFromDB();
         const botCreatedAt = new Date().toISOString();
         db.run(
           insertCommentQuery,
           [
             postId,
-            randomUserId,
+            randomOponentId,
             `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
             botCreatedAt,
           ],
@@ -206,7 +208,7 @@ app.post("/human_comment", async (req, res) => {
 
 // Route to fetch posts and comments
 app.get("/posts", (req, res) => {
-  const { search = "", limit = 20 } = req.query; // Default to no search and limit to 10 posts
+  const { search = "", limit = 30 } = req.query; // Default to no search and limit to 20 posts
 
   const query = `
   SELECT * FROM posts
