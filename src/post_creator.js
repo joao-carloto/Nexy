@@ -101,7 +101,7 @@ async function createAIPost({
     userId = getRandomElement(userIds); // TODO: Remove this. Get user from DB
   }
 
-  if (topic === undefined) {
+  if (topic === undefined || topic === "") {
     // Balance betwen 50% light and 50% serious topics.
     let random_index = Math.floor(Math.random() * 2);
     let topic_list = random_index === 0 ? serious_topics : lightTopics;
