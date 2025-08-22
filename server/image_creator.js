@@ -58,7 +58,7 @@ async function generateImage(contents) {
         await cropAndResizeToThumbnail(
           imageFileName,
           "./public/post_images",
-          "./public/thumbnails/images",
+          "./public/thumbnails/post_images",
           thumbnailFileName,
           200,
           null
@@ -320,6 +320,6 @@ What worked for me—I’ve wrapped Gemini’s calls (like sendMessage and gener
 cropAndResizeToThumbnail(
   "dec98590-23b4-42b9-80fa-0a21110d5779.png",
   "./data/images",
-  "./data/thumbnails/images"
+  "./data/thumbnails/post_images"
 );
 */

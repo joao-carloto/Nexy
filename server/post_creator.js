@@ -309,7 +309,7 @@ async function createHumanPost_2(userId, postText, originalImageFileName) {
       await cropAndResizeToThumbnail(
         editedImageFileName,
         "./public/post_images",
-        "./public/thumbnails/images",
+        "./public/thumbnails/post_images",
         thumbnailFileName,
         200
       );
@@ -410,7 +410,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       await cropAndResizeToThumbnail(
         editedImageFileName,
         "./public/post_images",
-        "./public/thumbnails/images",
+        "./public/thumbnails/post_images",
         thumbnailFileName,
         200
       );
