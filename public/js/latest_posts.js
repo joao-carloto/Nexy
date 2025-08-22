@@ -15,7 +15,7 @@ async function loadPosts() {
         <p>${post.postText.substring(0, 100)}...</p>
         ${
           post.imageFileName
-            ? `<img src="/data/images/${post.imageFileName}" alt="Post Image">`
+            ? `<img src="/post_images/${post.imageFileName}" alt="Post Image">`
             : ""
         }
         <button onclick="viewPost(${post.id})">View Post</button>

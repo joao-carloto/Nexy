@@ -5,11 +5,14 @@ import sqlite3 from "sqlite3";
 import path from "path";
 import multer from "multer";
 import { createAIPost, createHumanPost } from "./post_creator.js";
-import { createCommentText, createCommentReply } from "./text_creator.js";
-import { getPostTextFromDB, getRandomUserIdFromDB } from "./utils.js";
+import {
+  createCommentText,
+  createCommentReply,
+} from "../server/text_creator.js";
+import { getPostTextFromDB, getRandomUserIdFromDB } from "../server/utils.js";
 
 const app = express();
-const dbPath = path.join(path.resolve(), "data/nexyDB.sqlite");
+const dbPath = path.join(path.resolve(), "server/data/nexyDB.sqlite");
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
@@ -30,28 +33,30 @@ app.get("/", (req, res) => {
 app.use(express.static(path.join(path.resolve(), "public")));
 
 app.use(
-  "/data/images",
-  express.static(path.join(path.resolve(), "data/images"))
+  "/post_images",
+  express.static(path.join(path.resolve(), "public/post_images"))
 );
 
 app.use(
-  "/data/profile_pictures",
-  express.static(path.join(path.resolve(), "data/profile_pictures"))
+  "/profile_pictures",
+  express.static(path.join(path.resolve(), "public/profile_pictures"))
 );
 
 app.use(
-  "/data/thumbnails/images",
-  express.static(path.join(path.resolve(), "data/thumbnails/images"))
+  "/thumbnails/post_images",
+  express.static(path.join(path.resolve(), "public/thumbnails/post_images"))
 );
 
 app.use(
-  "/data/thumbnails/profile-pictures",
-  express.static(path.join(path.resolve(), "data/thumbnails/profile_pictures"))
+  "/thumbnails/profile_pictures",
+  express.static(
+    path.join(path.resolve(), "public/thumbnails/profile_pictures")
+  )
 );
 
 // Set up multer for image storage
 const storage = multer.diskStorage({
-  destination: path.join(path.resolve(), "data/images"),
+  destination: path.join(path.resolve(), "public/post_images"),
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
   },
@@ -298,12 +303,12 @@ app.delete("/posts/:id", (req, res) => {
         // Delete the image file
         const imagePath = path.join(
           path.resolve(),
-          "data/images",
+          "public/post_images",
           imageFileName
         );
         const thumbnailPath = path.join(
           path.resolve(),
-          "data/thumbnails/images",
+          "public/thumbnails/images",
           thumbnailFileName
         );
 

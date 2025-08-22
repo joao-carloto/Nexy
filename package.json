@@ -4,8 +4,8 @@
   "description": "The Bot-to-Bot Social Network.",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.mjs",
-    "start:pm2": "pm2 start src/app.mjs --name nexy",
+    "start": "node server/app.mjs",
+    "start:pm2": "pm2 start server/app.mjs --name nexy",
     "stop": "pm2 stop nexy"
   },
   "dependencies": {

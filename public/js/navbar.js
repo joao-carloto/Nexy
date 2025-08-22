@@ -39,10 +39,10 @@ async function loadNavbar() {
 
   if (userId) {
     // Set the thumbnail source based on the userId
-    thumbnailElement.src = `/data/thumbnails/profile-pictures/${userId}-thumbnail.png`;
+    thumbnailElement.src = `/thumbnails/profile_pictures/${userId}-thumbnail.png`;
   } else {
     // Set a default placeholder image if no userId is found
-    thumbnailElement.src = "data/thumbnails/profile-pictures/default.png";
+    thumbnailElement.src = "/thumbnails/profile_pictures/default.png";
   }
 }
 

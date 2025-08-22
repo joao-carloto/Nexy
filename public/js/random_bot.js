@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Function to display user information
   function displayUser(user) {
-    profilePicture.src = `/data/profile_pictures/${user.profilePictureName}`;
+    profilePicture.src = `/profile_pictures/${user.profilePictureName}`;
     fullName.textContent = user.fullName;
     userId.textContent = user.userId;
     description.textContent =
@@ -61,10 +61,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (user.userId) {
         // Set the thumbnail source based on the userId
-        thumbnailElement.src = `/data/thumbnails/profile-pictures/${user.userId}-thumbnail.png`;
+        thumbnailElement.src = `profile_pictures/${user.userId}-thumbnail.png`;
       } else {
         // Set a default placeholder image if no userId is found
-        thumbnailElement.src = "data/thumbnails/profile-pictures/default.png";
+        thumbnailElement.src = "profile_pictures/default.png";
       }
     }
   });

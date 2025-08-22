@@ -43,7 +43,11 @@ async function generateImage(contents) {
         const uuid = uuidv4();
         const imageFileName = uuid + ".png";
 
-        const imagePath = path.join(__dirname, "../data/images", imageFileName);
+        const imagePath = path.join(
+          __dirname,
+          "../public/post_images",
+          imageFileName
+        );
 
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
@@ -53,8 +57,8 @@ async function generateImage(contents) {
 
         await cropAndResizeToThumbnail(
           imageFileName,
-          "./data/images",
-          "./data/thumbnails/images",
+          "./public/post_images",
+          "./public/thumbnails/images",
           thumbnailFileName,
           200,
           null
@@ -140,7 +144,7 @@ async function createUserImage(userId, fullName, description) {
 
         const imagePath = path.join(
           __dirname,
-          "../data/profile_pictures",
+          "../public/profile_pictures",
           imageFileName
         );
 
@@ -151,8 +155,8 @@ async function createUserImage(userId, fullName, description) {
 
         await resizeImage(
           imageFileName,
-          "./data/profile_pictures",
-          "./data/thumbnails/profile_pictures",
+          "./public/profile_pictures",
+          "./public/thumbnails/profile_pictures",
           thumbnailFileName,
           200,
           null
@@ -304,7 +308,7 @@ export {
 
 // editImage("C:/Users/joao-carloto/Downloads/img_2.jpg", "edited.png");
 
-// resizeImages("./data/images", "./data/thumbnails/images", 200, 200);
+// resizeImages("./public/images", "./data/thumbnails/images", 200, 200);
 
 /*
 The strange thing is that they happen randomly. I am sure I am not hitting the rate limits or any other networking restrictions.

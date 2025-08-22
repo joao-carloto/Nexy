@@ -28,7 +28,7 @@ async function loadThumbnails(search = "", limit = 1000) {
         postElement.className = "post-thumbnail";
         postElement.innerHTML = `
             <img 
-              src="/data/thumbnails/images/${thumbnailFileName}" 
+              src="/thumbnails/post_images/${thumbnailFileName}" 
               alt="Post Thumbnail" 
               class="thumbnail-image"
               onclick="viewPost(${post.id})"

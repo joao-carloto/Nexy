@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 
-const db = new sqlite3.Database("./data/nexyDB.sqlite");
+const db = new sqlite3.Database("./server/data/nexyDB.sqlite");
 
 function getRandomElement(arr) {
   // Generate a random index based on the array length

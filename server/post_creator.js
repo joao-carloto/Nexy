@@ -16,7 +16,7 @@ import {
   getRandomElement,
   getRandomBoolean,
   getRandomUserIdFromDB,
-} from "./utils.js";
+} from "../server/utils.js";
 import {
   createPostText,
   createCommentText,
@@ -24,9 +24,9 @@ import {
   mockImage,
   editText,
   mockPost,
-} from "./text_creator.js";
+} from "../server/text_creator.js";
 
-const db = new sqlite3.Database("./data/nexyDB.sqlite");
+const db = new sqlite3.Database("./server/data/nexyDB.sqlite");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -259,7 +259,7 @@ async function createHumanPost_2(userId, postText, originalImageFileName) {
     if (originalImageFileName) {
       originalImagePath = path.join(
         path.resolve(),
-        "data/images",
+        "public/post_images",
         originalImageFileName
       );
 
@@ -267,8 +267,8 @@ async function createHumanPost_2(userId, postText, originalImageFileName) {
       try {
         await resizeImage(
           originalImageFileName,
-          "data/images",
-          "data/images",
+          "public/post_images",
+          "public/post_images",
           null,
           1080,
           null
@@ -288,7 +288,7 @@ async function createHumanPost_2(userId, postText, originalImageFileName) {
     const editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
     const editedImagePath = path.join(
       path.resolve(),
-      "data/images",
+      "public/post_images",
       editedImageFileName
     );
 
@@ -308,8 +308,8 @@ async function createHumanPost_2(userId, postText, originalImageFileName) {
     try {
       await cropAndResizeToThumbnail(
         editedImageFileName,
-        "./data/images",
-        "./data/thumbnails/images",
+        "./public/post_images",
+        "./public/thumbnails/images",
         thumbnailFileName,
         200
       );
@@ -356,7 +356,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     if (originalImageFileName) {
       originalImagePath = path.join(
         path.resolve(),
-        "data/images",
+        "public/post_images",
         originalImageFileName
       );
 
@@ -364,8 +364,8 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       try {
         await resizeImage(
           originalImageFileName,
-          "data/images",
-          "data/images",
+          "public/post_images",
+          "public/post_images",
           null,
           1080,
           null
@@ -389,7 +389,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     const editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
     const editedImagePath = path.join(
       path.resolve(),
-      "data/images",
+      "public/post_images",
       editedImageFileName
     );
 
@@ -409,8 +409,8 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     try {
       await cropAndResizeToThumbnail(
         editedImageFileName,
-        "./data/images",
-        "./data/thumbnails/images",
+        "./public/post_images",
+        "./public/thumbnails/images",
         thumbnailFileName,
         200
       );
