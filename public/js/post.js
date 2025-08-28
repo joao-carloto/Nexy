@@ -29,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadPost() {
     const urlParams = new URLSearchParams(window.location.search);
     const postId = urlParams.get("id");
+    if (!postId) {
+      console.error("No post identifier provided in URL");
+      return;
+    }
 
     try {
       const response = await fetch(`/posts/${postId}`);
@@ -64,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-      // Pre-fill the postId in the comment form
+      // Store post id for comment operations
       document.getElementById("postId").value = postId;
     } catch (error) {
       console.error("Error loading post:", error);

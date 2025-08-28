@@ -23,15 +23,27 @@ import {
   cleanUpPost,
   mockImage,
   editText,
-  mockPost,
 } from "../server/text_creator.js";
 
 const db = new sqlite3.Database("./server/data/nexyDB.sqlite");
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// Generate a random alphanumeric GUID with specified length
+function generateGUID(length) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < length; i++) {
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return out;
+}
+
 // Load environment variables from .env file
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Gemini client removed (unused after commenting out createUser)
 
 const serious_topics = [
   "Economy",
@@ -119,10 +131,13 @@ async function createAIPost({
   console.log("\nCaption:");
   console.log(postText);
 
-  const imageFileName = await generateImage(
+  // Pre-generate postId so image file can share the same 11-char id
+  const provisionalPostId = generateGUID(11);
+  await generateImage(
     `Create a realistic square photo inspired by this text: "${removeEmojis(
       removeHashtags(postText)
-    )}"`
+    )}"`,
+    provisionalPostId
   );
 
   // If not defined, create between 1 and 7 comments.
@@ -137,7 +152,8 @@ async function createAIPost({
     numComments = Number(numComments);
   }
 
-  const postId = await savePost(userId, postText, imageFileName);
+  // Use the provisionalPostId as the definitive id
+  const postId = await savePost(userId, postText, {}, provisionalPostId);
   for (let i = 0; i < numComments; i++) {
     const commentText = cleanUpPost(await createCommentText(postText));
 
@@ -154,21 +170,39 @@ async function createAIPost({
   return postId;
 }
 
-async function savePost(userId, postText, imageFileName) {
+async function savePost(
+  userId,
+  postText,
+  { countryCode = null, languageCode = null, sourceType = null } = {},
+  forcedPostId = null
+) {
   return new Promise((resolve, reject) => {
     const createdAt = new Date().toISOString();
+    const postId = forcedPostId || generateGUID(11); // becomes primary key id
     const query =
-      "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
+      "INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-    db.run(query, [userId, postText, imageFileName, createdAt], function (err) {
-      if (err) {
-        console.error(err.message);
-        reject(err);
-      } else {
-        console.log(`Post created with id: ${this.lastID}`);
-        resolve(this.lastID);
+    db.run(
+      query,
+      [
+        postId,
+        userId,
+        postText,
+        createdAt,
+        countryCode,
+        languageCode,
+        sourceType,
+      ],
+      function (err) {
+        if (err) {
+          console.error(err.message);
+          reject(err);
+        } else {
+          console.log(`Post created with id: ${postId}`);
+          resolve(postId);
+        }
       }
-    });
+    );
   });
 }
 
@@ -244,101 +278,6 @@ async function createUser() {
   });
 }
 
-async function createHumanPost_2(userId, postText, originalImageFileName) {
-  const createdAt = new Date().toISOString();
-
-  try {
-    // Validate input
-    if (!userId || !postText) {
-      throw new Error("User ID and post text are required.");
-    }
-
-    let originalImagePath = null;
-    let mockingPostText = null;
-
-    if (originalImageFileName) {
-      originalImagePath = path.join(
-        path.resolve(),
-        "public/post_images",
-        originalImageFileName
-      );
-
-      // Resize the image.
-      try {
-        await resizeImage(
-          originalImageFileName,
-          "public/post_images",
-          "public/post_images",
-          null,
-          1080,
-          null
-        );
-      } catch (error) {
-        throw new Error("Failed to resize the image.");
-      }
-
-      // Create text making fun of the original text and image content.
-      try {
-        mockingPostText = await mockPost(postText, originalImagePath);
-      } catch (error) {
-        throw new Error("Failed to mock the image.");
-      }
-    }
-
-    const editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
-    const editedImagePath = path.join(
-      path.resolve(),
-      "public/post_images",
-      editedImageFileName
-    );
-
-    // Edit the image and save it
-    try {
-      await editImage(originalImagePath, editedImagePath);
-    } catch (error) {
-      throw new Error("Failed to edit the image: " + error.message); // TODO: turn on the VPN message "gemini-2.0-flash-exp-image-generation is not found"
-    }
-
-    // Create thumbnail for the edited image
-
-    const fileNameWithoutExt = path.parse(editedImageFileName).name;
-    const fileExt = path.extname(editedImageFileName);
-    const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
-
-    try {
-      await cropAndResizeToThumbnail(
-        editedImageFileName,
-        "./public/post_images",
-        "./public/thumbnails/post_images",
-        thumbnailFileName,
-        200
-      );
-    } catch (error) {
-      throw new Error("Failed to create a thumbnail for the image.");
-    }
-
-    // Save the post with the edited text and image
-    return new Promise((resolve, reject) => {
-      const query =
-        "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
-      db.run(
-        query,
-        [userId, mockingPostText, editedImageFileName, createdAt],
-        function (err) {
-          if (err) {
-            reject(new Error("Failed to save the post to the database."));
-          } else {
-            resolve({ postId: this.lastID });
-          }
-        }
-      );
-    });
-  } catch (error) {
-    console.error("Error in createHumanPost:", error.message);
-    throw error; // Re-throw the error to handle it in the calling function
-  }
-}
-
 async function createHumanPost(userId, postText, originalImageFileName) {
   const createdAt = new Date().toISOString();
 
@@ -386,7 +325,9 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       editedPostText = editedPostText + "</br>" + mockingImageText;
     }
 
-    const editedImageFileName = `${uuidv4()}.png`; // Generate a new filename for the edited image
+    // Pre-generate postId so edited image uses the same base name
+    const postId = generateGUID(11);
+    const editedImageFileName = `${postId}.png`;
     const editedImagePath = path.join(
       path.resolve(),
       "public/post_images",
@@ -421,15 +362,15 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     // Save the post with the edited text and image
     return new Promise((resolve, reject) => {
       const query =
-        "INSERT INTO posts (userId, postText, imageFileName, createdAt) VALUES (?, ?, ?, ?)";
+        "INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)";
       db.run(
         query,
-        [userId, editedPostText, editedImageFileName, createdAt],
+        [postId, userId, editedPostText, createdAt, null, null, "human"],
         function (err) {
           if (err) {
             reject(new Error("Failed to save the post to the database."));
           } else {
-            resolve({ postId: this.lastID });
+            resolve({ postId });
           }
         }
       );

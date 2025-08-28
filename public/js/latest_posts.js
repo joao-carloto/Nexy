@@ -18,7 +18,7 @@ async function loadPosts() {
             ? `<img src="/post_images/${post.imageFileName}" alt="Post Image">`
             : ""
         }
-        <button onclick="viewPost(${post.id})">View Post</button>
+  <button onclick="viewPost('${post.id}')">View Post</button>
       `;
         postsContainer.appendChild(postElement);
       }

@@ -25,7 +25,7 @@ async function loadPostsWithDeleteButtons() {
               alt="Post Thumbnail" 
               class="thumbnail-image"
             >
-            <button class="delete-post-button" onclick="deletePost(${post.id})">Delete</button>
+            <button class="delete-post-button" onclick="deletePost('${post.id}')">Delete</button>
           `;
         postsContainer.appendChild(postElement);
       }

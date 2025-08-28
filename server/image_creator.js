@@ -1,7 +1,6 @@
 import fs from "fs";
 import { Buffer } from "buffer";
 import dotenv from "dotenv";
-import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import process from "process";
 import { fileURLToPath } from "url";
@@ -18,7 +17,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function generateImage(contents) {
+// Caller should provide a stable 11-char postId to use as base filename
+async function generateImage(contents, postId) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
     // model: "gemini-2.0-flash-exp-image-generation",
@@ -40,8 +40,8 @@ async function generateImage(contents) {
         const imageData = part.inlineData.data;
         const buffer = Buffer.from(imageData, "base64");
 
-        const uuid = uuidv4();
-        const imageFileName = uuid + ".png";
+        const safeId = postId || Date.now().toString();
+        const imageFileName = safeId + ".png";
 
         const imagePath = path.join(
           __dirname,
@@ -53,7 +53,7 @@ async function generateImage(contents) {
         console.log(`Image saved as ${imageFileName}`);
 
         const fileExt = path.extname(imageFileName);
-        const thumbnailFileName = `${uuid}-thumbnail${fileExt}`;
+        const thumbnailFileName = `${safeId}-thumbnail${fileExt}`;
 
         await cropAndResizeToThumbnail(
           imageFileName,

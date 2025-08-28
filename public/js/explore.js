@@ -31,7 +31,7 @@ async function loadThumbnails(search = "", limit = 1000) {
               src="/thumbnails/post_images/${thumbnailFileName}" 
               alt="Post Thumbnail" 
               class="thumbnail-image"
-              onclick="viewPost(${post.id})"
+              onclick="viewPost('${post.id}')"
             >
           `;
         postsContainer.appendChild(postElement);

@@ -167,5 +167,4 @@ export {
   createCommentReply,
   cleanUpPost,
   mockImage,
-  mockPost,
 };

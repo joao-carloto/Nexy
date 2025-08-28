@@ -65,22 +65,26 @@ const upload = multer({ storage });
 
 // Initialize database tables
 db.serialize(() => {
+  // Final schema (migrations removed on 2025-08-28)
   db.run(`CREATE TABLE IF NOT EXISTS posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     userId TEXT NOT NULL,
     postText TEXT NOT NULL,
-    imageFileName TEXT,
-    createdAt TEXT NOT NULL
+    createdAt TEXT NOT NULL,
+    countryCode TEXT,
+    languageCode TEXT,
+    sourceType TEXT
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS comments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    postId INTEGER NOT NULL,
+    commentId INTEGER PRIMARY KEY AUTOINCREMENT,
+    postId TEXT NOT NULL,
     userId TEXT NOT NULL,
     commentText TEXT NOT NULL,
     createdAt TEXT NOT NULL,
     FOREIGN KEY (postId) REFERENCES posts(id)
   )`);
+  db.run("CREATE INDEX IF NOT EXISTS idx_comments_postId ON comments(postId)");
 
   db.run(`CREATE TABLE IF NOT EXISTS users (
     userId TEXT PRIMARY KEY,
@@ -139,76 +143,78 @@ app.post("/create_human_post", upload.single("image"), async (req, res) => {
   }
 });
 
-// Route to save a comment
+// Helper: resolve post identifier (GUID primary key) -> { id }
+function resolvePostIdentifier(identifier, cb) {
+  db.get("SELECT id FROM posts WHERE id = ?", [identifier], (e, row) => {
+    if (e) return cb(e);
+    if (!row) return cb(new Error("Post not found"));
+    cb(null, { id: row.id });
+  });
+}
+
+// Route to save a comment (accepts GUID or numeric in postId field, stores GUID only)
 app.post("/comments", async (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
-
-  const query =
-    "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
-  db.run(query, [postId, userId, commentText, createdAt], function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ commentId: this.lastID });
-    }
+  resolvePostIdentifier(postId, (rErr, ids) => {
+    if (rErr) return res.status(404).json({ error: rErr.message });
+    const query =
+      "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
+    db.run(query, [ids.id, userId, commentText, createdAt], function (err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.status(201).json({ ok: true });
+      }
+    });
   });
 });
 
-// Route to save a human comment and generate a bot reply
+// Route to save a human comment and generate a bot reply (GUID stored)
 app.post("/human_comment", async (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
-
-  const insertCommentQuery =
-    "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
-
-  // Insert the human comment first
-  db.run(
-    insertCommentQuery,
-    [postId, userId, commentText, createdAt],
-    async function (err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      const humanCommentId = this.lastID;
-      // Now generate the bot reply
-      try {
-        const post_text = await getPostTextFromDB(postId);
-        const reply = await createCommentReply(post_text, commentText);
-        let randomOponentId = null;
-        while (randomOponentId === null || randomOponentId === userId) {
-          randomOponentId = await getRandomUserIdFromDB();
-        }
-        await getRandomUserIdFromDB();
-        const botCreatedAt = new Date().toISOString();
-        db.run(
-          insertCommentQuery,
-          [
-            postId,
-            randomOponentId,
-            `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
-            botCreatedAt,
-          ],
-          function (botErr) {
-            if (botErr) {
-              // Still return success for the human comment, but include bot error
-              return res
-                .status(201)
-                .json({ commentId: humanCommentId, botError: botErr.message });
-            }
-            const botReplyId = this.lastID;
-            res.status(201).json({ commentId: humanCommentId, botReplyId });
+  resolvePostIdentifier(postId, (rErr, ids) => {
+    if (rErr) return res.status(404).json({ error: rErr.message });
+    const insertCommentQuery =
+      "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
+    db.run(
+      insertCommentQuery,
+      [ids.id, userId, commentText, createdAt],
+      async function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        // Human comment inserted
+        try {
+          const post_text = await getPostTextFromDB(ids.id);
+          const reply = await createCommentReply(post_text, commentText);
+          let randomOponentId = null;
+          while (randomOponentId === null || randomOponentId === userId) {
+            randomOponentId = await getRandomUserIdFromDB();
           }
-        );
-      } catch (e) {
-        // If bot reply fails, still return success for the human comment
-        res
-          .status(201)
-          .json({ commentId: humanCommentId, botError: e.message });
+          await getRandomUserIdFromDB();
+          const botCreatedAt = new Date().toISOString();
+          db.run(
+            insertCommentQuery,
+            [
+              ids.id,
+              randomOponentId,
+              `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
+              botCreatedAt,
+            ],
+            function (botErr) {
+              if (botErr)
+                return res
+                  .status(201)
+                  .json({ ok: true, botError: botErr.message });
+              res.status(201).json({ ok: true });
+            }
+          );
+        } catch (e) {
+          res.status(201).json({ ok: true, botError: e.message });
+        }
       }
-    }
-  );
+    );
+  });
 });
 
 // Route to fetch posts and comments
@@ -225,32 +231,29 @@ app.get("/posts", (req, res) => {
     if (err) {
       res.status(500).json({ error: err.message });
     } else {
+      posts.forEach((p) => (p.imageFileName = `${p.id}.png`));
       res.status(200).json({ posts });
     }
   });
 });
 
-// Route to fetch a specific post by ID
-app.get("/posts/:id", (req, res) => {
-  const postId = req.params.id;
-  const postQuery = "SELECT * FROM posts WHERE id = ?;";
-  const commentsQuery = "SELECT * FROM comments WHERE postId = ?;";
-
-  db.get(postQuery, [postId], (err, post) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (!post) {
-      res.status(404).json({ error: "Post not found" });
-    } else {
-      db.all(commentsQuery, [postId], (err, comments) => {
-        if (err) {
-          res.status(500).json({ error: err.message });
-        } else {
-          post.comments = comments;
-          res.status(200).json(post);
-        }
+// Route to fetch a specific post by identifier (GUID)
+app.get("/posts/:postId", (req, res) => {
+  const identifier = req.params.postId;
+  resolvePostIdentifier(identifier, (rErr, ids) => {
+    if (rErr) return res.status(404).json({ error: rErr.message });
+    db.get("SELECT * FROM posts WHERE id = ?", [ids.id], (pErr, post) => {
+      if (pErr) return res.status(500).json({ error: pErr.message });
+      if (!post) return res.status(404).json({ error: "Post not found" });
+      const commentsQuery =
+        "SELECT * FROM comments WHERE postId = ? ORDER BY createdAt ASC";
+      db.all(commentsQuery, [ids.id], (cErr, comments) => {
+        if (cErr) return res.status(500).json({ error: cErr.message });
+        post.comments = comments || [];
+        post.imageFileName = `${post.id}.png`;
+        res.status(200).json(post);
       });
-    }
+    });
   });
 });
 
@@ -274,61 +277,35 @@ app.get("/random-user", (req, res) => {
   });
 });
 
-app.delete("/posts/:id", (req, res) => {
-  const postId = req.params.id;
-
-  // Query to delete the post's comments
-  const deleteCommentsQuery = "DELETE FROM comments WHERE postId = ?";
-  db.run(deleteCommentsQuery, [postId], (err) => {
-    if (err) {
-      console.error("Error deleting comments:", err.message);
-      return res.status(500).json({ error: "Failed to delete comments" });
-    }
-
-    // Query to get the post's image file name
-    const getImageQuery = "SELECT imageFileName FROM posts WHERE id = ?";
-    db.get(getImageQuery, [postId], (err, row) => {
-      if (err) {
-        console.error("Error fetching post image:", err.message);
-        return res.status(500).json({ error: "Failed to fetch post image" });
+app.delete("/posts/:postId", (req, res) => {
+  const identifier = req.params.postId;
+  resolvePostIdentifier(identifier, (rErr, ids) => {
+    if (rErr) return res.status(404).json({ error: rErr.message });
+    const deleteCommentsQuery = "DELETE FROM comments WHERE postId = ?";
+    db.run(deleteCommentsQuery, [ids.id], (cErr) => {
+      if (cErr) {
+        console.error("Error deleting comments:", cErr.message);
+        return res.status(500).json({ error: "Failed to delete comments" });
       }
-
-      if (row && row.imageFileName) {
-        const imageFileName = row.imageFileName;
-        const thumbnailFileName = imageFileName.replace(
-          /(\.[\w\d_-]+)$/i,
-          "-thumbnail$1"
-        );
-
-        // Delete the image file
-        const imagePath = path.join(
-          path.resolve(),
-          "public/post_images",
-          imageFileName
-        );
-        const thumbnailPath = path.join(
-          path.resolve(),
-          "public/thumbnails/images",
-          thumbnailFileName
-        );
-
-        fs.unlink(imagePath, (err) => {
-          if (err) console.error("Error deleting image file:", err.message);
-        });
-
-        fs.unlink(thumbnailPath, (err) => {
-          if (err) console.error("Error deleting thumbnail file:", err.message);
-        });
-      }
-
-      // Query to delete the post
-      const deletePostQuery = "DELETE FROM posts WHERE id = ?";
-      db.run(deletePostQuery, [postId], (err) => {
-        if (err) {
-          console.error("Error deleting post:", err.message);
+      const imageFileName = `${ids.id}.png`;
+      const thumbnailFileName = `${ids.id}-thumbnail.png`;
+      const imagePath = path.join(
+        path.resolve(),
+        "public/post_images",
+        imageFileName
+      );
+      const thumbnailPath = path.join(
+        path.resolve(),
+        "public/thumbnails/post_images",
+        thumbnailFileName
+      );
+      fs.unlink(imagePath, () => {});
+      fs.unlink(thumbnailPath, () => {});
+      db.run("DELETE FROM posts WHERE id = ?", [ids.id], (delErr) => {
+        if (delErr) {
+          console.error("Error deleting post:", delErr.message);
           return res.status(500).json({ error: "Failed to delete post" });
         }
-
         res.status(200).json({ message: "Post deleted successfully" });
       });
     });
@@ -337,30 +314,24 @@ app.delete("/posts/:id", (req, res) => {
 
 app.post("/generate-comment", async (req, res) => {
   const { postId, tone } = req.body;
-
-  try {
-    // Fetch the post text from the database
-    const query = "SELECT postText FROM posts WHERE id = ?";
-    db.get(query, [postId], async (err, row) => {
-      if (err) {
-        console.error("Error fetching post text:", err.message);
-        return res.status(500).json({ error: "Failed to fetch post text" });
+  resolvePostIdentifier(postId, (rErr, ids) => {
+    if (rErr) return res.status(404).json({ error: rErr.message });
+    db.get(
+      "SELECT postText FROM posts WHERE id = ?",
+      [ids.id],
+      async (err, row) => {
+        if (err)
+          return res.status(500).json({ error: "Failed to fetch post text" });
+        if (!row) return res.status(404).json({ error: "Post not found" });
+        try {
+          const commentText = await createCommentText(row.postText, tone);
+          res.status(200).json({ commentText });
+        } catch (e) {
+          res.status(500).json({ error: "Failed to generate comment" });
+        }
       }
-
-      if (!row) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-
-      const postText = row.postText;
-
-      // Generate the comment text
-      const commentText = await createCommentText(postText, tone);
-      res.status(200).json({ commentText });
-    });
-  } catch (error) {
-    console.error("Error generating comment:", error.message);
-    res.status(500).json({ error: "Failed to generate comment" });
-  }
+    );
+  });
 });
 
 // Start the server

@@ -38,13 +38,13 @@ async function getRandomUserIdFromDB() {
   });
 }
 
-// Get post text according to postId
+// Get post text by GUID primary key
 async function getPostTextFromDB(postId) {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT postText
       FROM posts
-      WHERE id = ?
+  WHERE id = ?
     `;
 
     db.get(query, [postId], (err, row) => {
