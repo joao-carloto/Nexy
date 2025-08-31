@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (user.userId) {
         // Set the thumbnail source based on the userId
-        thumbnailElement.src = `profile_pictures/${user.userId}-thumbnail.png`;
+        thumbnailElement.src = `thumbnails/profile_pictures/${user.userId}-thumbnail.png`;
       } else {
         // Set a default placeholder image if no userId is found
         thumbnailElement.src = "profile_pictures/default.png";

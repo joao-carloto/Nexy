@@ -82,6 +82,7 @@ db.serialize(() => {
     userId TEXT NOT NULL,
     commentText TEXT NOT NULL,
     createdAt TEXT NOT NULL,
+    sourceType TEXT,
     FOREIGN KEY (postId) REFERENCES posts(id)
   )`);
   db.run("CREATE INDEX IF NOT EXISTS idx_comments_postId ON comments(postId)");
@@ -159,14 +160,18 @@ app.post("/comments", async (req, res) => {
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
     const query =
-      "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
-    db.run(query, [ids.id, userId, commentText, createdAt], function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.status(201).json({ ok: true });
+      "INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)";
+    db.run(
+      query,
+      [ids.id, userId, commentText, createdAt, "bot"],
+      function (err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        } else {
+          res.status(201).json({ ok: true });
+        }
       }
-    });
+    );
   });
 });
 
@@ -177,10 +182,10 @@ app.post("/human_comment", async (req, res) => {
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
     const insertCommentQuery =
-      "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
+      "INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)";
     db.run(
       insertCommentQuery,
-      [ids.id, userId, commentText, createdAt],
+      [ids.id, userId, commentText, createdAt, "human"],
       async function (err) {
         if (err) return res.status(500).json({ error: err.message });
         // Human comment inserted
@@ -200,6 +205,7 @@ app.post("/human_comment", async (req, res) => {
               randomOponentId,
               `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
               botCreatedAt,
+              "bot",
             ],
             function (botErr) {
               if (botErr)

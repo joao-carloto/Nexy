@@ -152,8 +152,16 @@ async function createAIPost({
     numComments = Number(numComments);
   }
 
+  // Persist with required bot metadata defaults
   // Use the provisionalPostId as the definitive id
-  const postId = await savePost(userId, postText, {}, provisionalPostId);
+  const postId = await savePost(
+    userId,
+    postText,
+    { countryCode: "US", languageCode: "EN", sourceType: "bot" },
+    provisionalPostId
+  );
+
+  // Use the provisionalPostId as the definitive id
   for (let i = 0; i < numComments; i++) {
     const commentText = cleanUpPost(await createCommentText(postText));
 
@@ -161,7 +169,7 @@ async function createAIPost({
     console.log(commentText);
 
     const commentUserId = await getRandomUserIdFromDB();
-    await saveComment(postId, commentUserId, commentText);
+    await saveComment(postId, commentUserId, commentText, "bot");
   }
 
   console.log(`Post created with id: ${postId}`);
@@ -206,13 +214,18 @@ async function savePost(
   });
 }
 
-async function saveComment(postId, userId, commentText) {
+async function saveComment(postId, userId, commentText, sourceType = null) {
   return new Promise((resolve, reject) => {
     const createdAt = new Date().toISOString();
-    const query =
-      "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
+    const query = sourceType
+      ? "INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)"
+      : "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
 
-    db.run(query, [postId, userId, commentText, createdAt], function (err) {
+    const params = sourceType
+      ? [postId, userId, commentText, createdAt, sourceType]
+      : [postId, userId, commentText, createdAt];
+
+    db.run(query, params, function (err) {
       if (err) {
         console.error(err.message);
         reject(err);
@@ -365,7 +378,15 @@ async function createHumanPost(userId, postText, originalImageFileName) {
         "INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)";
       db.run(
         query,
-        [postId, userId, editedPostText, createdAt, null, null, "human"],
+        [
+          postId,
+          userId,
+          editedPostText,
+          createdAt,
+          "US", // countryCode default for human post
+          "EN", // languageCode default for human post
+          "human", // sourceType
+        ],
         function (err) {
           if (err) {
             reject(new Error("Failed to save the post to the database."));
