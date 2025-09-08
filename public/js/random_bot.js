@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         thumbnailElement.src = `thumbnails/profile_pictures/${user.userId}-thumbnail.png`;
       } else {
         // Set a default placeholder image if no userId is found
-        thumbnailElement.src = "profile_pictures/default.png";
+        thumbnailElement.src = "images/logo.png";
       }
     }
   });

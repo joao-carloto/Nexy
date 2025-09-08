@@ -42,7 +42,7 @@ async function loadNavbar() {
     thumbnailElement.src = `/thumbnails/profile_pictures/${userId}-thumbnail.png`;
   } else {
     // Set a default placeholder image if no userId is found
-    thumbnailElement.src = "/thumbnails/profile_pictures/default.png";
+    thumbnailElement.src = "images/logo.png";
   }
 }
 
