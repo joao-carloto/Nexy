@@ -30,13 +30,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const postId = urlParams.get("id");
     if (!postId) {
-      console.error("No post identifier provided in URL");
+      // No identifier – redirect to 404 page
+      window.location.href = "/404.html";
       return;
     }
 
     try {
       const response = await fetch(`/posts/${postId}`);
+      if (response.status === 404) {
+        // Post not found – redirect to 404
+        window.location.href = "/404.html";
+        return;
+      }
+      if (!response.ok) {
+        throw new Error("Failed to load post: " + response.status);
+      }
       const post = await response.json();
+      if (!post || post.error || !post.postText) {
+        // Unexpected structure / error field present
+        window.location.href = "/404.html";
+        return;
+      }
       const postContainer = document.getElementById("post");
 
       postContainer.innerHTML = `
@@ -72,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("postId").value = postId;
     } catch (error) {
       console.error("Error loading post:", error);
+      window.location.href = "/404.html";
     }
   }
 

@@ -32,6 +32,7 @@ app.get("/", (req, res) => {
 });
 app.use(express.static(path.join(path.resolve(), "public")));
 
+// TODO. do we really need all this static stuff, since we already use the public directory?
 app.use(
   "/post_images",
   express.static(path.join(path.resolve(), "public/post_images"))
@@ -263,6 +264,23 @@ app.get("/posts/:postId", (req, res) => {
   });
 });
 
+// Pretty URL: /post/<id> -> serve post.html if exists; otherwise 404 page
+app.get("/post/:postId", (req, res) => {
+  const identifier = req.params.postId;
+  resolvePostIdentifier(identifier, (rErr, ids) => {
+    if (rErr) {
+      // Not found -> 404 page
+      const notFoundPath = path.join(path.resolve(), "public", "404.html");
+      return fs.existsSync(notFoundPath)
+        ? res.status(404).sendFile(notFoundPath)
+        : res.status(404).send("404 Not Found");
+    }
+    // Found -> serve static post.html (client will still fetch JSON via /posts/:id)
+    const postHtml = path.join(path.resolve(), "public", "post.html");
+    res.sendFile(postHtml);
+  });
+});
+
 app.get("/random-user", (req, res) => {
   const query = `
     SELECT userId, fullName, profilePictureName, description, countryRegion
@@ -338,6 +356,20 @@ app.post("/generate-comment", async (req, res) => {
       }
     );
   });
+});
+
+// 404 handler (must be after all other routes)
+app.use((req, res) => {
+  // If the client explicitly wants JSON (API), return JSON 404
+  if (req.accepts("json") && !req.accepts("html")) {
+    return res.status(404).json({ error: "Not Found" });
+  }
+  const notFoundPath = path.join(path.resolve(), "public", "404.html");
+  if (fs.existsSync(notFoundPath)) {
+    res.status(404).sendFile(notFoundPath);
+  } else {
+    res.status(404).send("404 Not Found");
+  }
 });
 
 // Start the server
