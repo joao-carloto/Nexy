@@ -67,7 +67,7 @@ function requireAdminPage(req, res, next) {
 }
 
 // Intercept request for manage_posts.html before static middleware serves it
-app.get('/manage_posts.html', requireAdminPage, (req, res, next) => {
+app.get('/manage_posts.html', requireAdminPage, (req, res) => {
   // Serve the file explicitly (bypass redirect loop)
   const filePath = path.join(path.resolve(), 'public', 'manage_posts.html');
   res.sendFile(filePath);

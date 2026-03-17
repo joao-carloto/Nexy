@@ -4,14 +4,14 @@ import dotenv from 'dotenv';
 import path from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI, { toFile } from 'openai';
 import { Image } from 'image-js';
 import sharp from 'sharp';
 
 // Load environment variables from .env file
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Define __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -24,47 +24,35 @@ const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures
 
 // Caller should provide a stable 11-char postId to use as base filename
 async function generateImage(contents, postId) {
-  // Set responseModalities to include "Image" so the model can generate  an image
-  const model = genAI.getGenerativeModel({
-    // model: "gemini-2.0-flash-exp-image-generation",
-    model: 'gemini-2.0-flash-preview-image-generation',
-    generationConfig: {
-      responseModalities: ['Text', 'Image'],
-      temperature: 2.0,
-    },
-  });
-
   try {
-    const response = await model.generateContent(contents);
-    let foundImage = false;
-    for (const part of response.response.candidates[0].content.parts) {
-      if (part.text) {
-        console.log(part.text);
-      } else if (part.inlineData) {
-        foundImage = true;
-        const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, 'base64');
+    const image = await openai.images.generate({
+      model: 'gpt-image-1.5',
+      prompt: typeof contents === 'string' ? contents : String(contents),
+      size: '1024x1024',
+      quality: 'low',
+    });
 
-        const safeId = postId || Date.now().toString();
-        const imageFileName = safeId + '.png';
-
-        fs.mkdirSync(postImagesDir, { recursive: true });
-        const imagePath = path.join(postImagesDir, imageFileName);
-
-        fs.writeFileSync(imagePath, buffer);
-        console.log(`Image saved as ${imageFileName}`);
-
-        const fileExt = path.extname(imageFileName);
-        const thumbnailFileName = `${safeId}-thumbnail${fileExt}`;
-
-        await cropAndResizeToThumbnail(imageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200, null);
-
-        return imageFileName;
-      }
+    const imageData = image.data?.[0]?.b64_json;
+    if (!imageData) {
+      throw new Error('OpenAI API did not return an image.');
     }
-    if (!foundImage) {
-      throw new Error('Gemini API did not return an image.');
-    }
+
+    const buffer = Buffer.from(imageData, 'base64');
+    const safeId = postId || Date.now().toString();
+    const imageFileName = safeId + '.png';
+
+    fs.mkdirSync(postImagesDir, { recursive: true });
+    const imagePath = path.join(postImagesDir, imageFileName);
+
+    fs.writeFileSync(imagePath, buffer);
+    console.log(`Image saved as ${imageFileName}`);
+
+    const fileExt = path.extname(imageFileName);
+    const thumbnailFileName = `${safeId}-thumbnail${fileExt}`;
+
+    await cropAndResizeToThumbnail(imageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200, null);
+
+    return imageFileName;
   } catch (error) {
     console.error('Error generating content:', error);
     throw error;
@@ -73,85 +61,73 @@ async function generateImage(contents, postId) {
 
 // TODO: remove the input image
 async function editImage(inputImagePath, outputImagePath) {
-  const imageData = fs.readFileSync(inputImagePath);
-  const base64Image = imageData.toString('base64');
-
-  const contents = [
-    {
-      text: 'Add some piegon to this image.',
-    },
-    {
-      inlineData: {
-        mimeType: 'image/jpeg',
-        data: base64Image,
-      },
-    },
-  ];
-
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-preview-image-generation',
-    generationConfig: {
-      responseModalities: ['Text', 'Image'],
-    },
-    temperature: 2.0,
-  });
-
+  const tempPngInputPath = `${outputImagePath}.edit-input.png`;
   try {
-    const response = await model.generateContent(contents);
-    for (const part of response.response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, 'base64');
-        fs.writeFileSync(outputImagePath, buffer);
-        console.log(`Image saved as ${outputImagePath}`);
-      }
+    // Ensure input is PNG for the edit endpoint.
+    await sharp(inputImagePath).png().toFile(tempPngInputPath);
+
+    const pngBuffer = fs.readFileSync(tempPngInputPath);
+    const pngFile = await toFile(pngBuffer, 'image.png', { type: 'image/png' });
+
+    const response = await openai.images.edit({
+      model: 'gpt-image-1.5',
+      image: pngFile,
+      prompt: 'Add some pigeon to this image. Preserve humans and objects in the image as much as possible.',
+      size: '1024x1024',
+      quality: 'low',
+    });
+
+    const imageData = response.data?.[0]?.b64_json;
+    if (!imageData) {
+      throw new Error('OpenAI image edit did not return image data.');
     }
+
+    const buffer = Buffer.from(imageData, 'base64');
+    fs.writeFileSync(outputImagePath, buffer);
+    console.log(`Image saved as ${outputImagePath}`);
   } catch (error) {
     console.error('Error generating content:', error);
     throw error;
+  } finally {
+    if (fs.existsSync(tempPngInputPath)) {
+      fs.unlinkSync(tempPngInputPath);
+    }
   }
 }
 
 async function createUserImage(userId, fullName, description) {
-  // Set responseModalities to include "Image" so the model can generate  an image
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-preview-image-generation',
-    generationConfig: {
-      responseModalities: ['Text', 'Image'],
-    },
-    temperature: 2.0,
-  });
-
-  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
-  // "Create a user profile for a social media platform. Include a username, full name, profile picture, and a short bio. The username should be unique and not contain any special characters. The profile picture should be a realistic image of a person. The bio should be a short description of the user's interests and hobbies. Provide text results in array formt.";
+  const contents = `Create a realistic square photo of a person. The photo is to be used on a social media profile. 
+  The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
 
   try {
-    const response = await model.generateContent(contents);
-    for (const part of response.response.candidates[0].content.parts) {
-      // Based on the part type, either show the text or save the image
-      if (part.text) {
-        console.log(part.text);
-      } else if (part.inlineData) {
-        const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, 'base64');
+    const image = await openai.images.generate({
+      model: 'gpt-image-1.5',
+      prompt: contents,
+      size: '1024x1024',
+      quality: 'low',
+    });
 
-        const imageFileName = userId + '.png';
-
-        fs.mkdirSync(profilePicturesDir, { recursive: true });
-        const imagePath = path.join(profilePicturesDir, imageFileName);
-
-        fs.writeFileSync(imagePath, buffer);
-        console.log(`Image saved as ${imageFileName}`);
-
-        const thumbnailFileName = `${userId}-thumbnail.png`;
-
-        await resizeImage(imageFileName, profilePicturesDir, profileThumbnailsDir, thumbnailFileName, 200, null);
-
-        return imageFileName;
-      }
+    const imageData = image.data?.[0]?.b64_json;
+    if (!imageData) {
+      throw new Error('OpenAI API did not return an image.');
     }
+
+    const buffer = Buffer.from(imageData, 'base64');
+    const imageFileName = userId + '.png';
+
+    fs.mkdirSync(profilePicturesDir, { recursive: true });
+    const imagePath = path.join(profilePicturesDir, imageFileName);
+
+    fs.writeFileSync(imagePath, buffer);
+    console.log(`Image saved as ${imageFileName}`);
+
+    const thumbnailFileName = `${userId}-thumbnail.png`;
+    await resizeImage(imageFileName, profilePicturesDir, profileThumbnailsDir, thumbnailFileName, 200, null);
+
+    return imageFileName;
   } catch (error) {
     console.error('Error generating content:', error);
+    throw error;
   }
 }
 
@@ -255,28 +231,30 @@ async function resizeImage(
   }
 }
 
-// Converts local file information to base64
-function fileToGenerativePart(path, mimeType) {
-  return {
-    inlineData: {
-      data: Buffer.from(fs.readFileSync(path)).toString('base64'),
-      mimeType,
-    },
-  };
-}
-
 async function describeImage(imagePath) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const base64 = Buffer.from(fs.readFileSync(imagePath)).toString('base64');
+  const response = await openai.responses.create({
+    model: 'gpt-4.1-mini',
+    input: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'input_text',
+            text: 'Describe this image.',
+          },
+          {
+            type: 'input_image',
+            image_url: `data:image/jpeg;base64,${base64}`,
+          },
+        ],
+      },
+    ],
+  });
 
-  const prompt = 'Describe this image.';
+  console.log(response.output_text);
 
-  const imageParts = [fileToGenerativePart(imagePath, 'image/jpg')];
-
-  const generatedContent = await model.generateContent([prompt, ...imageParts]);
-
-  console.log(generatedContent.response.text());
-
-  return generatedContent.response.text();
+  return response.output_text || '';
 }
 
 export {

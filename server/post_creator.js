@@ -1,11 +1,8 @@
 import dotenv from 'dotenv';
-import process from 'process';
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import sqlite3 from 'sqlite3';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { generateImage, createUserImage, editImage, resizeImage, cropAndResizeToThumbnail } from './image_creator.js';
+import { generateImage, editImage, resizeImage, cropAndResizeToThumbnail } from './image_creator.js';
 import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from '../server/utils.js';
 import { createPostText, createCommentText, cleanUpPost, mockImage, editText } from '../server/text_creator.js';
 
@@ -13,8 +10,6 @@ const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
 const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
 const postImagesDir = path.join(uploadsRoot, 'post_images');
 const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Generate a random alphanumeric GUID with specified length
 function generateGUID(length) {
@@ -29,7 +24,7 @@ function generateGUID(length) {
 // Load environment variables from .env file
 dotenv.config();
 
-// Gemini client removed (unused after commenting out createUser)
+// AI client is handled in text_creator.js and image_creator.js
 
 const serious_topics = [
   'Economy',
@@ -115,7 +110,9 @@ async function createAIPost({
   // Pre-generate postId so image file can share the same 11-char id
   const provisionalPostId = generateGUID(11);
   await generateImage(
-    `Create a realistic square photo inspired by this text: "${removeEmojis(removeHashtags(postText))}"`,
+    `Create a amateur-looking square photo inspired by this text: "${removeEmojis(removeHashtags(postText))}". 
+    The photo should look like it was taken casually with a smartphone by a regular person, 
+    slightly imperfect framing, natural lighting, not too much saturation, no professional editing or filters.`,
     provisionalPostId
   );
 
@@ -199,50 +196,6 @@ async function saveComment(postId, userId, commentText, sourceType = null) {
   });
 }
 
-async function createUser() {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-  });
-
-  const prompt =
-    "Create a random username, full user name, and a short bio. The username should not contain any special characters. The bio should be a short description of the user's unusual interests and hobbies written in the first person. Provide results separated by commas. Single result.";
-  const content = await model.generateContent(prompt);
-  const contentText = content.response.text();
-
-  console.log(contentText);
-
-  // Parse the generated content (assuming it's in the format: "userId, fullName, description")
-  const [userId, fullName, description] = contentText.split(',').map((item) => item.trim());
-
-  // Generate a profile picture
-  const profilePictureName = await createUserImage(userId, fullName, description);
-
-  // Persist the user in the database
-  return new Promise((resolve, reject) => {
-    const query = `
-      INSERT INTO users (userId, fullName, profilePictureName, description, countryRegion)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const countryRegion = 'USA'; // Default value for country/region
-
-    db.run(query, [userId, fullName, profilePictureName, description, countryRegion], function (err) {
-      if (err) {
-        console.error('Error inserting user into database:', err.message);
-        reject(err);
-      } else {
-        console.log(`User created with ID: ${userId}`);
-        resolve({
-          userId,
-          fullName,
-          profilePictureName,
-          description,
-          countryRegion,
-        });
-      }
-    });
-  });
-}
-
 async function createHumanPost(userId, postText, originalImageFileName) {
   const createdAt = new Date().toISOString();
 
@@ -288,7 +241,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     try {
       await editImage(originalImagePath, editedImagePath);
     } catch (error) {
-      throw new Error('Failed to edit the image: ' + error.message); // TODO: turn on the VPN message "gemini-2.0-flash-exp-image-generation is not found"
+      throw new Error('Failed to edit the image: ' + error.message);
     }
 
     // Create thumbnail for the edited image
@@ -354,5 +307,3 @@ distortPostText(
 // createHumanPost("TUMBA", " I like ice-cream!", "1743606767632.png");
 
 // createAIPost({});
-
-// createUser();

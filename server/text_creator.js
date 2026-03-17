@@ -1,23 +1,18 @@
 import dotenv from 'dotenv';
 import process from 'process';
 import { getRandomElement } from './utils.js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { describeImage } from './image_creator.js';
 
 // Load environment variables from .env file
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const tones = ['positive', 'neutral', 'negative'];
 
 async function createPostText(topic, isFakeNews) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    // TODO: use this?
-    // systemInstruction: "You are a very dumb person.",
-    temperature: 2.0,
-  });
+  const model = 'gpt-4.1-mini';
 
   let options = '';
 
@@ -26,26 +21,24 @@ async function createPostText(topic, isFakeNews) {
   }
 
   // TODO: remove this?
-  let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
-  let topicContent = await model.generateContent(topicPrompt);
-  console.log(`\nResponse 1: ${topicContent.response.text()}`);
+  let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, 
+  that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
+  let topicText = await generateText(topicPrompt, model);
+  console.log(`\nResponse 1: ${topicText}`);
 
-  let postPrompt = `Social media post inspired on this text: "${topicContent.response.text()}". Just one option. Include some emoji. Don't explain it, just give me the content.`;
-  let postContent = await model.generateContent(postPrompt);
-  console.log(`\nResponse 1: ${topicContent.response.text()}`);
+  let postPrompt = `Social media post inspired on this text: "${topicText}". Just one option. Include some emoji. 
+  Don't explain it, just give me the content.`;
+  let postTextRaw = await generateText(postPrompt, model);
+  console.log(`\nResponse 2: ${postTextRaw}`);
 
-  const postText = cleanUpPost(postContent.response.text());
+  const postText = cleanUpPost(postTextRaw);
   return postText;
 }
 
 async function editText(originalPostText) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    temperature: 2.0,
-  });
+  const model = 'gpt-4.1-mini';
   const postPrompt = `Write a small text that digrees with this one: "${originalPostText}".`;
-  const postContent = await model.generateContent(postPrompt);
-  const postText = postContent.response.text();
+  const postText = await generateText(postPrompt, model);
 
   console.log(postText);
 
@@ -53,33 +46,26 @@ async function editText(originalPostText) {
 }
 
 async function createCommentText(postText, tone = undefined) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    // TODO: use this?
-    // systemInstruction: "You are a very dumb person.",
-    temperature: 2.0,
-  });
+  const model = 'gpt-4.1-mini';
   let options = '';
   // If not defined, pick a tone.
   if (tone === undefined) {
     tone = getRandomElement(tones);
   }
   options = options + ` The comment should have a ${tone} tone.`;
-  const commentPrompt = `Small social media comment responding to ${postText}. Just one option. Include some emoji.${options} Don't explain it, just give me the content.`;
-  const commentContent = await model.generateContent(commentPrompt);
-  const commentText = commentContent.response.text();
+  const commentPrompt = `Small social media comment responding to ${postText}. 
+  Just one option. Include some emoji.${options} Don't explain it, just give me the content.`;
+  const commentText = await generateText(commentPrompt, model);
   return commentText;
 }
 
 async function createCommentReply(postText, postCommentText) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    temperature: 2.0,
-  });
+  const model = 'gpt-4.1-mini';
 
-  const commentPrompt = `Small social media comment responding in a confrontational manner to this comment: "${postCommentText}", made on this social media post: "${postText}". Just one option. Include some emoji. Don't explain it, just give me the content.`;
-  const commentContent = await model.generateContent(commentPrompt);
-  const commentText = cleanUpPost(commentContent.response.text());
+  const commentPrompt = `Small social media comment, responding in a confrontational manner,
+   to this comment: "${postCommentText}", made on this social media post: "${postText}". 
+   Just one option. Include some emoji. Don't explain it, just give me the content.`;
+  const commentText = cleanUpPost(await generateText(commentPrompt, model));
 
   console.log(commentText);
 
@@ -124,15 +110,11 @@ function cleanUpPost(str) {
 
 async function mockImage(imagePath) {
   const description = await describeImage(imagePath);
+  const model = 'gpt-4.1-mini';
 
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    temperature: 2.0,
-  });
-
-  const prompt = `Create a small text making fun of an image described in this manner: ${description}. Don't explain it, just give me the content.`;
-  const content = await model.generateContent(prompt);
-  const mockingText = content.response.text();
+  const prompt = `Create a small text making fun of an image described in this manner: ${description}.
+   Don't explain it, just give me the content.`;
+  const mockingText = await generateText(prompt, model);
 
   console.log('');
   console.log(mockingText);
@@ -142,20 +124,29 @@ async function mockImage(imagePath) {
 
 async function mockPost(originalText, imagePath) {
   const description = await describeImage(imagePath);
+  const model = 'gpt-4.1-mini';
 
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    temperature: 2.0,
-  });
-
-  const prompt = `Create a small text making fun of a social media post with the following text: "${originalText}" and with an associated image described in this manner: "${description}". Don't explain it, just give me the content.`;
-  const content = await model.generateContent(prompt);
-  const mockingText = content.response.text();
+  const prompt = `Create a small text making fun of a social media post with the following text: "${originalText}"
+   and with an associated image described in this manner: "${description}". Don't explain it, just give me the content.`;
+  const mockingText = await generateText(prompt, model);
 
   console.log('');
   console.log(mockingText);
 
   return cleanUpPost(mockingText);
+}
+
+async function generateText(prompt, model = 'gpt-4.1-mini') {
+  const response = await openai.responses.create({
+    model,
+    input: prompt,
+  });
+
+  if (response.output_text) {
+    return response.output_text;
+  }
+
+  return '';
 }
 
 export { createPostText, editText, createCommentText, createCommentReply, cleanUpPost, mockImage };
