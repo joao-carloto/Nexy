@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -21,12 +21,7 @@
       <form id="commentForm">
         <h2>Add a Human Comment</h2>
         <input type="hidden" id="postId" />
-        <textarea
-          id="commentText"
-          placeholder="Comment Text"
-          required
-          maxlength="500"
-        ></textarea>
+        <textarea id="commentText" placeholder="Comment Text" required maxlength="500"></textarea>
         <button type="submit" class="submit-button">SUBMIT</button>
         <div>
           <h2>Add a Bot Comment</h2>
@@ -36,9 +31,7 @@
             <option value="neutral">Neutral</option>
             <option value="negative">Negative</option>
           </select>
-          <button type="button" id="addBotComment" class="submit-button">
-            SUBMIT
-          </button>
+          <button type="button" id="addBotComment" class="submit-button">SUBMIT</button>
         </div>
       </form>
     </div>

@@ -1,37 +1,37 @@
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toISOString().split(".")[0].replace("T", " ");
+  return date.toISOString().split('.')[0].replace('T', ' ');
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const commentForm = document.getElementById("commentForm");
-  const commentText = document.getElementById("commentText");
-  const commentTone = document.getElementById("commentTone");
-  const addBotCommentButton = document.getElementById("addBotComment");
+document.addEventListener('DOMContentLoaded', () => {
+  const commentForm = document.getElementById('commentForm');
+  const commentText = document.getElementById('commentText');
+  const commentTone = document.getElementById('commentTone');
+  const addBotCommentButton = document.getElementById('addBotComment');
 
   // Show glasspanel overlay
-  function showLoadingOverlay(message = "Generating bot comment...") {
-    const overlay = document.getElementById("loadingOverlay");
+  function showLoadingOverlay(message = 'Generating bot comment...') {
+    const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
-      overlay.classList.remove("hidden");
-      const msg = overlay.querySelector(".loading-message");
+      overlay.classList.remove('hidden');
+      const msg = overlay.querySelector('.loading-message');
       if (msg) msg.textContent = message;
     }
   }
 
   // Hide glasspanel overlay
   function hideLoadingOverlay() {
-    const overlay = document.getElementById("loadingOverlay");
-    if (overlay) overlay.classList.add("hidden");
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
   }
 
   // Load the post details
   async function loadPost() {
     const urlParams = new URLSearchParams(window.location.search);
-    const postId = urlParams.get("id");
+    const postId = urlParams.get('id');
     if (!postId) {
       // No identifier – redirect to 404 page
-      window.location.href = "/404.html";
+      window.location.href = '/404.html';
       return;
     }
 
@@ -39,19 +39,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(`/posts/${postId}`);
       if (response.status === 404) {
         // Post not found – redirect to 404
-        window.location.href = "/404.html";
+        window.location.href = '/404.html';
         return;
       }
       if (!response.ok) {
-        throw new Error("Failed to load post: " + response.status);
+        throw new Error('Failed to load post: ' + response.status);
       }
       const post = await response.json();
       if (!post || post.error || !post.postText) {
         // Unexpected structure / error field present
-        window.location.href = "/404.html";
+        window.location.href = '/404.html';
         return;
       }
-      const postContainer = document.getElementById("post");
+      const postContainer = document.getElementById('post');
 
       postContainer.innerHTML = `
         <div class="post-details">
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ${
             post.imageFileName
               ? `<img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-image">`
-              : ""
+              : ''
           }
           <p class="post-date">Created at: ${formatDate(post.createdAt)}</p>
           <h4>Comments:</h4>
@@ -71,52 +71,48 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="comment">
                 <p class="comment-user">${comment.userId}:</p>
                 <p class="comment-text">${comment.commentText}</p>
-                <p class="comment-date">Created at: ${formatDate(
-                  comment.createdAt
-                )}</p>
+                <p class="comment-date">Created at: ${formatDate(comment.createdAt)}</p>
               </div>
             `
               )
-              .join("")}
+              .join('')}
           </div>
         </div>
       `;
 
       // Store post id for comment operations
-      document.getElementById("postId").value = postId;
+      document.getElementById('postId').value = postId;
     } catch (error) {
-      console.error("Error loading post:", error);
-      window.location.href = "/404.html";
+      console.error('Error loading post:', error);
+      window.location.href = '/404.html';
     }
   }
 
   // Generate a comment and add it automatically
   async function generateAndAddComment() {
     showLoadingOverlay();
-    const postId = document.getElementById("postId").value;
+    const postId = document.getElementById('postId').value;
     const tone = commentTone.value;
-    const userId = localStorage.getItem("randomUser")
-      ? JSON.parse(localStorage.getItem("randomUser")).userId
-      : null;
+    const userId = localStorage.getItem('randomUser') ? JSON.parse(localStorage.getItem('randomUser')).userId : null;
 
     if (!userId) {
       hideLoadingOverlay();
-      alert("No user selected. Please select a user first.");
+      alert('No user selected. Please select a user first.');
       return;
     }
 
     try {
       // Generate the comment text
-      const response = await fetch("/generate-comment", {
-        method: "POST",
+      const response = await fetch('/generate-comment', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ postId, tone }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate comment");
+        throw new Error('Failed to generate comment');
       }
 
       const { commentText } = await response.json();
@@ -124,10 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // TODO: Makes no sense to go back and forth between the server and client
 
       // Add the generated comment to the post
-      const addCommentResponse = await fetch("/comments", {
-        method: "POST",
+      const addCommentResponse = await fetch('/comments', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ postId, userId, commentText }),
       });
@@ -136,11 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // alert("Comment added successfully!"); // Removed success alert
         loadPost(); // Reload the post to show the new comment
       } else {
-        throw new Error("Failed to add comment");
+        throw new Error('Failed to add comment');
       }
     } catch (error) {
-      console.error("Error generating or adding comment:", error);
-      alert("Failed to generate or add comment. Please try again.");
+      console.error('Error generating or adding comment:', error);
+      alert('Failed to generate or add comment. Please try again.');
     } finally {
       hideLoadingOverlay();
     }
@@ -152,44 +148,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showLoadingOverlay("Wait. Someone's answering to your comment.");
 
-    const postId = document.getElementById("postId").value;
-    const userId = localStorage.getItem("randomUser")
-      ? JSON.parse(localStorage.getItem("randomUser")).userId
-      : null;
+    const postId = document.getElementById('postId').value;
+    const userId = localStorage.getItem('randomUser') ? JSON.parse(localStorage.getItem('randomUser')).userId : null;
     const commentTextValue = commentText.value;
 
     if (!userId) {
       hideLoadingOverlay();
-      alert("No user selected. Please select a user first.");
+      alert('No user selected. Please select a user first.');
       return;
     }
 
     try {
-      const response = await fetch("/human_comment", {
-        method: "POST",
+      const response = await fetch('/human_comment', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ postId, userId, commentText: commentTextValue }),
       });
 
       if (response.ok) {
-        commentText.value = ""; // Clear the comment text
+        commentText.value = ''; // Clear the comment text
         loadPost(); // Reload the post to show the new comment
       } else {
-        throw new Error("Failed to add comment: " + response.statusText);
+        throw new Error('Failed to add comment: ' + response.statusText);
       }
     } catch (error) {
-      console.error("Error adding comment:", error);
-      alert("Failed to add comment. Please try again." + error);
+      console.error('Error adding comment:', error);
+      alert('Failed to add comment. Please try again.' + error);
     } finally {
       hideLoadingOverlay();
     }
   }
 
   // Attach event listeners
-  addBotCommentButton.addEventListener("click", generateAndAddComment);
-  commentForm.addEventListener("submit", addHumanComment);
+  addBotCommentButton.addEventListener('click', generateAndAddComment);
+  commentForm.addEventListener('submit', addHumanComment);
 
   // Load the post on page load
   loadPost();

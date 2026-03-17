@@ -1,39 +1,25 @@
-import dotenv from "dotenv";
-import process from "process";
-import { v4 as uuidv4 } from "uuid";
-import path from "path";
-import sqlite3 from "sqlite3";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from 'dotenv';
+import process from 'process';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import sqlite3 from 'sqlite3';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import {
-  generateImage,
-  createUserImage,
-  editImage,
-  resizeImage,
-  cropAndResizeToThumbnail,
-} from "./image_creator.js";
-import {
-  getRandomElement,
-  getRandomBoolean,
-  getRandomUserIdFromDB,
-} from "../server/utils.js";
-import {
-  createPostText,
-  createCommentText,
-  cleanUpPost,
-  mockImage,
-  editText,
-} from "../server/text_creator.js";
+import { generateImage, createUserImage, editImage, resizeImage, cropAndResizeToThumbnail } from './image_creator.js';
+import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from '../server/utils.js';
+import { createPostText, createCommentText, cleanUpPost, mockImage, editText } from '../server/text_creator.js';
 
-const db = new sqlite3.Database("./server/data/nexyDB.sqlite");
+const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
+const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
+const postImagesDir = path.join(uploadsRoot, 'post_images');
+const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Generate a random alphanumeric GUID with specified length
 function generateGUID(length) {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let out = "";
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let out = '';
   for (let i = 0; i < length; i++) {
     out += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -46,61 +32,56 @@ dotenv.config();
 // Gemini client removed (unused after commenting out createUser)
 
 const serious_topics = [
-  "Economy",
-  "Sports",
-  "Politics",
-  "World News",
-  "Business",
-  "Technology",
-  "Health",
-  "Entertainment",
-  "Lifestyle",
-  "Opinion",
-  "Science",
-  "Immigration",
-  "Education",
-  "Weather",
+  'Economy',
+  'Sports',
+  'Politics',
+  'World News',
+  'Business',
+  'Technology',
+  'Health',
+  'Entertainment',
+  'Lifestyle',
+  'Opinion',
+  'Science',
+  'Immigration',
+  'Education',
+  'Weather',
 ];
 
 // const lightTopics = ['social media post', 'some celebrity', 'internet influencer product placement']
 
-const lightTopics = [
-  "some music celebrity",
-  "some TV celebrity",
-  "some movie celebrity",
-  "some sports celebrity",
-];
+const lightTopics = ['some music celebrity', 'some TV celebrity', 'some movie celebrity', 'some sports celebrity'];
 
 // TODO: remove
 const userIds = [
-  "SunnySky123",
-  "MoonlightMagic",
-  "StarGazer89",
-  "DreamerGirl",
-  "TechieTom",
-  "NatureLover",
-  "BookWorm2025",
-  "TravelBug",
-  "MusicFanatic",
-  "CreativeSoul",
-  "JohnDoe",
-  "JaneSmith",
-  "AlexJohnson",
-  "EmilyBrown",
-  "MichaelWilliams",
-  "SarahDavis",
-  "DavidClark",
-  "LauraMartinez",
-  "ChrisTaylor",
-  "JessicaLee",
+  'SunnySky123',
+  'MoonlightMagic',
+  'StarGazer89',
+  'DreamerGirl',
+  'TechieTom',
+  'NatureLover',
+  'BookWorm2025',
+  'TravelBug',
+  'MusicFanatic',
+  'CreativeSoul',
+  'JohnDoe',
+  'JaneSmith',
+  'AlexJohnson',
+  'EmilyBrown',
+  'MichaelWilliams',
+  'SarahDavis',
+  'DavidClark',
+  'LauraMartinez',
+  'ChrisTaylor',
+  'JessicaLee',
 ];
 
 function removeHashtags(text) {
-  return text.replace(/#[\w-]+/g, "").trim();
+  return text.replace(/#[\w-]+/g, '').trim();
 }
 
 function removeEmojis(text) {
-  return text.replace(/[\u{1F600}-\u{1F64F}]/gu, "").trim();
+  return text.replace(/[\u{1F600}-\u{1F64F}]/gu, '').trim();
 }
 
 async function createAIPost({
@@ -113,7 +94,7 @@ async function createAIPost({
     userId = getRandomElement(userIds); // TODO: Remove this. Get user from DB
   }
 
-  if (topic === undefined || topic === "") {
+  if (topic === undefined || topic === '') {
     // Balance betwen 50% light and 50% serious topics.
     let random_index = Math.floor(Math.random() * 2);
     let topic_list = random_index === 0 ? serious_topics : lightTopics;
@@ -128,25 +109,18 @@ async function createAIPost({
 
   const postText = await createPostText(topic, isFakeNews);
 
-  console.log("\nCaption:");
+  console.log('\nCaption:');
   console.log(postText);
 
   // Pre-generate postId so image file can share the same 11-char id
   const provisionalPostId = generateGUID(11);
   await generateImage(
-    `Create a realistic square photo inspired by this text: "${removeEmojis(
-      removeHashtags(postText)
-    )}"`,
+    `Create a realistic square photo inspired by this text: "${removeEmojis(removeHashtags(postText))}"`,
     provisionalPostId
   );
 
   // If not defined, create between 1 and 7 comments.
-  if (
-    numComments === undefined ||
-    isNaN(Number(numComments)) ||
-    numComments === "" ||
-    numComments === null
-  ) {
+  if (numComments === undefined || isNaN(Number(numComments)) || numComments === '' || numComments === null) {
     numComments = Math.floor(Math.random() * 7) + 1;
   } else {
     numComments = Number(numComments);
@@ -157,7 +131,7 @@ async function createAIPost({
   const postId = await savePost(
     userId,
     postText,
-    { countryCode: "US", languageCode: "EN", sourceType: "bot" },
+    { countryCode: 'US', languageCode: 'EN', sourceType: 'bot' },
     provisionalPostId
   );
 
@@ -165,11 +139,11 @@ async function createAIPost({
   for (let i = 0; i < numComments; i++) {
     const commentText = cleanUpPost(await createCommentText(postText));
 
-    console.log("\nComment:");
+    console.log('\nComment:');
     console.log(commentText);
 
     const commentUserId = await getRandomUserIdFromDB();
-    await saveComment(postId, commentUserId, commentText, "bot");
+    await saveComment(postId, commentUserId, commentText, 'bot');
   }
 
   console.log(`Post created with id: ${postId}`);
@@ -188,29 +162,17 @@ async function savePost(
     const createdAt = new Date().toISOString();
     const postId = forcedPostId || generateGUID(11); // becomes primary key id
     const query =
-      "INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      'INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
-    db.run(
-      query,
-      [
-        postId,
-        userId,
-        postText,
-        createdAt,
-        countryCode,
-        languageCode,
-        sourceType,
-      ],
-      function (err) {
-        if (err) {
-          console.error(err.message);
-          reject(err);
-        } else {
-          console.log(`Post created with id: ${postId}`);
-          resolve(postId);
-        }
+    db.run(query, [postId, userId, postText, createdAt, countryCode, languageCode, sourceType], function (err) {
+      if (err) {
+        console.error(err.message);
+        reject(err);
+      } else {
+        console.log(`Post created with id: ${postId}`);
+        resolve(postId);
       }
-    );
+    });
   });
 }
 
@@ -218,8 +180,8 @@ async function saveComment(postId, userId, commentText, sourceType = null) {
   return new Promise((resolve, reject) => {
     const createdAt = new Date().toISOString();
     const query = sourceType
-      ? "INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)"
-      : "INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)";
+      ? 'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)'
+      : 'INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)';
 
     const params = sourceType
       ? [postId, userId, commentText, createdAt, sourceType]
@@ -239,7 +201,7 @@ async function saveComment(postId, userId, commentText, sourceType = null) {
 
 async function createUser() {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: 'gemini-2.0-flash',
   });
 
   const prompt =
@@ -250,16 +212,10 @@ async function createUser() {
   console.log(contentText);
 
   // Parse the generated content (assuming it's in the format: "userId, fullName, description")
-  const [userId, fullName, description] = contentText
-    .split(",")
-    .map((item) => item.trim());
+  const [userId, fullName, description] = contentText.split(',').map((item) => item.trim());
 
   // Generate a profile picture
-  const profilePictureName = await createUserImage(
-    userId,
-    fullName,
-    description
-  );
+  const profilePictureName = await createUserImage(userId, fullName, description);
 
   // Persist the user in the database
   return new Promise((resolve, reject) => {
@@ -267,27 +223,23 @@ async function createUser() {
       INSERT INTO users (userId, fullName, profilePictureName, description, countryRegion)
       VALUES (?, ?, ?, ?, ?)
     `;
-    const countryRegion = "USA"; // Default value for country/region
+    const countryRegion = 'USA'; // Default value for country/region
 
-    db.run(
-      query,
-      [userId, fullName, profilePictureName, description, countryRegion],
-      function (err) {
-        if (err) {
-          console.error("Error inserting user into database:", err.message);
-          reject(err);
-        } else {
-          console.log(`User created with ID: ${userId}`);
-          resolve({
-            userId,
-            fullName,
-            profilePictureName,
-            description,
-            countryRegion,
-          });
-        }
+    db.run(query, [userId, fullName, profilePictureName, description, countryRegion], function (err) {
+      if (err) {
+        console.error('Error inserting user into database:', err.message);
+        reject(err);
+      } else {
+        console.log(`User created with ID: ${userId}`);
+        resolve({
+          userId,
+          fullName,
+          profilePictureName,
+          description,
+          countryRegion,
+        });
       }
-    );
+    });
   });
 }
 
@@ -297,7 +249,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
   try {
     // Validate input
     if (!userId || !postText) {
-      throw new Error("User ID and post text are required.");
+      throw new Error('User ID and post text are required.');
     }
 
     // Edit the post text
@@ -306,52 +258,37 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     let originalImagePath = null;
     let mockingImageText = null;
     if (originalImageFileName) {
-      originalImagePath = path.join(
-        path.resolve(),
-        "public/post_images",
-        originalImageFileName
-      );
+      originalImagePath = path.join(postImagesDir, originalImageFileName);
 
       // Resize the image.
       try {
-        await resizeImage(
-          originalImageFileName,
-          "public/post_images",
-          "public/post_images",
-          null,
-          1080,
-          null
-        );
+        await resizeImage(originalImageFileName, postImagesDir, postImagesDir, null, 1080, null);
       } catch (error) {
-        throw new Error("Failed to resize the image.");
+        throw new Error('Failed to resize the image.');
       }
 
       // Create text making fun of the image content.
       try {
         mockingImageText = await mockImage(originalImagePath);
       } catch (error) {
-        throw new Error("Failed to mock the image.");
+        throw new Error('Failed to mock the image.');
       }
     }
 
     if (mockingImageText) {
-      editedPostText = editedPostText + "</br>" + mockingImageText;
+      editedPostText = editedPostText + '</br>' + mockingImageText;
     }
 
     // Pre-generate postId so edited image uses the same base name
     const postId = generateGUID(11);
     const editedImageFileName = `${postId}.png`;
-    const editedImagePath = path.join(
-      path.resolve(),
-      "public/post_images",
-      editedImageFileName
-    );
+    const editedImagePath = path.join(postImagesDir, editedImageFileName);
 
     // Edit the image and save it
     try {
       await editImage(originalImagePath, editedImagePath);
     } catch (error) {
-      throw new Error("Failed to edit the image: " + error.message); // TODO: turn on the VPN message "gemini-2.0-flash-exp-image-generation is not found"
+      throw new Error('Failed to edit the image: ' + error.message); // TODO: turn on the VPN message "gemini-2.0-flash-exp-image-generation is not found"
     }
 
     // Create thumbnail for the edited image
@@ -361,21 +298,15 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
 
     try {
-      await cropAndResizeToThumbnail(
-        editedImageFileName,
-        "./public/post_images",
-        "./public/thumbnails/post_images",
-        thumbnailFileName,
-        200
-      );
+      await cropAndResizeToThumbnail(editedImageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200);
     } catch (error) {
-      throw new Error("Failed to create a thumbnail for the image.");
+      throw new Error('Failed to create a thumbnail for the image.');
     }
 
     // Save the post with the edited text and image
     return new Promise((resolve, reject) => {
       const query =
-        "INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        'INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)';
       db.run(
         query,
         [
@@ -383,13 +314,13 @@ async function createHumanPost(userId, postText, originalImageFileName) {
           userId,
           editedPostText,
           createdAt,
-          "US", // countryCode default for human post
-          "EN", // languageCode default for human post
-          "human", // sourceType
+          'US', // countryCode default for human post
+          'EN', // languageCode default for human post
+          'human', // sourceType
         ],
         function (err) {
           if (err) {
-            reject(new Error("Failed to save the post to the database."));
+            reject(new Error('Failed to save the post to the database.'));
           } else {
             resolve({ postId });
           }
@@ -397,7 +328,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       );
     });
   } catch (error) {
-    console.error("Error in createHumanPost:", error.message);
+    console.error('Error in createHumanPost:', error.message);
     throw error; // Re-throw the error to handle it in the calling function
   }
 }

@@ -1,6 +1,6 @@
-import sqlite3 from "sqlite3";
+import sqlite3 from 'sqlite3';
 
-const db = new sqlite3.Database("./server/data/nexyDB.sqlite");
+const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
 
 function getRandomElement(arr) {
   // Generate a random index based on the array length
@@ -24,13 +24,10 @@ async function getRandomUserIdFromDB() {
 
     db.get(query, (err, row) => {
       if (err) {
-        console.error(
-          "Error fetching random userId from database:",
-          err.message
-        );
-        reject(new Error("Failed to fetch random userId from the database."));
+        console.error('Error fetching random userId from database:', err.message);
+        reject(new Error('Failed to fetch random userId from the database.'));
       } else if (!row) {
-        reject(new Error("No users found in the database."));
+        reject(new Error('No users found in the database.'));
       } else {
         resolve(row.userId);
       }
@@ -49,19 +46,14 @@ async function getPostTextFromDB(postId) {
 
     db.get(query, [postId], (err, row) => {
       if (err) {
-        console.error("Error fetching post text from database:", err.message);
-        reject(new Error("Failed to fetch post text from the database."));
+        console.error('Error fetching post text from database:', err.message);
+        reject(new Error('Failed to fetch post text from the database.'));
       } else if (!row) {
-        reject(new Error("No post found with the given ID."));
+        reject(new Error('No post found with the given ID.'));
       } else {
         resolve(row.postText);
       }
     });
   });
 }
-export {
-  getRandomElement,
-  getRandomBoolean,
-  getRandomUserIdFromDB,
-  getPostTextFromDB,
-};
+export { getRandomElement, getRandomBoolean, getRandomUserIdFromDB, getPostTextFromDB };

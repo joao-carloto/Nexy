@@ -1,12 +1,12 @@
-import fs from "fs";
-import { Buffer } from "buffer";
-import dotenv from "dotenv";
-import path from "path";
-import process from "process";
-import { fileURLToPath } from "url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Image } from "image-js";
-import sharp from "sharp";
+import fs from 'fs';
+import { Buffer } from 'buffer';
+import dotenv from 'dotenv';
+import path from 'path';
+import process from 'process';
+import { fileURLToPath } from 'url';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Image } from 'image-js';
+import sharp from 'sharp';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -16,15 +16,20 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // Define __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsRoot = path.join(__dirname, '../server/data/uploads');
+const postImagesDir = path.join(uploadsRoot, 'post_images');
+const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
+const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
+const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures');
 
 // Caller should provide a stable 11-char postId to use as base filename
 async function generateImage(contents, postId) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
     // model: "gemini-2.0-flash-exp-image-generation",
-    model: "gemini-2.0-flash-preview-image-generation",
+    model: 'gemini-2.0-flash-preview-image-generation',
     generationConfig: {
-      responseModalities: ["Text", "Image"],
+      responseModalities: ['Text', 'Image'],
       temperature: 2.0,
     },
   });
@@ -38,16 +43,13 @@ async function generateImage(contents, postId) {
       } else if (part.inlineData) {
         foundImage = true;
         const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, "base64");
+        const buffer = Buffer.from(imageData, 'base64');
 
         const safeId = postId || Date.now().toString();
-        const imageFileName = safeId + ".png";
+        const imageFileName = safeId + '.png';
 
-        const imagePath = path.join(
-          __dirname,
-          "../public/post_images",
-          imageFileName
-        );
+        fs.mkdirSync(postImagesDir, { recursive: true });
+        const imagePath = path.join(postImagesDir, imageFileName);
 
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
@@ -55,23 +57,16 @@ async function generateImage(contents, postId) {
         const fileExt = path.extname(imageFileName);
         const thumbnailFileName = `${safeId}-thumbnail${fileExt}`;
 
-        await cropAndResizeToThumbnail(
-          imageFileName,
-          "./public/post_images",
-          "./public/thumbnails/post_images",
-          thumbnailFileName,
-          200,
-          null
-        );
+        await cropAndResizeToThumbnail(imageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200, null);
 
         return imageFileName;
       }
     }
     if (!foundImage) {
-      throw new Error("Gemini API did not return an image.");
+      throw new Error('Gemini API did not return an image.');
     }
   } catch (error) {
-    console.error("Error generating content:", error);
+    console.error('Error generating content:', error);
     throw error;
   }
 }
@@ -79,24 +74,24 @@ async function generateImage(contents, postId) {
 // TODO: remove the input image
 async function editImage(inputImagePath, outputImagePath) {
   const imageData = fs.readFileSync(inputImagePath);
-  const base64Image = imageData.toString("base64");
+  const base64Image = imageData.toString('base64');
 
   const contents = [
     {
-      text: "Add some piegon to this image.",
+      text: 'Add some piegon to this image.',
     },
     {
       inlineData: {
-        mimeType: "image/jpeg",
+        mimeType: 'image/jpeg',
         data: base64Image,
       },
     },
   ];
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-preview-image-generation",
+    model: 'gemini-2.0-flash-preview-image-generation',
     generationConfig: {
-      responseModalities: ["Text", "Image"],
+      responseModalities: ['Text', 'Image'],
     },
     temperature: 2.0,
   });
@@ -106,13 +101,13 @@ async function editImage(inputImagePath, outputImagePath) {
     for (const part of response.response.candidates[0].content.parts) {
       if (part.inlineData) {
         const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, "base64");
+        const buffer = Buffer.from(imageData, 'base64');
         fs.writeFileSync(outputImagePath, buffer);
         console.log(`Image saved as ${outputImagePath}`);
       }
     }
   } catch (error) {
-    console.error("Error generating content:", error);
+    console.error('Error generating content:', error);
     throw error;
   }
 }
@@ -120,9 +115,9 @@ async function editImage(inputImagePath, outputImagePath) {
 async function createUserImage(userId, fullName, description) {
   // Set responseModalities to include "Image" so the model can generate  an image
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-preview-image-generation",
+    model: 'gemini-2.0-flash-preview-image-generation',
     generationConfig: {
-      responseModalities: ["Text", "Image"],
+      responseModalities: ['Text', 'Image'],
     },
     temperature: 2.0,
   });
@@ -138,35 +133,25 @@ async function createUserImage(userId, fullName, description) {
         console.log(part.text);
       } else if (part.inlineData) {
         const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, "base64");
+        const buffer = Buffer.from(imageData, 'base64');
 
-        const imageFileName = userId + ".png";
+        const imageFileName = userId + '.png';
 
-        const imagePath = path.join(
-          __dirname,
-          "../public/profile_pictures",
-          imageFileName
-        );
+        fs.mkdirSync(profilePicturesDir, { recursive: true });
+        const imagePath = path.join(profilePicturesDir, imageFileName);
 
         fs.writeFileSync(imagePath, buffer);
         console.log(`Image saved as ${imageFileName}`);
 
         const thumbnailFileName = `${userId}-thumbnail.png`;
 
-        await resizeImage(
-          imageFileName,
-          "./public/profile_pictures",
-          "./public/thumbnails/profile_pictures",
-          thumbnailFileName,
-          200,
-          null
-        );
+        await resizeImage(imageFileName, profilePicturesDir, profileThumbnailsDir, thumbnailFileName, 200, null);
 
         return imageFileName;
       }
     }
   } catch (error) {
-    console.error("Error generating content:", error);
+    console.error('Error generating content:', error);
   }
 }
 
@@ -223,9 +208,7 @@ async function cropAndResizeToThumbnail(
     pipeline = pipeline.extract({ left, top, width: size, height: size });
   }
 
-  await pipeline
-    .resize(thumbnailSize, thumbnailSize, { fit: "cover", position: "centre" })
-    .toFile(outputFilePath);
+  await pipeline.resize(thumbnailSize, thumbnailSize, { fit: 'cover', position: 'centre' }).toFile(outputFilePath);
 }
 
 async function resizeImage(
@@ -258,7 +241,7 @@ async function resizeImage(
     } else if (height && !width) {
       width = Math.round((image.width / image.height) * height);
     } else if (!width && !height) {
-      throw new Error("Either width or height must be provided.");
+      throw new Error('Either width or height must be provided.');
     }
 
     // Resize the image
@@ -276,18 +259,18 @@ async function resizeImage(
 function fileToGenerativePart(path, mimeType) {
   return {
     inlineData: {
-      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
+      data: Buffer.from(fs.readFileSync(path)).toString('base64'),
       mimeType,
     },
   };
 }
 
 async function describeImage(imagePath) {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const prompt = "Describe this image.";
+  const prompt = 'Describe this image.';
 
-  const imageParts = [fileToGenerativePart(imagePath, "image/jpg")];
+  const imageParts = [fileToGenerativePart(imagePath, 'image/jpg')];
 
   const generatedContent = await model.generateContent([prompt, ...imageParts]);
 

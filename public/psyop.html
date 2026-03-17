@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -31,17 +31,8 @@
           placeholder="Define the target audience"
           class="post-text"
         />
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 1em;
-          "
-        >
-          <label for="strategy" style="margin: 0; white-space: nowrap"
-            >Strategy</label
-          >
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1em">
+          <label for="strategy" style="margin: 0; white-space: nowrap">Strategy</label>
           <select id="strategy" name="strategy">
             <option value="White" selected>White</option>
             <option value="Grey">Grey</option>
@@ -55,12 +46,12 @@
     <script src="js/title.js"></script>
     <script src="js/navbar.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const form = document.getElementById("psyopForm");
+      document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('psyopForm');
         if (form) {
-          form.addEventListener("submit", function (e) {
+          form.addEventListener('submit', function (e) {
             e.preventDefault();
-            alert("Stay tuned to Nexy for the new upcoming PsyOp feature!");
+            alert('Stay tuned to Nexy for the new upcoming PsyOp feature!');
           });
         }
       });

@@ -1,0 +1,18 @@
+node_modules/
+
+# Image directories
+public/images/
+server/data/uploads/
+
+# Image files anywhere
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.avif
+**/*.bmp
+**/*.ico
+**/*.svg
+**/*.tif
+**/*.tiff

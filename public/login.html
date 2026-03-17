@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Nexy Admin</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <style>
+      .login-container {
+        max-width: 400px;
+        margin: 4rem auto;
+        padding: 2rem;
+        border: 1px solid #444;
+        border-radius: 8px;
+        background: #111;
+      }
+      .login-container h1 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+      .login-container form {
+        display: flex;
+        flex-direction: column;
+      }
+      .login-container input[type='password'] {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        background: #222;
+        color: #fff;
+        border: 1px solid #333;
+        border-radius: 6px;
+      }
+      .login-container button {
+        padding: 0.75rem;
+        background: #333;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .login-container button:hover {
+        background: #555;
+      }
+      .error-msg {
+        color: #ff4d4d;
+        min-height: 1.25rem;
+        font-size: 0.9rem;
+      }
+      .logout-hint {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="js/navbar.js"></script>
+    <div class="login-container">
+      <h1>Admin Login</h1>
+      <form id="loginForm">
+        <input id="password" type="password" placeholder="Password" required autocomplete="current-password" />
+        <div class="error-msg" id="errorMsg"></div>
+        <button type="submit">LOGIN</button>
+      </form>
+      <div class="logout-hint">On success you'll be redirected to Manage Posts.</div>
+    </div>
+    <script src="js/login.js"></script>
+  </body>
+</html>

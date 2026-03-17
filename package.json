@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node server/app.mjs",
     "start:pm2": "pm2 start server/app.mjs --name nexy",
-    "stop": "pm2 stop nexy"
+    "stop": "pm2 stop nexy",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
@@ -21,5 +25,12 @@
   },
   "author": "https://github.com/joao-carloto/nexy",
   "license": "MIT",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1"
+  }
 }

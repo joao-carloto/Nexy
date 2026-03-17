@@ -1,10 +1,10 @@
 // js/title.js
 // Dynamically loads the title.html into the #title-container div
 
-document.addEventListener("DOMContentLoaded", function () {
-  const container = document.getElementById("title-container");
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('title-container');
   if (container) {
-    fetch("title.html")
+    fetch('title.html')
       .then((response) => response.text())
       .then((html) => {
         container.innerHTML = html;
@@ -12,11 +12,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Help button logic
-  document.addEventListener("click", function (event) {
+  document.addEventListener('click', function (event) {
     // Use event delegation to catch help button clicks even after dynamic load
-    if (event.target.closest && event.target.closest(".help-button")) {
+    if (event.target.closest && event.target.closest('.help-button')) {
       event.preventDefault();
-      window.open("docs/NEXY.pdf", "_blank");
+      window.open('docs/NEXY.pdf', '_blank');
     }
   });
 });

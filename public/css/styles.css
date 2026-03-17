@@ -249,7 +249,9 @@ button:hover {
   height: 60px; /* Increased from 40px to 60px*/
   border-radius: 8px;
   text-decoration: none;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
   margin: 10px auto;
   background-color: #2d4554;
   border: none;
@@ -274,7 +276,9 @@ select {
   border: 2px solid #2d4554; /* Border color matching the theme */
   border-radius: 5px; /* Rounded corners */
   outline: none; /* Remove default outline */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 select #commentTone {
@@ -555,7 +559,7 @@ nav {
   overflow-x: auto;
 }
 
-.file-input-container input[type="file"] {
+.file-input-container input[type='file'] {
   max-width: 100%;
   box-sizing: border-box;
 }

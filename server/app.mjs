@@ -1,63 +1,121 @@
-import fs from "fs";
-import process from "process";
-import express from "express";
-import sqlite3 from "sqlite3";
-import path from "path";
-import multer from "multer";
-import { createAIPost, createHumanPost } from "./post_creator.js";
-import {
-  createCommentText,
-  createCommentReply,
-} from "../server/text_creator.js";
-import { getPostTextFromDB, getRandomUserIdFromDB } from "../server/utils.js";
+import fs from 'fs';
+import process from 'process';
+import express from 'express';
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import multer from 'multer';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+import { createAIPost, createHumanPost } from './post_creator.js';
+import { createCommentText, createCommentReply } from '../server/text_creator.js';
+import { getPostTextFromDB, getRandomUserIdFromDB } from '../server/utils.js';
 
+dotenv.config();
 const app = express();
-const dbPath = path.join(path.resolve(), "server/data/nexyDB.sqlite");
+const dbPath = path.join(path.resolve(), 'server/data/nexyDB.sqlite');
+const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
+const postImagesDir = path.join(uploadsRoot, 'post_images');
+const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
+const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
+const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error("Error opening database:", err.message);
+    console.error('Error opening database:', err.message);
   } else {
-    console.log("Database opened successfully");
+    console.log('Database opened successfully');
   }
 });
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Simple cookie parser (no external dependency)
+function parseCookies(header) {
+  const list = {};
+  if (!header) return list;
+  header.split(';').forEach((cookie) => {
+    const parts = cookie.split('=');
+    const key = parts.shift()?.trim();
+    if (!key) return;
+    list[key] = decodeURIComponent(parts.join('=').trim());
+  });
+  return list;
+}
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || 'nexy-admin-secret';
+
+function generateAdminToken() {
+  // Derive a stable HMAC from password + secret
+  return crypto.createHmac('sha256', ADMIN_TOKEN_SECRET).update(ADMIN_PASSWORD).digest('hex');
+}
+
+function isAdmin(req) {
+  const cookies = parseCookies(req.headers.cookie || '');
+  const token = cookies.adminAuth;
+  if (!token || !ADMIN_PASSWORD) return false;
+  return token === generateAdminToken();
+}
+
+// Middleware to protect admin pages
+function requireAdminPage(req, res, next) {
+  if (!isAdmin(req)) {
+    return res.redirect('/login.html');
+  }
+  next();
+}
+
+// Intercept request for manage_posts.html before static middleware serves it
+app.get('/manage_posts.html', requireAdminPage, (req, res, next) => {
+  // Serve the file explicitly (bypass redirect loop)
+  const filePath = path.join(path.resolve(), 'public', 'manage_posts.html');
+  res.sendFile(filePath);
+});
+
+// Login endpoint
+app.post('/login', (req, res) => {
+  const { password } = req.body || {};
+  if (!ADMIN_PASSWORD) {
+    return res.status(500).json({ error: 'Admin password not configured on server' });
+  }
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Invalid password' });
+  }
+  const token = generateAdminToken();
+  // Set HttpOnly cookie (no secure flag since may be served over http locally)
+  res.setHeader('Set-Cookie', `adminAuth=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${60 * 60}`);
+  res.json({ ok: true });
+});
+
+// Logout endpoint
+app.get('/logout', (req, res) => {
+  res.setHeader('Set-Cookie', 'adminAuth=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
+  res.redirect('/login.html');
+});
+
 // Serve static files
 // Redirect root to explore.html
-app.get("/", (req, res) => {
-  res.redirect("/explore.html");
+app.get('/', (req, res) => {
+  res.redirect('/explore.html');
 });
-app.use(express.static(path.join(path.resolve(), "public")));
+app.use(express.static(path.join(path.resolve(), 'public')));
 
 // TODO. do we really need all this static stuff, since we already use the public directory?
-app.use(
-  "/post_images",
-  express.static(path.join(path.resolve(), "public/post_images"))
-);
+app.use('/post_images', express.static(postImagesDir));
 
-app.use(
-  "/profile_pictures",
-  express.static(path.join(path.resolve(), "public/profile_pictures"))
-);
+app.use('/profile_pictures', express.static(profilePicturesDir));
 
-app.use(
-  "/thumbnails/post_images",
-  express.static(path.join(path.resolve(), "public/thumbnails/post_images"))
-);
+app.use('/thumbnails/post_images', express.static(postThumbnailsDir));
 
-app.use(
-  "/thumbnails/profile_pictures",
-  express.static(
-    path.join(path.resolve(), "public/thumbnails/profile_pictures")
-  )
-);
+app.use('/thumbnails/profile_pictures', express.static(profileThumbnailsDir));
 
 // Set up multer for image storage
 const storage = multer.diskStorage({
-  destination: path.join(path.resolve(), "public/post_images"),
+  destination: (req, file, cb) => {
+    fs.mkdirSync(postImagesDir, { recursive: true });
+    cb(null, postImagesDir);
+  },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
   },
@@ -86,7 +144,7 @@ db.serialize(() => {
     sourceType TEXT,
     FOREIGN KEY (postId) REFERENCES posts(id)
   )`);
-  db.run("CREATE INDEX IF NOT EXISTS idx_comments_postId ON comments(postId)");
+  db.run('CREATE INDEX IF NOT EXISTS idx_comments_postId ON comments(postId)');
 
   db.run(`CREATE TABLE IF NOT EXISTS users (
     userId TEXT PRIMARY KEY,
@@ -98,16 +156,16 @@ db.serialize(() => {
 });
 
 // Route to create an AI generated post
-app.post("/create_bot_post", async (req, res) => {
+app.post('/create_bot_post', async (req, res) => {
   let { topic, isFakeNews, numComments } = req.body;
   // All fields are optional
-  if (typeof topic !== "string") topic = "";
-  if (typeof isFakeNews === "undefined") isFakeNews = false;
+  if (typeof topic !== 'string') topic = '';
+  if (typeof isFakeNews === 'undefined') isFakeNews = false;
   // If numComments is not set or invalid, pick a random number between 1 and 5
-  if (typeof numComments === "undefined" || isNaN(Number(numComments))) {
+  if (typeof numComments === 'undefined' || isNaN(Number(numComments))) {
     numComments = Math.floor(Math.random() * 5) + 1;
   }
-  console.log("/create_bot_post received:", { topic, isFakeNews, numComments });
+  console.log('/create_bot_post received:', { topic, isFakeNews, numComments });
   try {
     const postId = await createAIPost({
       topic,
@@ -116,29 +174,25 @@ app.post("/create_bot_post", async (req, res) => {
     });
     res.status(201).json({ postId });
   } catch (error) {
-    console.error("Error generating bot post:", error);
+    console.error('Error generating bot post:', error);
     res.status(500).json({
-      error: error.message || String(error) || "Failed to generate bot post",
+      error: error.message || String(error) || 'Failed to generate bot post',
     });
   }
 });
 
 // Route to save a post
-app.post("/create_human_post", upload.single("image"), async (req, res) => {
+app.post('/create_human_post', upload.single('image'), async (req, res) => {
   const { userId, postText } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
   try {
     // Call the createHumanPost function
-    const result = await createHumanPost(
-      userId,
-      postText,
-      originalImageFileName
-    );
+    const result = await createHumanPost(userId, postText, originalImageFileName);
 
     // Send a success response back to the client
     res.status(200).json({ success: true, postId: result.postId });
   } catch (error) {
-    console.error("Error creating human post:", error.message);
+    console.error('Error creating human post:', error.message);
 
     // Send an error response back to the client
     res.status(500).json({ success: false, error: error.message });
@@ -147,86 +201,74 @@ app.post("/create_human_post", upload.single("image"), async (req, res) => {
 
 // Helper: resolve post identifier (GUID primary key) -> { id }
 function resolvePostIdentifier(identifier, cb) {
-  db.get("SELECT id FROM posts WHERE id = ?", [identifier], (e, row) => {
+  db.get('SELECT id FROM posts WHERE id = ?', [identifier], (e, row) => {
     if (e) return cb(e);
-    if (!row) return cb(new Error("Post not found"));
+    if (!row) return cb(new Error('Post not found'));
     cb(null, { id: row.id });
   });
 }
 
 // Route to save a comment (accepts GUID or numeric in postId field, stores GUID only)
-app.post("/comments", async (req, res) => {
+app.post('/comments', async (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    const query =
-      "INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)";
-    db.run(
-      query,
-      [ids.id, userId, commentText, createdAt, "bot"],
-      function (err) {
-        if (err) {
-          res.status(500).json({ error: err.message });
-        } else {
-          res.status(201).json({ ok: true });
-        }
+    const query = 'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)';
+    db.run(query, [ids.id, userId, commentText, createdAt, 'bot'], function (err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.status(201).json({ ok: true });
       }
-    );
+    });
   });
 });
 
 // Route to save a human comment and generate a bot reply (GUID stored)
-app.post("/human_comment", async (req, res) => {
+app.post('/human_comment', async (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
     const insertCommentQuery =
-      "INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)";
-    db.run(
-      insertCommentQuery,
-      [ids.id, userId, commentText, createdAt, "human"],
-      async function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        // Human comment inserted
-        try {
-          const post_text = await getPostTextFromDB(ids.id);
-          const reply = await createCommentReply(post_text, commentText);
-          let randomOponentId = null;
-          while (randomOponentId === null || randomOponentId === userId) {
-            randomOponentId = await getRandomUserIdFromDB();
-          }
-          await getRandomUserIdFromDB();
-          const botCreatedAt = new Date().toISOString();
-          db.run(
-            insertCommentQuery,
-            [
-              ids.id,
-              randomOponentId,
-              `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
-              botCreatedAt,
-              "bot",
-            ],
-            function (botErr) {
-              if (botErr)
-                return res
-                  .status(201)
-                  .json({ ok: true, botError: botErr.message });
-              res.status(201).json({ ok: true });
-            }
-          );
-        } catch (e) {
-          res.status(201).json({ ok: true, botError: e.message });
+      'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)';
+    db.run(insertCommentQuery, [ids.id, userId, commentText, createdAt, 'human'], async function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      // Human comment inserted
+      try {
+        const post_text = await getPostTextFromDB(ids.id);
+        const reply = await createCommentReply(post_text, commentText);
+        let randomOponentId = null;
+        while (randomOponentId === null || randomOponentId === userId) {
+          randomOponentId = await getRandomUserIdFromDB();
         }
+        await getRandomUserIdFromDB();
+        const botCreatedAt = new Date().toISOString();
+        db.run(
+          insertCommentQuery,
+          [
+            ids.id,
+            randomOponentId,
+            `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
+            botCreatedAt,
+            'bot',
+          ],
+          function (botErr) {
+            if (botErr) return res.status(201).json({ ok: true, botError: botErr.message });
+            res.status(201).json({ ok: true });
+          }
+        );
+      } catch (e) {
+        res.status(201).json({ ok: true, botError: e.message });
       }
-    );
+    });
   });
 });
 
 // Route to fetch posts and comments
-app.get("/posts", (req, res) => {
-  const { search = "", limit = 20 } = req.query; // Default to no search and limit to 20 posts
+app.get('/posts', (req, res) => {
+  const { search = '', limit = 20 } = req.query; // Default to no search and limit to 20 posts
 
   const query = `
   SELECT * FROM posts
@@ -245,15 +287,14 @@ app.get("/posts", (req, res) => {
 });
 
 // Route to fetch a specific post by identifier (GUID)
-app.get("/posts/:postId", (req, res) => {
+app.get('/posts/:postId', (req, res) => {
   const identifier = req.params.postId;
   resolvePostIdentifier(identifier, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    db.get("SELECT * FROM posts WHERE id = ?", [ids.id], (pErr, post) => {
+    db.get('SELECT * FROM posts WHERE id = ?', [ids.id], (pErr, post) => {
       if (pErr) return res.status(500).json({ error: pErr.message });
-      if (!post) return res.status(404).json({ error: "Post not found" });
-      const commentsQuery =
-        "SELECT * FROM comments WHERE postId = ? ORDER BY createdAt ASC";
+      if (!post) return res.status(404).json({ error: 'Post not found' });
+      const commentsQuery = 'SELECT * FROM comments WHERE postId = ? ORDER BY createdAt ASC';
       db.all(commentsQuery, [ids.id], (cErr, comments) => {
         if (cErr) return res.status(500).json({ error: cErr.message });
         post.comments = comments || [];
@@ -265,23 +306,23 @@ app.get("/posts/:postId", (req, res) => {
 });
 
 // Pretty URL: /post/<id> -> serve post.html if exists; otherwise 404 page
-app.get("/post/:postId", (req, res) => {
+app.get('/post/:postId', (req, res) => {
   const identifier = req.params.postId;
   resolvePostIdentifier(identifier, (rErr, ids) => {
     if (rErr) {
       // Not found -> 404 page
-      const notFoundPath = path.join(path.resolve(), "public", "404.html");
+      const notFoundPath = path.join(path.resolve(), 'public', '404.html');
       return fs.existsSync(notFoundPath)
         ? res.status(404).sendFile(notFoundPath)
-        : res.status(404).send("404 Not Found");
+        : res.status(404).send('404 Not Found');
     }
     // Found -> serve static post.html (client will still fetch JSON via /posts/:id)
-    const postHtml = path.join(path.resolve(), "public", "post.html");
+    const postHtml = path.join(path.resolve(), 'public', 'post.html');
     res.sendFile(postHtml);
   });
 });
 
-app.get("/random-user", (req, res) => {
+app.get('/random-user', (req, res) => {
   const query = `
     SELECT userId, fullName, profilePictureName, description, countryRegion
     FROM users
@@ -291,89 +332,79 @@ app.get("/random-user", (req, res) => {
 
   db.get(query, (err, user) => {
     if (err) {
-      console.error("Error fetching random user:", err.message);
-      res.status(500).json({ error: "Failed to fetch random user" });
+      console.error('Error fetching random user:', err.message);
+      res.status(500).json({ error: 'Failed to fetch random user' });
     } else if (!user) {
-      res.status(404).json({ error: "No users found" });
+      res.status(404).json({ error: 'No users found' });
     } else {
       res.status(200).json(user);
     }
   });
 });
 
-app.delete("/posts/:postId", (req, res) => {
+app.delete('/posts/:postId', (req, res) => {
+  if (!isAdmin(req)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   const identifier = req.params.postId;
   resolvePostIdentifier(identifier, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    const deleteCommentsQuery = "DELETE FROM comments WHERE postId = ?";
+    const deleteCommentsQuery = 'DELETE FROM comments WHERE postId = ?';
     db.run(deleteCommentsQuery, [ids.id], (cErr) => {
       if (cErr) {
-        console.error("Error deleting comments:", cErr.message);
-        return res.status(500).json({ error: "Failed to delete comments" });
+        console.error('Error deleting comments:', cErr.message);
+        return res.status(500).json({ error: 'Failed to delete comments' });
       }
       const imageFileName = `${ids.id}.png`;
       const thumbnailFileName = `${ids.id}-thumbnail.png`;
-      const imagePath = path.join(
-        path.resolve(),
-        "public/post_images",
-        imageFileName
-      );
-      const thumbnailPath = path.join(
-        path.resolve(),
-        "public/thumbnails/post_images",
-        thumbnailFileName
-      );
+      const imagePath = path.join(postImagesDir, imageFileName);
+      const thumbnailPath = path.join(postThumbnailsDir, thumbnailFileName);
       fs.unlink(imagePath, () => {});
       fs.unlink(thumbnailPath, () => {});
-      db.run("DELETE FROM posts WHERE id = ?", [ids.id], (delErr) => {
+      db.run('DELETE FROM posts WHERE id = ?', [ids.id], (delErr) => {
         if (delErr) {
-          console.error("Error deleting post:", delErr.message);
-          return res.status(500).json({ error: "Failed to delete post" });
+          console.error('Error deleting post:', delErr.message);
+          return res.status(500).json({ error: 'Failed to delete post' });
         }
-        res.status(200).json({ message: "Post deleted successfully" });
+        res.status(200).json({ message: 'Post deleted successfully' });
       });
     });
   });
 });
 
-app.post("/generate-comment", async (req, res) => {
+app.post('/generate-comment', async (req, res) => {
   const { postId, tone } = req.body;
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    db.get(
-      "SELECT postText FROM posts WHERE id = ?",
-      [ids.id],
-      async (err, row) => {
-        if (err)
-          return res.status(500).json({ error: "Failed to fetch post text" });
-        if (!row) return res.status(404).json({ error: "Post not found" });
-        try {
-          const commentText = await createCommentText(row.postText, tone);
-          res.status(200).json({ commentText });
-        } catch (e) {
-          res.status(500).json({ error: "Failed to generate comment" });
-        }
+    db.get('SELECT postText FROM posts WHERE id = ?', [ids.id], async (err, row) => {
+      if (err) return res.status(500).json({ error: 'Failed to fetch post text' });
+      if (!row) return res.status(404).json({ error: 'Post not found' });
+      try {
+        const commentText = await createCommentText(row.postText, tone);
+        res.status(200).json({ commentText });
+      } catch (e) {
+        res.status(500).json({ error: 'Failed to generate comment' });
       }
-    );
+    });
   });
 });
 
 // 404 handler (must be after all other routes)
 app.use((req, res) => {
   // If the client explicitly wants JSON (API), return JSON 404
-  if (req.accepts("json") && !req.accepts("html")) {
-    return res.status(404).json({ error: "Not Found" });
+  if (req.accepts('json') && !req.accepts('html')) {
+    return res.status(404).json({ error: 'Not Found' });
   }
-  const notFoundPath = path.join(path.resolve(), "public", "404.html");
+  const notFoundPath = path.join(path.resolve(), 'public', '404.html');
   if (fs.existsSync(notFoundPath)) {
     res.status(404).sendFile(notFoundPath);
   } else {
-    res.status(404).send("404 Not Found");
+    res.status(404).send('404 Not Found');
   }
 });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server is running on http://0.0.0.0:3000");
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('Server is running on http://0.0.0.0:3000');
 });
