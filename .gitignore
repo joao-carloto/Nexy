@@ -32,8 +32,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Packed tarballs
 *.tgz
 
-# Generated user uploads
-server/data/uploads/
-
 # Local editor config
 .vscode/
