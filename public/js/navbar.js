@@ -24,7 +24,7 @@ async function ensureUserId() {
 }
 
 async function loadNavbar() {
-  const response = await fetch('navbar.html');
+  const response = await fetch('/navbar.html');
   const navbarHTML = await response.text();
   document.body.insertAdjacentHTML('afterbegin', navbarHTML);
 

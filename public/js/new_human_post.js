@@ -41,7 +41,7 @@ document.getElementById('postForm').addEventListener('submit', async (event) => 
 
     console.log('Post created successfully:', result);
     // alert(`Post created with ID: ${result.postId}`);
-    window.location.href = `post.html?id=${result.postId}`; // Redirect to the post page after creating the post
+    window.location.href = `/post.html?id=${result.postId}`; // Redirect to the post page after creating the post
   } catch (error) {
     console.error('Error:', error);
     alert(`Failed to create post: ${error.message}`);

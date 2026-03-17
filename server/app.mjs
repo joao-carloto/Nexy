@@ -69,7 +69,7 @@ function requireAdminPage(req, res, next) {
 // Intercept request for manage_posts.html before static middleware serves it
 app.get('/manage_posts.html', requireAdminPage, (req, res) => {
   // Serve the file explicitly (bypass redirect loop)
-  const filePath = path.join(path.resolve(), 'public', 'manage_posts.html');
+  const filePath = path.join(path.resolve(), 'public', 'html', 'manage_posts.html');
   res.sendFile(filePath);
 });
 
@@ -100,6 +100,7 @@ app.get('/', (req, res) => {
   res.redirect('/explore.html');
 });
 app.use(express.static(path.join(path.resolve(), 'public')));
+app.use(express.static(path.join(path.resolve(), 'public', 'html')));
 
 // TODO. do we really need all this static stuff, since we already use the public directory?
 app.use('/post_images', express.static(postImagesDir));
@@ -311,13 +312,13 @@ app.get('/post/:postId', (req, res) => {
   resolvePostIdentifier(identifier, (rErr, ids) => {
     if (rErr) {
       // Not found -> 404 page
-      const notFoundPath = path.join(path.resolve(), 'public', '404.html');
+      const notFoundPath = path.join(path.resolve(), 'public', 'html', '404.html');
       return fs.existsSync(notFoundPath)
         ? res.status(404).sendFile(notFoundPath)
         : res.status(404).send('404 Not Found');
     }
     // Found -> serve static post.html (client will still fetch JSON via /posts/:id)
-    const postHtml = path.join(path.resolve(), 'public', 'post.html');
+    const postHtml = path.join(path.resolve(), 'public', 'html', 'post.html');
     res.sendFile(postHtml);
   });
 });
@@ -395,7 +396,7 @@ app.use((req, res) => {
   if (req.accepts('json') && !req.accepts('html')) {
     return res.status(404).json({ error: 'Not Found' });
   }
-  const notFoundPath = path.join(path.resolve(), 'public', '404.html');
+  const notFoundPath = path.join(path.resolve(), 'public', 'html', '404.html');
   if (fs.existsSync(notFoundPath)) {
     res.status(404).sendFile(notFoundPath);
   } else {

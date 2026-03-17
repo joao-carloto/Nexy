@@ -22,6 +22,11 @@ const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
 const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
 const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures');
 
+function isSafetyRejection(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return message.includes('rejected by the safety system') || message.includes('content_policy_violation');
+}
+
 // Caller should provide a stable 11-char postId to use as base filename
 async function generateImage(contents, postId) {
   try {
@@ -72,7 +77,10 @@ async function editImage(inputImagePath, outputImagePath) {
     const response = await openai.images.edit({
       model: 'gpt-image-1.5',
       image: pngFile,
-      prompt: 'Add some pigeon to this image. Preserve humans and objects in the image as much as possible.',
+      prompt: `Add a pigeon to the image.
+              Preserve the entire original photo exactly. 
+              Keep lighting, shadows, and all textures unchanged.
+              Blend the new object realistically without modifying anything else.`,
       size: '1024x1024',
       quality: 'low',
     });
@@ -86,6 +94,12 @@ async function editImage(inputImagePath, outputImagePath) {
     fs.writeFileSync(outputImagePath, buffer);
     console.log(`Image saved as ${outputImagePath}`);
   } catch (error) {
+    if (isSafetyRejection(error) && inputImagePath) {
+      // If edit is blocked, keep workflow running by using the original image.
+      await sharp(inputImagePath).png().toFile(outputImagePath);
+      console.warn('Image edit rejected by safety system; using original image instead.');
+      return;
+    }
     console.error('Error generating content:', error);
     throw error;
   } finally {

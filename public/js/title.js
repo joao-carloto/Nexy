@@ -4,7 +4,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const container = document.getElementById('title-container');
   if (container) {
-    fetch('title.html')
+    fetch('/title.html')
       .then((response) => response.text())
       .then((html) => {
         container.innerHTML = html;

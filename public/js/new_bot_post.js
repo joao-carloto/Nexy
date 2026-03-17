@@ -20,7 +20,7 @@ document.getElementById('postForm').addEventListener('submit', async (event) => 
 
     if (response.ok) {
       const result = await response.json();
-      window.location.href = `post.html?id=${result.postId}`; // Redirect to the post page after creating the post
+      window.location.href = `/post.html?id=${result.postId}`; // Redirect to the post page after creating the post
     } else {
       const errorData = await response.json();
       alert('Failed to create bot post: ' + (errorData.error || response.statusText));
