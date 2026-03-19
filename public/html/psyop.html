@@ -12,7 +12,10 @@
     <script src="js/navbar.js"></script>
     <div id="title-container"></div>
     <div id="navbar-container"></div>
-    <h1>New PsyOp (coming soon)</h1>
+    <h1>New PsyOp</h1>
+    <div class="psyop-info-trigger-container">
+      <button type="button" id="openPsyopInfo" class="psyop-info-button">What are PsyOps?</button>
+    </div>
     <div class="form-container">
       <form id="psyopForm">
         <textarea
@@ -37,24 +40,216 @@
             <option value="White" selected>White</option>
             <option value="Grey">Grey</option>
             <option value="Black">Black</option>
-            <option value="Mixed">Mixed</option>
           </select>
         </div>
         <button type="submit" class="submit-button">SUBMIT</button>
       </form>
     </div>
+
+    <!-- Glass panel and spinner -->
+    <div id="loadingOverlay" class="hidden">
+      <div class="spinner"></div>
+      <p class="loading-message">Crafting your PsyOp post...</p>
+    </div>
+    <div
+      id="psyopInfoModal"
+      class="psyop-info-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="psyopInfoTitle"
+    >
+      <div class="psyop-info-dialog" role="document">
+        <div class="psyop-info-header">
+          <h2 id="psyopInfoTitle">What are PsyOps?</h2>
+          <button type="button" id="closePsyopInfo" class="psyop-info-close" aria-label="Close PsyOps information">
+            &times;
+          </button>
+        </div>
+        <div class="psyop-info-content">
+          <section>
+            <h3>Overview</h3>
+            <p>
+              Psychological Operations (PsyOps) are strategic communication activities aimed at influencing perceptions,
+              emotions, attitudes, or behavior of target audiences. They are used by governments, militaries, and other
+              organizations to shape how groups think or react, without using physical force.
+            </p>
+          </section>
+
+          <section>
+            <h3>Common Tactics on Social Platforms</h3>
+            <ul>
+              <li>Narrative shaping: pushing specific interpretations of events to influence public opinion.</li>
+              <li>
+                Information amplification: using bots, fake accounts, or coordinated posting to make a message appear
+                widely accepted.
+              </li>
+              <li>
+                Disinformation or misinformation: spreading misleading or false content to create confusion or division.
+              </li>
+              <li>Astroturfing: fabricating the appearance of grassroots support.</li>
+              <li>
+                Selective disclosure: releasing true information at strategic moments to drive emotional reactions.
+              </li>
+            </ul>
+            <p>These techniques exploit social media speed, virality, and algorithmic amplification.</p>
+          </section>
+
+          <section>
+            <h3>White vs Grey vs Black PsyOps</h3>
+            <p>These categories describe transparency of source and truthfulness of information.</p>
+
+            <h4 class="psyop-type psyop-white">White PsyOps</h4>
+            <ul>
+              <li>Truthful information</li>
+              <li>Source is openly acknowledged</li>
+              <li>Goal: influence while maintaining credibility</li>
+            </ul>
+            <p>Example: A government publicly releasing accurate information to counter foreign propaganda.</p>
+
+            <h4 class="psyop-type psyop-grey">Grey PsyOps</h4>
+            <ul>
+              <li>Source is concealed or ambiguous</li>
+              <li>Information may be partly true, incomplete, or strategically framed</li>
+              <li>Goal: shape narratives without clear attribution</li>
+            </ul>
+            <p>Example: Anonymous social accounts pushing technically true but selectively framed talking points.</p>
+
+            <h4 class="psyop-type psyop-black">Black PsyOps</h4>
+            <ul>
+              <li>False information</li>
+              <li>Falsely attributed source (pretending to be someone else)</li>
+              <li>Goal: deceive, manipulate, or cause disruption</li>
+            </ul>
+            <p>Example: Fake leaked documents allegedly from an opponent, designed to damage credibility.</p>
+          </section>
+
+          <section>
+            <h3>How to Spot PsyOps on Social Media</h3>
+            <p>
+              PsyOps often rely on emotional manipulation, selective storytelling, and coordinated messaging. Look for
+              these warning signs:
+            </p>
+
+            <h4 class="psyop-warning">1. Strong Emotional Manipulation</h4>
+            <ul>
+              <li>Content designed to trigger instant reaction instead of reflection</li>
+              <li>Repeated panic, outrage, hatred, or tribal framing</li>
+              <li>Claims like "you are being lied to" without evidence</li>
+            </ul>
+
+            <h4 class="psyop-warning">2. Selective Storytelling or Partial Truths</h4>
+            <ul>
+              <li>Technically true but suspiciously incomplete narrative</li>
+              <li>Missing context that should be obvious</li>
+              <li>Only one selective interpretation promoted</li>
+            </ul>
+
+            <h4 class="psyop-warning">3. Anonymous or Ambiguous Sources</h4>
+            <ul>
+              <li>Recently created accounts with no real history</li>
+              <li>No verifiable identity or sudden rebranding</li>
+              <li>Vague sourcing such as "scientists say" or "insiders report"</li>
+            </ul>
+
+            <h4 class="psyop-warning">4. Coordinated or Bot-Like Behavior</h4>
+            <ul>
+              <li>Many accounts posting identical wording, memes, or tone</li>
+              <li>Sudden waves of the same comments under unrelated posts</li>
+              <li>Aggressive short-window hashtag repetition</li>
+            </ul>
+
+            <h4 class="psyop-warning">5. Too-Clean Good vs Evil Framing</h4>
+            <ul>
+              <li>Everyone on one side described as evil, corrupt, or brainwashed</li>
+              <li>No nuance or alternative explanations</li>
+              <li>Overly simplified geopolitics or conflict narratives</li>
+            </ul>
+
+            <h4 class="psyop-warning">6. Messages Encouraging Social Division</h4>
+            <ul>
+              <li>Pushes blanket distrust of institutions, media, science, or communities</li>
+              <li>Encourages social or ideological isolation</li>
+            </ul>
+
+            <h4 class="psyop-warning">7. Unusual Virality for Low-Credibility Content</h4>
+            <ul>
+              <li>Low-quality screenshots or memes spreading faster than credible reporting</li>
+              <li>Unknown accounts gaining huge followings overnight</li>
+              <li>Sensational claims with no citations</li>
+            </ul>
+
+            <h4 class="psyop-warning">8. Repetition Across Unrelated Accounts</h4>
+            <ul>
+              <li>Identical talking points from different accounts at the same time</li>
+              <li>Same narrative copied across multiple platforms</li>
+              <li>Repeated meme templates with minor tweaks</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Quick Checklist</h3>
+            <p>Ask yourself:</p>
+            <ul class="psyop-checklist">
+              <li>Does it trigger strong emotions?</li>
+              <li>Is the source unclear, anonymous, or suspicious?</li>
+              <li>Does it oversimplify a complex issue?</li>
+              <li>Does it promote distrust or division?</li>
+              <li>Is it being repeated or boosted unnaturally?</li>
+              <li>Is important context missing?</li>
+              <li>Does it push reaction over thoughtful engagement?</li>
+            </ul>
+            <p class="psyop-checklist-note">If several answers are yes — be cautious.</p>
+          </section>
+        </div>
+      </div>
+    </div>
     <script src="js/title.js"></script>
     <script src="js/navbar.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('psyopForm');
-        if (form) {
-          form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            alert('Stay tuned to Nexy for the new upcoming PsyOp feature!');
+        const modal = document.getElementById('psyopInfoModal');
+        const openButton = document.getElementById('openPsyopInfo');
+        const closeButton = document.getElementById('closePsyopInfo');
+
+        function openModal() {
+          if (!modal) {
+            return;
+          }
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+          if (!modal) {
+            return;
+          }
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+
+        if (openButton) {
+          openButton.addEventListener('click', openModal);
+        }
+
+        if (closeButton) {
+          closeButton.addEventListener('click', closeModal);
+        }
+
+        if (modal) {
+          modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+              closeModal();
+            }
           });
         }
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            closeModal();
+          }
+        });
       });
     </script>
+    <script src="js/psyop.js"></script>
   </body>
 </html>

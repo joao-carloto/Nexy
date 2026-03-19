@@ -149,4 +149,38 @@ async function generateText(prompt, model = 'gpt-4.1-mini') {
   return '';
 }
 
-export { createPostText, editText, createCommentText, createCommentReply, cleanUpPost, mockImage };
+async function createPsyopPostText(objective, target, strategy) {
+  const model = 'gpt-4.1-mini';
+
+  const strategyGuide = {
+    White:
+      'Use only truthful and verifiable information. The source and intent may be transparent. ' +
+      'The post should be credible and persuasive while remaining factually accurate.',
+    Grey:
+      'The source should be ambiguous or implied, never stated. Information may be technically true ' +
+      'but selectively framed to advance the objective. Use strategic omissions and emotional framing ' +
+      'without outright lying.',
+    Black:
+      'The post should appear completely organic and authentic while spreading misleading or false ' +
+      'information that advances the objective. The true intent must be entirely hidden. ' +
+      'Use emotional manipulation, fabricated context, or disinformation as needed.',
+  };
+
+  const guide = strategyGuide[strategy] || strategyGuide['White'];
+
+  const prompt =
+    `You are crafting a social media post as part of a psychological operation (PsyOp).\n\n` +
+    `Objective: ${objective}\n` +
+    `Target audience: ${target}\n` +
+    `Strategy: ${strategy} — ${guide}\n\n` +
+    `Write a single realistic social media post that achieves the objective above, ` +
+    `is specifically crafted for the described audience, and follows the ${strategy} strategy. ` +
+    `Include relevant emojis. Make it feel completely natural, as if written by a real person. ` +
+    `Output only the post text with no explanation or commentary.`;
+
+  const postTextRaw = await generateText(prompt, model);
+  console.log(`\nPsyOp Post (${strategy}): ${postTextRaw}`);
+  return cleanUpPost(postTextRaw);
+}
+
+export { createPostText, editText, createCommentText, createCommentReply, cleanUpPost, mockImage, createPsyopPostText };

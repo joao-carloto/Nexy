@@ -4,7 +4,14 @@ import sqlite3 from 'sqlite3';
 
 import { generateImage, editImage, resizeImage, cropAndResizeToThumbnail } from './image_creator.js';
 import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from '../server/utils.js';
-import { createPostText, createCommentText, cleanUpPost, mockImage, editText } from '../server/text_creator.js';
+import {
+  createPostText,
+  createCommentText,
+  cleanUpPost,
+  mockImage,
+  editText,
+  createPsyopPostText,
+} from '../server/text_creator.js';
 
 const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
 const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
@@ -286,7 +293,40 @@ async function createHumanPost(userId, postText, originalImageFileName) {
   }
 }
 
-export { createAIPost, createHumanPost };
+async function createPsyopPost({ objective, target = 'general public', strategy = 'White' }) {
+  const userId = await getRandomUserIdFromDB();
+
+  const postText = await createPsyopPostText(objective, target, strategy);
+  console.log('\nPsyOp caption:', postText);
+
+  const provisionalPostId = generateGUID(11);
+  await generateImage(
+    `Create an amateur-looking square image that could accompany this social media post: ` +
+      `"${removeEmojis(removeHashtags(postText))}". ` +
+      `The image should look like it was taken casually with a smartphone by a regular person, ` +
+      `slightly imperfect framing, natural lighting, not too much saturation, no professional editing or filters.`,
+    provisionalPostId
+  );
+
+  const numComments = Math.floor(Math.random() * 7) + 1;
+  const postId = await savePost(
+    userId,
+    postText,
+    { countryCode: 'US', languageCode: 'EN', sourceType: 'bot' },
+    provisionalPostId
+  );
+
+  for (let i = 0; i < numComments; i++) {
+    const commentText = cleanUpPost(await createCommentText(postText));
+    const commentUserId = await getRandomUserIdFromDB();
+    await saveComment(postId, commentUserId, commentText, 'bot');
+  }
+
+  console.log(`PsyOp post created with id: ${postId}`);
+  return postId;
+}
+
+export { createAIPost, createHumanPost, createPsyopPost };
 
 // TODO: remove
 console.clear();

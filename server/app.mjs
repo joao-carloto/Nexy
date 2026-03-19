@@ -6,7 +6,7 @@ import path from 'path';
 import multer from 'multer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { createAIPost, createHumanPost } from './post_creator.js';
+import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
 import { createCommentText, createCommentReply } from '../server/text_creator.js';
 import { getPostTextFromDB, getRandomUserIdFromDB } from '../server/utils.js';
 
@@ -179,6 +179,24 @@ app.post('/create_bot_post', async (req, res) => {
     res.status(500).json({
       error: error.message || String(error) || 'Failed to generate bot post',
     });
+  }
+});
+
+// Route to create a PsyOp post
+app.post('/create_psyop_post', async (req, res) => {
+  let { objective, target, strategy } = req.body;
+  if (!objective || typeof objective !== 'string' || objective.trim() === '') {
+    return res.status(400).json({ error: 'objective is required' });
+  }
+  if (!target || typeof target !== 'string') target = 'general public';
+  if (!['White', 'Grey', 'Black'].includes(strategy)) strategy = 'White';
+  console.log('/create_psyop_post received:', { objective, target, strategy });
+  try {
+    const postId = await createPsyopPost({ objective: objective.trim(), target: target.trim(), strategy });
+    res.status(201).json({ postId });
+  } catch (error) {
+    console.error('Error generating psyop post:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate psyop post' });
   }
 });
 
