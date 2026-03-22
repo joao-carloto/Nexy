@@ -144,7 +144,8 @@ nav {
   align-items: center;
   justify-content: center;
   margin-top: 20px;
-  color: #f4f3f1;
+  /* Previous: #f4f3f1 */
+  color: #b33939;
   font-family: serif;
   font-size: 90px;
   text-align: center;
@@ -164,7 +165,8 @@ nav {
   align-items: center;
   justify-content: center;
   flex: 1;
-  color: #f4f3f1;
+  /* Previous: #f4f3f1 */
+  color: #b33939;
   font-family: serif;
   font-size: 90px;
   letter-spacing: -0.02em;
@@ -193,18 +195,9 @@ nav {
   cursor: pointer;
   outline: none;
   box-sizing: content-box;
-  transition: none;
-}
-
-.help-button,
-.help-button:hover,
-.help-button:focus,
-.help-button:active {
-  background: none;
-  transform: none;
-  box-shadow: none;
-  outline: none;
-  border: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .help-button svg {
@@ -213,6 +206,26 @@ nav {
   margin: auto;
   display: block;
   stroke: #f4f3f1;
+  transition:
+    stroke 0.18s ease,
+    filter 0.18s ease;
+}
+
+.help-button:hover {
+  background: none;
+  box-shadow: none;
+  transform: translateY(-1px) scale(1.04);
+}
+
+.help-button:hover svg {
+  stroke: #74bbee;
+  filter: drop-shadow(0 0 6px rgba(116, 187, 238, 0.4));
+}
+
+.help-button:focus-visible {
+  background: none;
+  outline: 2px solid rgba(116, 187, 238, 0.85);
+  outline-offset: 2px;
 }
 
 /* ==============================
@@ -324,6 +337,16 @@ button:hover {
   background-color: #218838;
   box-shadow: 0 6px 22px rgba(40, 167, 69, 0.45);
   transform: translateY(-2px);
+}
+
+#load-user {
+  background-color: #007bff;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
+}
+
+#load-user:hover {
+  background-color: #0069d9;
+  box-shadow: 0 6px 22px rgba(0, 123, 255, 0.45);
 }
 
 .file-input-container {
@@ -848,10 +871,22 @@ select:hover {
 
   .nav-item {
     width: 50px;
-    height: 50px;
+    height: 100%;
     margin: 0 auto;
     padding: 0;
     justify-content: center;
+    border-radius: 0;
+  }
+
+  .nav-item:hover {
+    background: transparent;
+    color: #f4f3f1;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .svg-button:hover {
+    background-color: transparent;
   }
 
   .nav-item svg {
