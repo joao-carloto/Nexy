@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
 import { createCommentText, createCommentReply } from '../server/text_creator.js';
 import { getPostTextFromDB, getRandomUserIdFromDB } from '../server/utils.js';
+import { createUserImage } from './image_creator.js';
 
 dotenv.config();
 const app = express();
@@ -70,6 +71,12 @@ function requireAdminPage(req, res, next) {
 app.get('/manage_posts.html', requireAdminPage, (req, res) => {
   // Serve the file explicitly (bypass redirect loop)
   const filePath = path.join(path.resolve(), 'public', 'html', 'manage_posts.html');
+  res.sendFile(filePath);
+});
+
+// Intercept request for manage_bots.html before static middleware serves it
+app.get('/manage_bots.html', requireAdminPage, (req, res) => {
+  const filePath = path.join(path.resolve(), 'public', 'html', 'manage_bots.html');
   res.sendFile(filePath);
 });
 
@@ -404,6 +411,104 @@ app.post('/generate-comment', async (req, res) => {
       } catch (e) {
         res.status(500).json({ error: 'Failed to generate comment' });
       }
+    });
+  });
+});
+
+// Route to fetch all bots
+app.get('/bots', (req, res) => {
+  db.all(
+    'SELECT userId, fullName, profilePictureName, description, countryRegion FROM users ORDER BY fullName',
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(200).json({ bots: rows || [] });
+    }
+  );
+});
+
+// Route to create a new bot
+app.post('/bots', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  let { userId, fullName, description, countryRegion } = req.body;
+
+  try {
+    const { generateText } = await import('./text_creator.js');
+
+    // Auto-generate missing fields
+    if (!fullName) {
+      fullName = await generateText(
+        'Invent a realistic full name for a fictional social media user. Just the name, nothing else.'
+      );
+      fullName = fullName.replace(/["']/g, '').trim();
+    }
+
+    if (!userId) {
+      userId = await generateText(
+        `Invent a short social media username (no spaces, no special characters) for a person named "${fullName}". Just the username, nothing else.`
+      );
+      userId = userId.replace(/[^a-zA-Z0-9_]/g, '').trim();
+    }
+
+    // Check for duplicates
+    const existing = await new Promise((resolve, reject) => {
+      db.get('SELECT userId FROM users WHERE userId = ?', [userId], (e, row) => {
+        if (e) return reject(e);
+        resolve(row);
+      });
+    }).catch(() => null);
+    if (existing) return res.status(409).json({ error: 'A bot with this userId already exists' });
+
+    if (!countryRegion) {
+      countryRegion = await generateText('Name a random country or region in the world. Just the name, nothing else.');
+      countryRegion = countryRegion.replace(/["']/g, '').trim();
+    }
+
+    if (!description) {
+      description = await generateText(
+        `Write a short social media bio for a fictional person named "${fullName}" from ${countryRegion}. Just the bio text, no explanation, no quotes.`
+      );
+    }
+  } catch (e) {
+    console.error('Error auto-generating bot fields:', e);
+    return res.status(500).json({ error: 'Failed to auto-generate bot content' });
+  }
+
+  try {
+    const profilePictureName = await createUserImage(userId, fullName, description);
+    await new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO users (userId, fullName, profilePictureName, description, countryRegion) VALUES (?, ?, ?, ?, ?)',
+        [userId, fullName, profilePictureName, description, countryRegion || null],
+        function (err) {
+          if (err) return reject(err);
+          resolve();
+        }
+      );
+    });
+    res.status(201).json({ userId, fullName, profilePictureName, description, countryRegion });
+  } catch (error) {
+    console.error('Error creating bot:', error);
+    res.status(500).json({ error: error.message || 'Failed to create bot' });
+  }
+});
+
+// Route to delete a bot
+app.delete('/bots/:userId', (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const { userId } = req.params;
+  db.get('SELECT userId, profilePictureName FROM users WHERE userId = ?', [userId], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Bot not found' });
+    // Delete profile picture and thumbnail
+    if (row.profilePictureName) {
+      const picPath = path.join(profilePicturesDir, row.profilePictureName);
+      const thumbPath = path.join(profileThumbnailsDir, `${userId}-thumbnail.png`);
+      fs.unlink(picPath, () => {});
+      fs.unlink(thumbPath, () => {});
+    }
+    db.run('DELETE FROM users WHERE userId = ?', [userId], function (delErr) {
+      if (delErr) return res.status(500).json({ error: 'Failed to delete bot' });
+      res.status(200).json({ message: 'Bot deleted successfully' });
     });
   });
 });

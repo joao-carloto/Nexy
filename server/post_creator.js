@@ -11,6 +11,8 @@ import {
   mockImage,
   editText,
   createPsyopPostText,
+  createPsyopCommentText,
+  createPsyopDemolisherReply,
 } from '../server/text_creator.js';
 
 const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
@@ -317,9 +319,22 @@ async function createPsyopPost({ objective, target = 'general public', strategy 
   );
 
   for (let i = 0; i < numComments; i++) {
-    const commentText = cleanUpPost(await createCommentText(postText));
+    const { text: commentText, type: commentType } = await createPsyopCommentText(postText, objective);
     const commentUserId = await getRandomUserIdFromDB();
     await saveComment(postId, commentUserId, commentText, 'bot');
+
+    console.log(`\nPsyOp comment (${commentType}):`);
+    console.log(commentText);
+
+    // If the comment is a strawman opposition, generate a demolisher reply
+    if (commentType === 'strawman_opposition') {
+      const replyText = await createPsyopDemolisherReply(postText, commentText, objective, commentUserId);
+      const replyUserId = await getRandomUserIdFromDB();
+      await saveComment(postId, replyUserId, replyText, 'bot');
+
+      console.log('\nPsyOp demolisher reply:');
+      console.log(replyText);
+    }
   }
 
   console.log(`PsyOp post created with id: ${postId}`);

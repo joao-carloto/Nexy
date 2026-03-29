@@ -149,6 +149,54 @@ async function generateText(prompt, model = 'gpt-4.1-mini') {
   return '';
 }
 
+const psyopCommentTypes = ['supportive', 'strawman_opposition'];
+
+async function createPsyopCommentText(postText, objective, type = undefined) {
+  const model = 'gpt-4.1-mini';
+  if (type === undefined) {
+    type = getRandomElement(psyopCommentTypes);
+  }
+
+  let prompt;
+  if (type === 'strawman_opposition') {
+    prompt =
+      `Write a short social media comment that disagrees with or criticises this post: "${postText}". ` +
+      `However, the comment must be poorly written and unconvincing: use clumsy phrasing, weak logic, ` +
+      `emotional outbursts, spelling mistakes, incoherent reasoning, or conspiracy-like rhetoric. ` +
+      `It should make the person opposing the post look foolish or unreasonable. ` +
+      `Include some emoji. Output only the comment text with no explanation.`;
+  } else {
+    // supportive
+    prompt =
+      `Write a short social media comment that enthusiastically agrees with this post: "${postText}". ` +
+      `The comment should reinforce the post's message and feel natural, as if written by a real person. ` +
+      `Include some emoji. Output only the comment text with no explanation.`;
+  }
+
+  const commentText = await generateText(prompt, model);
+  return { text: cleanUpPost(commentText), type };
+}
+
+async function createPsyopDemolisherReply(postText, strawmanComment, _objective, commentUserId) {
+  const model = 'gpt-4.1-mini';
+
+  const prompt =
+    `You are replying to this poorly reasoned comment: "${strawmanComment}" ` +
+    `which was posted on this social media post: "${postText}". ` +
+    `Write a short, articulate, and confident social media reply that dismantles the comment point by point. ` +
+    `Use a calm, measured, and seemingly evidence-based tone. Cite plausible-sounding facts or statistics ` +
+    `(they do not need to be real). The reply should make the original commenter look uninformed ` +
+    `and should reinforce the narrative of the original post. ` +
+    `Include some emoji. Output only the reply text with no explanation.`;
+
+  const replyText = await generateText(prompt, model);
+  const cleanReply = cleanUpPost(replyText);
+  if (commentUserId) {
+    return `<span style="color: red; font-weight: bold;">@${commentUserId}</span> ${cleanReply}`;
+  }
+  return cleanReply;
+}
+
 async function createPsyopPostText(objective, target, strategy) {
   const model = 'gpt-4.1-mini';
 
@@ -183,4 +231,15 @@ async function createPsyopPostText(objective, target, strategy) {
   return cleanUpPost(postTextRaw);
 }
 
-export { createPostText, editText, createCommentText, createCommentReply, cleanUpPost, mockImage, createPsyopPostText };
+export {
+  createPostText,
+  editText,
+  createCommentText,
+  createCommentReply,
+  cleanUpPost,
+  mockImage,
+  generateText,
+  createPsyopPostText,
+  createPsyopCommentText,
+  createPsyopDemolisherReply,
+};

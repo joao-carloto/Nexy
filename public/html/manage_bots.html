@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Bots</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" type="image/png" href="images/logo.png" />
+  </head>
+  <body>
+    <script src="js/navbar.js"></script>
+    <div id="title-container"></div>
+    <script src="js/title.js"></script>
+    <h1>Manage Bots</h1>
+
+    <div class="form-container">
+      <h2>Create New Bot</h2>
+      <form id="create-bot-form">
+        <input type="text" id="botUserId" placeholder="User ID (auto-generated if empty)" />
+        <input type="text" id="botFullName" placeholder="Full Name (auto-generated if empty)" />
+        <input type="text" id="botCountryRegion" placeholder="Country / Region (auto-generated if empty)" />
+        <textarea id="botDescription" rows="3" placeholder="Description / Bio (auto-generated if empty)"></textarea>
+        <button type="submit" class="submit-button">CREATE BOT</button>
+      </form>
+      <p id="create-bot-status" style="color: #f4f3f1; margin-top: 10px"></p>
+    </div>
+
+    <h2>Existing Bots</h2>
+    <div id="bots" class="posts-container"></div>
+
+    <script src="js/manage_bots.js"></script>
+
+    <!-- Glass panel and spinner -->
+    <div id="loadingOverlay" class="hidden">
+      <div class="spinner"></div>
+      <p class="loading-message">Your overlords are working. Stay put...</p>
+    </div>
+  </body>
+</html>
