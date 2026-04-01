@@ -57,7 +57,7 @@ document.getElementById('create-bot-form').addEventListener('submit', async (e) 
 
   const userId = document.getElementById('botUserId').value.trim();
   const fullName = document.getElementById('botFullName').value.trim();
-  const countryRegion = document.getElementById('botCountryRegion').value.trim();
+  // const countryRegion = document.getElementById('botCountryRegion').value.trim();
   const description = document.getElementById('botDescription').value.trim();
 
   loadingOverlay.classList.remove('hidden');
@@ -66,7 +66,7 @@ document.getElementById('create-bot-form').addEventListener('submit', async (e) 
     const response = await fetch('/bots', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, fullName, description, countryRegion }),
+      body: JSON.stringify({ userId, fullName, description }), // countryRegion commented out for now
     });
     const data = await response.json();
     if (response.ok) {

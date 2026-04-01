@@ -16,10 +16,20 @@
     <div class="form-container">
       <h2>Create New Bot</h2>
       <form id="create-bot-form">
-        <input type="text" id="botUserId" placeholder="User ID (auto-generated if empty)" />
-        <input type="text" id="botFullName" placeholder="Full Name (auto-generated if empty)" />
-        <input type="text" id="botCountryRegion" placeholder="Country / Region (auto-generated if empty)" />
-        <textarea id="botDescription" rows="3" placeholder="Description / Bio (auto-generated if empty)"></textarea>
+        <input type="text" id="botUserId" placeholder="User ID (auto-generated if empty)" maxlength="20" />
+        <input type="text" id="botFullName" placeholder="Full Name (auto-generated if empty)" maxlength="100" />
+        <!-- <input
+          type="text"
+          id="botCountryRegion"
+          placeholder="Country / Region (auto-generated if empty)"
+          maxlength="50"
+        /> -->
+        <textarea
+          id="botDescription"
+          rows="3"
+          placeholder="Description / Bio (auto-generated if empty)"
+          maxlength="500"
+        ></textarea>
         <button type="submit" class="submit-button">CREATE BOT</button>
       </form>
       <p id="create-bot-status" style="color: #f4f3f1; margin-top: 10px"></p>

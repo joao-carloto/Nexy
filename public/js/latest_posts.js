@@ -12,7 +12,7 @@ async function loadPosts() {
         postElement.className = 'post-frame';
         postElement.innerHTML = `
         <h3>${post.userId}</h3>
-        <p>${post.postText.substring(0, 100)}...</p>
+        <p>${post.postText.substring(0, 250)}...</p>
         ${post.imageFileName ? `<img src="/post_images/${post.imageFileName}" alt="Post Image">` : ''}
   <button onclick="viewPost('${post.id}')">View Post</button>
       `;

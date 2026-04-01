@@ -113,8 +113,8 @@ async function createUserImage(userId, fullName, description) {
   const contents = `Create a realistic square photo of a person to be used as a social media profile picture. 
   It should look like a casual, everyday selfie or photo taken with a smartphone — not a professional headshot. 
   Slightly imperfect framing, natural lighting, no filters or heavy editing. The person should look like a normal, average person.
-  Not too pretty. Just a believable, ordinary profile picture that could belong to a real user.
-  Pick a random age and ethnicity.
+  Not pretty. Just a believable, ordinary profile picture that could belong to a real user.
+  Pick a random age (16 to 100 years of age) and ethnicity.
   The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
 
   try {

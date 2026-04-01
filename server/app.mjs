@@ -6,6 +6,7 @@ import path from 'path';
 import multer from 'multer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import { encode } from 'html-entities';
 import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
 import { createCommentText, createCommentReply } from '../server/text_creator.js';
 import { getPostTextFromDB, getRandomUserIdFromDB } from '../server/utils.js';
@@ -212,6 +213,13 @@ app.post('/create_human_post', upload.single('image'), async (req, res) => {
   const { userId, postText } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
   try {
+    // Validate postText length
+    if (!postText || postText.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Post text is required' });
+    }
+    if (postText.length > 500) {
+      return res.status(400).json({ success: false, error: 'Post text exceeds maximum length of 500 characters' });
+    }
     // Call the createHumanPost function
     const result = await createHumanPost(userId, postText, originalImageFileName);
 
@@ -240,55 +248,67 @@ app.post('/comments', async (req, res) => {
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    const query = 'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)';
-    db.run(query, [ids.id, userId, commentText, createdAt, 'bot'], function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.status(201).json({ ok: true });
+    // Escape HTML entities to prevent XSS injection
+    const escapedCommentText = encode(commentText);
+    db.run(
+      'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)',
+      [ids.id, userId, escapedCommentText, createdAt, 'human'],
+      function (err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        } else {
+          res.status(201).json({ ok: true });
+        }
       }
-    });
+    );
   });
 });
 
 // Route to save a human comment and generate a bot reply (GUID stored)
-app.post('/human_comment', async (req, res) => {
+app.post('/human_comment', (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    const insertCommentQuery =
-      'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)';
-    db.run(insertCommentQuery, [ids.id, userId, commentText, createdAt, 'human'], async function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      // Human comment inserted
-      try {
-        const post_text = await getPostTextFromDB(ids.id);
-        const reply = await createCommentReply(post_text, commentText);
-        let randomOponentId = null;
-        while (randomOponentId === null || randomOponentId === userId) {
-          randomOponentId = await getRandomUserIdFromDB();
-        }
-        await getRandomUserIdFromDB();
-        const botCreatedAt = new Date().toISOString();
-        db.run(
-          insertCommentQuery,
-          [
-            ids.id,
-            randomOponentId,
-            `<span style="color: red; font-weight: bold;">@${userId}</span> ${reply}`,
-            botCreatedAt,
-            'bot',
-          ],
-          function (botErr) {
-            if (botErr) return res.status(201).json({ ok: true, botError: botErr.message });
-            res.status(201).json({ ok: true });
+    // Escape HTML entities to prevent XSS injection
+    const escapedCommentText = encode(commentText);
+    // Insert human comment first
+    db.run(
+      'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)',
+      [ids.id, userId, escapedCommentText, createdAt, 'human'],
+      async function (humanErr) {
+        if (humanErr) return res.status(500).json({ error: humanErr.message });
+
+        // Then insert bot reply
+        try {
+          const post_text = await getPostTextFromDB(ids.id);
+          const reply = await createCommentReply(post_text, commentText);
+          let randomOponentId = null;
+          while (randomOponentId === null || randomOponentId === userId) {
+            randomOponentId = await getRandomUserIdFromDB();
           }
-        );
-      } catch (e) {
-        res.status(201).json({ ok: true, botError: e.message });
+          const botCreatedAt = new Date().toISOString();
+          // Escape HTML entities for user ID to prevent XSS injection
+          const escapedUserId = encode(userId);
+          db.run(
+            'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)',
+            [
+              ids.id,
+              randomOponentId,
+              `<span style="color: red; font-weight: bold;">@${escapedUserId}</span> ${reply}`,
+              botCreatedAt,
+              'bot',
+            ],
+            function (botErr) {
+              if (botErr) return res.status(500).json({ error: botErr.message });
+              res.status(201).json({ ok: true });
+            }
+          );
+        } catch (e) {
+          res.status(500).json({ error: e.message });
+        }
       }
-    });
+    );
   });
 });
 
@@ -430,6 +450,21 @@ app.get('/bots', (req, res) => {
 app.post('/bots', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
   let { userId, fullName, description, countryRegion } = req.body;
+  const { encode } = await import('html-entities');
+
+  // Validate character limits
+  if (userId && userId.length > 20) {
+    return res.status(400).json({ error: 'User ID must not exceed 20 characters' });
+  }
+  if (fullName && fullName.length > 100) {
+    return res.status(400).json({ error: 'Full Name must not exceed 100 characters' });
+  }
+  if (countryRegion && countryRegion.length > 50) {
+    return res.status(400).json({ error: 'Country/Region must not exceed 50 characters' });
+  }
+  if (description && description.length > 500) {
+    return res.status(400).json({ error: 'Description must not exceed 500 characters' });
+  }
 
   try {
     const { generateText } = await import('./text_creator.js');
@@ -475,10 +510,15 @@ app.post('/bots', async (req, res) => {
 
   try {
     const profilePictureName = await createUserImage(userId, fullName, description);
+    // Escape user-entered fields to prevent XSS
+    const escapedUserId = encode(userId);
+    const escapedFullName = encode(fullName);
+    const escapedDescription = encode(description);
+    const escapedCountryRegion = countryRegion ? encode(countryRegion) : null;
     await new Promise((resolve, reject) => {
       db.run(
         'INSERT INTO users (userId, fullName, profilePictureName, description, countryRegion) VALUES (?, ?, ?, ?, ?)',
-        [userId, fullName, profilePictureName, description, countryRegion || null],
+        [escapedUserId, escapedFullName, profilePictureName, escapedDescription, escapedCountryRegion],
         function (err) {
           if (err) return reject(err);
           resolve();

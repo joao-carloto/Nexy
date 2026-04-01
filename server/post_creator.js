@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import sqlite3 from 'sqlite3';
+import { encode } from 'html-entities';
 
 import { generateImage, editImage, resizeImage, cropAndResizeToThumbnail } from './image_creator.js';
 import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from '../server/utils.js';
@@ -214,8 +215,11 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       throw new Error('User ID and post text are required.');
     }
 
+    // Escape user input to prevent XSS injection
+    const escapedPostText = encode(postText);
+
     // Edit the post text
-    let editedPostText = await editText(postText);
+    let editedPostText = await editText(escapedPostText);
 
     let originalImagePath = null;
     let mockingImageText = null;
@@ -250,7 +254,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     try {
       await editImage(originalImagePath, editedImagePath);
     } catch (error) {
-      throw new Error('Failed to edit the image: ' + error.message);
+      throw new Error('Failed to edit the image: ' + error.message, { cause: error });
     }
 
     // Create thumbnail for the edited image
@@ -262,7 +266,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     try {
       await cropAndResizeToThumbnail(editedImageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200);
     } catch (error) {
-      throw new Error('Failed to create a thumbnail for the image.');
+      throw new Error('Failed to create a thumbnail for the image.', { cause: error });
     }
 
     // Save the post with the edited text and image
