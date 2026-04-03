@@ -3,6 +3,13 @@ function formatDate(dateString) {
   return date.toISOString().split('.')[0].replace('T', ' ');
 }
 
+function getUserThumbnail(userId, profilePictureName) {
+  if (profilePictureName) {
+    return `/thumbnails/profile_pictures/${userId}-thumbnail.png`;
+  }
+  return 'images/logo.png';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const commentForm = document.getElementById('commentForm');
   const commentText = document.getElementById('commentText');
@@ -53,10 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const postContainer = document.getElementById('post');
 
+      const postUserThumbSrc = getUserThumbnail(post.userId, post.authorProfilePicture);
+
       postContainer.innerHTML = `
-        <div class="post-details">
-          <h3>${post.userId}</h3>
-          <p class="post-text">${post.postText}</p>
+          <div class="post-details">
+            <div class="post-user-header">
+              <img src="${postUserThumbSrc}" alt="${post.userId}" class="post-user-thumbnail" onerror="this.src='images/logo.png'" />
+              <h3>${post.userId}</h3>
+            </div>
+            <p class="post-text">${post.postText}</p>
           ${
             post.imageFileName
               ? `<img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-image">`
@@ -66,15 +78,19 @@ document.addEventListener('DOMContentLoaded', () => {
           <h4>Comments:</h4>
           <div class="comments">
             ${post.comments
-              .map(
-                (comment) => `
+              .map((comment) => {
+                const thumbSrc = getUserThumbnail(comment.userId, comment.authorProfilePicture);
+                return `
               <div class="comment">
-                <p class="comment-user">${comment.userId}:</p>
+                <div class="comment-header">
+                  <img src="${thumbSrc}" alt="${comment.userId}" class="comment-author-thumbnail" onerror="this.src='images/logo.png'" />
+                  <p class="comment-user">${comment.userId}</p>
+                </div>
                 <p class="comment-text">${comment.commentText}</p>
                 <p class="comment-date">Created at: ${formatDate(comment.createdAt)}</p>
               </div>
-            `
-              )
+            `;
+              })
               .join('')}
           </div>
         </div>

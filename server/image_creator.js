@@ -64,7 +64,6 @@ async function generateImage(contents, postId) {
   }
 }
 
-// TODO: remove the input image
 async function editImage(inputImagePath, outputImagePath) {
   const tempPngInputPath = `${outputImagePath}.edit-input.png`;
   try {
@@ -92,6 +91,9 @@ async function editImage(inputImagePath, outputImagePath) {
 
     const buffer = Buffer.from(imageData, 'base64');
     fs.writeFileSync(outputImagePath, buffer);
+    if (inputImagePath !== outputImagePath && fs.existsSync(inputImagePath)) {
+      fs.unlinkSync(inputImagePath);
+    }
     console.log(`Image saved as ${outputImagePath}`);
   } catch (error) {
     if (isSafetyRejection(error) && inputImagePath) {
@@ -114,7 +116,10 @@ async function createUserImage(userId, fullName, description) {
   It should look like a casual, everyday selfie or photo taken with a smartphone — not a professional headshot. 
   Slightly imperfect framing, natural lighting, no filters or heavy editing. The person should look like a normal, average person.
   Not pretty. Just a believable, ordinary profile picture that could belong to a real user.
-  Pick a random age (16 to 100 years of age) and ethnicity.
+  Pick a random age (16 to 100 years of age).
+  Pick a random ethnicity not always white.
+  Pick some random outfit with random color, by some reason you always tend to go with khaki/green, don't do it.
+  Pick a random background that would be typical for a profile picture, but keep it simple and realistic.
   The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
 
   try {

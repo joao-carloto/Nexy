@@ -11,18 +11,20 @@
     <div id="title-container"></div>
     <script src="js/title.js"></script>
     <script src="js/navbar.js"></script>
-    <h1>Random Bot</h1>
-    <div id="user-container">
-      <img id="profile-picture" src="" alt="Profile Picture" class="profile-picture" />
-      <h2 id="full-name"></h2>
-      <p style="color: #f4f3f1"><strong>User ID:</strong> <span id="user-id"></span></p>
-      <p style="color: #f4f3f1"><strong>Description:</strong> <span id="description"></span></p>
-      <div style="height: 20px"></div>
-      <button class="submit-button" id="load-user" style="display: block; background-color: #007bff; width: 300px">
-        LOAD ANOTHER BOT
-      </button>
-      <br />
-    </div>
+    <main class="random-bot-page">
+      <h1 class="random-bot-title">Random Bot</h1>
+      <div id="user-container" class="random-bot-card">
+        <div class="random-bot-image-wrap">
+          <img id="profile-picture" src="" alt="Profile Picture" class="profile-picture" />
+        </div>
+        <h2 id="full-name"></h2>
+        <div class="random-bot-meta">
+          <p><strong>User ID:</strong> <span id="user-id"></span></p>
+          <p><strong>Description:</strong> <span id="description"></span></p>
+        </div>
+        <button class="submit-button" id="load-user">Load Another Bot</button>
+      </div>
+    </main>
     <script src="js/random_bot.js"></script>
   </body>
 </html>

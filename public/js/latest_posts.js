@@ -10,10 +10,16 @@ async function loadPosts() {
       if (post.imageFileName) {
         const postElement = document.createElement('div');
         postElement.className = 'post-frame';
+        const thumbSrc = post.authorProfilePicture
+          ? `/thumbnails/profile_pictures/${post.userId}-thumbnail.png`
+          : 'images/logo.png';
         postElement.innerHTML = `
-        <h3>${post.userId}</h3>
+        <div class="post-user-header">
+          <img src="${thumbSrc}" alt="${post.userId}" class="post-user-thumbnail" onerror="this.src='images/logo.png'" />
+          <h3>${post.userId}</h3>
+        </div>
         <p>${post.postText.substring(0, 250)}...</p>
-        ${post.imageFileName ? `<img src="/post_images/${post.imageFileName}" alt="Post Image">` : ''}
+        ${post.imageFileName ? `<img src="/post_images/${post.imageFileName}" alt="Post Image" onclick="viewPost('${post.id}')" style="cursor: pointer;">` : ''}
   <button onclick="viewPost('${post.id}')">View Post</button>
       `;
         postsContainer.appendChild(postElement);

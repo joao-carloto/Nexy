@@ -346,23 +346,3 @@ async function createPsyopPost({ objective, target = 'general public', strategy 
 }
 
 export { createAIPost, createHumanPost, createPsyopPost };
-
-// TODO: remove
-console.clear();
-
-// TODO: remove
-// editImage("C:\\Users\\joao-carloto\\Pictures\\unnamed.png", "edited.png");
-
-// createAIPost({ topic: "Economy", isFakeNews: true });
-
-// createPost({});
-
-/*
-distortPostText(
-  "What a wonderfull the sunset was lat night. I was at the beach and the sky was so beautiful. I love sunsets."
-);
-*/
-
-// createHumanPost("TUMBA", " I like ice-cream!", "1743606767632.png");
-
-// createAIPost({});

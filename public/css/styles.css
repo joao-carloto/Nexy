@@ -405,7 +405,7 @@ select {
 }
 
 #isFakeNews {
-  width: 110px;
+  width: 130px;
 }
 
 select:focus {
@@ -541,9 +541,43 @@ select:hover {
   border-bottom: 1px solid #ddd;
 }
 
+.post-user-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-user-thumbnail {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.post-user-header h3 {
+  margin: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.comment-author-thumbnail {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .comment-user {
-  margin-bottom: 5px;
+  margin: 0;
   font-weight: bold;
+  font-size: 0.95em;
 }
 
 .comment-text {
@@ -601,6 +635,77 @@ select:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.random-bot-page {
+  width: min(720px, calc(100% - 48px));
+  margin: 10px auto 36px;
+}
+
+.random-bot-title {
+  margin: 8px 0 18px;
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  letter-spacing: -0.03em;
+}
+
+.random-bot-card {
+  width: min(700px, 100%);
+  margin: 0 auto;
+  padding: 22px 22px 22px;
+  color: #f4f3f1;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(244, 243, 241, 0.16);
+  border-radius: 20px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(4px);
+}
+
+.random-bot-image-wrap {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.random-bot-card .profile-picture {
+  width: 100%;
+  max-height: 60vh;
+  object-fit: cover;
+  border: 1px solid rgba(244, 243, 241, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.random-bot-card h2 {
+  margin: 6px 0 14px;
+  font-size: clamp(1.35rem, 2.3vw, 1.8rem);
+}
+
+.random-bot-meta {
+  width: 100%;
+  margin: 0 auto 14px;
+  padding: 14px 16px;
+  background: rgba(10, 22, 32, 0.34);
+  border: 1px solid rgba(244, 243, 241, 0.12);
+  border-radius: 12px;
+}
+
+.random-bot-meta p {
+  margin: 0;
+  color: #f4f3f1;
+  line-height: 1.5;
+}
+
+.random-bot-meta p + p {
+  margin-top: 10px;
+}
+
+.random-bot-meta strong {
+  color: #b9d9ee;
+}
+
+#load-user {
+  width: min(320px, 100%);
+  margin: 8px auto 0;
+  display: block;
 }
 
 /* ==============================

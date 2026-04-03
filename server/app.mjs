@@ -8,8 +8,8 @@ import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { encode } from 'html-entities';
 import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
-import { createCommentText, createCommentReply } from '../server/text_creator.js';
-import { getPostTextFromDB, getRandomUserIdFromDB } from '../server/utils.js';
+import { createCommentText, createCommentReply } from './text_creator.js';
+import { getPostTextFromDB, getRandomUserIdFromDB } from './utils.js';
 import { createUserImage } from './image_creator.js';
 
 dotenv.config();
@@ -110,7 +110,6 @@ app.get('/', (req, res) => {
 app.use(express.static(path.join(path.resolve(), 'public')));
 app.use(express.static(path.join(path.resolve(), 'public', 'html')));
 
-// TODO. do we really need all this static stuff, since we already use the public directory?
 app.use('/post_images', express.static(postImagesDir));
 
 app.use('/profile_pictures', express.static(profilePicturesDir));
@@ -317,9 +316,11 @@ app.get('/posts', (req, res) => {
   const { search = '', limit = 20 } = req.query; // Default to no search and limit to 20 posts
 
   const query = `
-  SELECT * FROM posts
-  WHERE LOWER(postText) LIKE LOWER(?) 
-  ORDER BY createdAt DESC
+  SELECT p.*, u.profilePictureName AS authorProfilePicture
+  FROM posts p
+  LEFT JOIN users u ON p.userId = u.userId
+  WHERE LOWER(p.postText) LIKE LOWER(?) 
+  ORDER BY p.createdAt DESC
   LIMIT ?
 `;
   db.all(query, [`%${search}%`, parseInt(limit, 10)], (err, posts) => {
@@ -337,24 +338,35 @@ app.get('/posts/:postId', (req, res) => {
   const identifier = req.params.postId;
   resolvePostIdentifier(identifier, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    db.get('SELECT * FROM posts WHERE id = ?', [ids.id], (pErr, post) => {
-      if (pErr) return res.status(500).json({ error: pErr.message });
-      if (!post) return res.status(404).json({ error: 'Post not found' });
-      const commentsQuery = 'SELECT * FROM comments WHERE postId = ? ORDER BY createdAt ASC';
-      db.all(commentsQuery, [ids.id], (cErr, comments) => {
-        if (cErr) return res.status(500).json({ error: cErr.message });
-        post.comments = comments || [];
-        post.imageFileName = `${post.id}.png`;
-        res.status(200).json(post);
-      });
-    });
+    db.get(
+      `SELECT p.*, u.profilePictureName AS authorProfilePicture
+       FROM posts p LEFT JOIN users u ON p.userId = u.userId
+       WHERE p.id = ?`,
+      [ids.id],
+      (pErr, post) => {
+        if (pErr) return res.status(500).json({ error: pErr.message });
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        const commentsQuery = `
+          SELECT c.*, u.profilePictureName AS authorProfilePicture
+          FROM comments c
+          LEFT JOIN users u ON c.userId = u.userId
+          WHERE c.postId = ?
+          ORDER BY c.createdAt ASC`;
+        db.all(commentsQuery, [ids.id], (cErr, comments) => {
+          if (cErr) return res.status(500).json({ error: cErr.message });
+          post.comments = comments || [];
+          post.imageFileName = `${post.id}.png`;
+          res.status(200).json(post);
+        });
+      }
+    );
   });
 });
 
 // Pretty URL: /post/<id> -> serve post.html if exists; otherwise 404 page
 app.get('/post/:postId', (req, res) => {
   const identifier = req.params.postId;
-  resolvePostIdentifier(identifier, (rErr, ids) => {
+  resolvePostIdentifier(identifier, (rErr, _ids) => {
     if (rErr) {
       // Not found -> 404 page
       const notFoundPath = path.join(path.resolve(), 'public', 'html', '404.html');
@@ -428,7 +440,7 @@ app.post('/generate-comment', async (req, res) => {
       try {
         const commentText = await createCommentText(row.postText, tone);
         res.status(200).json({ commentText });
-      } catch (e) {
+      } catch (_e) {
         res.status(500).json({ error: 'Failed to generate comment' });
       }
     });
@@ -450,7 +462,6 @@ app.get('/bots', (req, res) => {
 app.post('/bots', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
   let { userId, fullName, description, countryRegion } = req.body;
-  const { encode } = await import('html-entities');
 
   // Validate character limits
   if (userId && userId.length > 20) {
@@ -493,14 +504,11 @@ app.post('/bots', async (req, res) => {
     }).catch(() => null);
     if (existing) return res.status(409).json({ error: 'A bot with this userId already exists' });
 
-    if (!countryRegion) {
-      countryRegion = await generateText('Name a random country or region in the world. Just the name, nothing else.');
-      countryRegion = countryRegion.replace(/["']/g, '').trim();
-    }
-
     if (!description) {
       description = await generateText(
-        `Write a short social media bio for a fictional person named "${fullName}" from ${countryRegion}. Just the bio text, no explanation, no quotes.`
+        `Write a social media bio for a fictional person named "${fullName}". 
+        Just the bio text, no explanation, no quotes. 
+        Make it interesting and realistic but keep it concise (under 200 characters).`
       );
     }
   } catch (e) {
@@ -570,5 +578,5 @@ app.use((req, res) => {
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server is running on http://0.0.0.0:3000');
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });
