@@ -1,5 +1,6 @@
 async function loadPostsWithDeleteButtons() {
   try {
+    // Admin dashboard fetches a large list to render all removable post thumbnails.
     const response = await fetch(`/posts?search=${encodeURIComponent('')}&limit=1000`);
     const data = await response.json();
     const postsContainer = document.getElementById('posts');
@@ -7,7 +8,7 @@ async function loadPostsWithDeleteButtons() {
 
     data.posts.forEach((post) => {
       if (post.imageFileName) {
-        // Add the "-thumbnail" suffix before the file extension
+        // Convert <id>.png to <id>-thumbnail.png to match server thumbnail naming.
         const fileNameWithoutExt = post.imageFileName.split('.').slice(0, -1).join('.');
         const fileExt = post.imageFileName.split('.').pop();
         const thumbnailFileName = `${fileNameWithoutExt}-thumbnail.${fileExt}`;
@@ -36,12 +37,13 @@ async function deletePost(postId) {
   }
 
   try {
+    // Admin delete API: DELETE /posts/:postId
     const response = await fetch(`/posts/${postId}`, {
       method: 'DELETE',
     });
 
     if (response.ok) {
-      // alert("Post deleted successfully!");
+      // Reload list to reflect DB + filesystem deletion performed by server.
       loadPostsWithDeleteButtons(); // Reload the posts after deletion
     } else {
       throw new Error('Failed to delete post');

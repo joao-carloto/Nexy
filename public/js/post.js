@@ -5,16 +5,50 @@ function formatDate(dateString) {
 
 function getUserThumbnail(userId, profilePictureName) {
   if (profilePictureName) {
+    // Thumbnail naming contract: <userId>-thumbnail.png
     return `/thumbnails/profile_pictures/${userId}-thumbnail.png`;
   }
   return 'images/logo.png';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Remembers one antagonist per (postId, userId) pair to keep reply identity stable.
+  const ANTAGONIST_STORAGE_KEY = 'antagonistUserByPostAndUser';
   const commentForm = document.getElementById('commentForm');
   const commentText = document.getElementById('commentText');
   const commentTone = document.getElementById('commentTone');
   const addBotCommentButton = document.getElementById('addBotComment');
+
+  function getAntagonistStorageMap() {
+    try {
+      const raw = localStorage.getItem(ANTAGONIST_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function getAntagonistStorageKey(postId, userId) {
+    // Composite key prevents collisions when same user comments in multiple posts.
+    return `${postId}::${userId}`;
+  }
+
+  function getStoredAntagonistUserId(postId, userId) {
+    if (!postId || !userId) return null;
+    const map = getAntagonistStorageMap();
+    const key = getAntagonistStorageKey(postId, userId);
+    const stored = map[key];
+    return typeof stored === 'string' && stored.trim() !== '' ? stored : null;
+  }
+
+  function storeAntagonistUserId(postId, userId, antagonistUserId) {
+    if (!postId || !userId || !antagonistUserId) return;
+    const map = getAntagonistStorageMap();
+    const key = getAntagonistStorageKey(postId, userId);
+    map[key] = antagonistUserId;
+    localStorage.setItem(ANTAGONIST_STORAGE_KEY, JSON.stringify(map));
+  }
 
   // Show glasspanel overlay
   function showLoadingOverlay(message = 'Generating bot comment...') {
@@ -43,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
+      // Data source for this page: GET /posts/:postId (returns post + comments).
       const response = await fetch(`/posts/${postId}`);
       if (response.status === 404) {
         // Post not found – redirect to 404
@@ -96,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      // Store post id for comment operations
+      // Hidden form field is reused by both comment actions below.
       document.getElementById('postId').value = postId;
     } catch (error) {
       console.error('Error loading post:', error);
@@ -118,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Generate the comment text
+      // Step 1: ask server to generate text with selected tone.
       const response = await fetch('/generate-comment', {
         method: 'POST',
         headers: {
@@ -133,9 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const { commentText } = await response.json();
 
-      // TODO: Makes no sense to go back and forth between the server and client
-
-      // Add the generated comment to the post
+      // Step 2: persist generated text as a regular human comment.
       const addCommentResponse = await fetch('/comments', {
         method: 'POST',
         headers: {
@@ -145,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (addCommentResponse.ok) {
-        // alert("Comment added successfully!"); // Removed success alert
         loadPost(); // Reload the post to show the new comment
       } else {
         throw new Error('Failed to add comment');
@@ -167,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const postId = document.getElementById('postId').value;
     const userId = localStorage.getItem('randomUser') ? JSON.parse(localStorage.getItem('randomUser')).userId : null;
     const commentTextValue = commentText.value;
+    const storedAntagonistUserId = getStoredAntagonistUserId(postId, userId);
 
     if (!userId) {
       hideLoadingOverlay();
@@ -175,15 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
+      // This route stores human comment and appends an automatic bot reply.
       const response = await fetch('/human_comment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId, userId, commentText: commentTextValue }),
+        body: JSON.stringify({
+          postId,
+          userId,
+          commentText: commentTextValue,
+          antagonistUserId: storedAntagonistUserId,
+        }),
       });
 
       if (response.ok) {
+        const responseBody = await response.json().catch(() => null);
+        // Persist antagonist id to keep the same opponent across future replies.
+        if (responseBody?.antagonistUserId) {
+          storeAntagonistUserId(postId, userId, responseBody.antagonistUserId);
+        }
         commentText.value = ''; // Clear the comment text
         loadPost(); // Reload the post to show the new comment
       } else {

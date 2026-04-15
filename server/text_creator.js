@@ -11,6 +11,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const tones = ['positive', 'neutral', 'negative'];
 
+// Centralized prompt + cleanup helpers for post/comment text used by server routes.
+
 async function createPostText(topic, isFakeNews) {
   const model = 'gpt-4.1-mini';
 
@@ -20,7 +22,7 @@ async function createPostText(topic, isFakeNews) {
     options = options + ' It should be a fictious story about real people.';
   }
 
-  // TODO: remove this?
+  // Two-step generation: first an inspiration snippet, then final user-facing post.
   let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, 
   that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
   let topicText = await generateText(topicPrompt, model);
@@ -37,6 +39,7 @@ async function createPostText(topic, isFakeNews) {
 
 async function editText(originalPostText) {
   const model = 'gpt-4.1-mini';
+  // Used by createHumanPost to intentionally change the original author tone.
   const postPrompt = `Write a small text that digrees with this one: "${originalPostText}".`;
   const postText = await generateText(postPrompt, model);
 
@@ -48,7 +51,7 @@ async function editText(originalPostText) {
 async function createCommentText(postText, tone = undefined) {
   const model = 'gpt-4.1-mini';
   let options = '';
-  // If not defined, pick a tone.
+  // If not defined, pick a tone for variability in generated threads.
   if (tone === undefined) {
     tone = getRandomElement(tones);
   }
@@ -73,7 +76,7 @@ async function createCommentReply(postText, postCommentText) {
 }
 
 function cleanUpPost(str) {
-  // Somel regex cleanup
+  // Best-effort normalization for common LLM wrappers and formatting artifacts.
   str = str.replace(/\*\*.*?\*\*/g, '');
   str = str.replace(/\[.*?\]/g, '');
 
@@ -109,6 +112,7 @@ function cleanUpPost(str) {
 }
 
 async function mockImage(imagePath) {
+  // Image-to-text caption is generated first, then converted to short mocking text.
   const description = await describeImage(imagePath);
   const model = 'gpt-4.1-mini';
 
@@ -137,6 +141,7 @@ async function mockPost(originalText, imagePath) {
 }
 
 async function generateText(prompt, model = 'gpt-4.1-mini') {
+  // Wrapper kept minimal so callers can fully control prompt shape.
   const response = await openai.responses.create({
     model,
     input: prompt,
@@ -157,6 +162,7 @@ async function createPsyopCommentText(postText, objective, type = undefined) {
     type = getRandomElement(psyopCommentTypes);
   }
 
+  // Type controls the rhetorical role of the generated comment.
   let prompt;
   if (type === 'strawman_opposition') {
     prompt =
@@ -191,6 +197,7 @@ async function createPsyopDemolisherReply(postText, strawmanComment, _objective,
 
   const replyText = await generateText(prompt, model);
   const cleanReply = cleanUpPost(replyText);
+  // Return tagged mention when caller provides the target comment author id.
   if (commentUserId) {
     return `<span style="color: red; font-weight: bold;">@${commentUserId}</span> ${cleanReply}`;
   }
@@ -200,6 +207,7 @@ async function createPsyopDemolisherReply(postText, strawmanComment, _objective,
 async function createPsyopPostText(objective, target, strategy) {
   const model = 'gpt-4.1-mini';
 
+  // Strategy guide maps UI-selected strategy to generation constraints.
   const strategyGuide = {
     White:
       'Use only truthful and verifiable information. The source and intent may be transparent. ' +

@@ -1,5 +1,6 @@
 async function loadBots() {
   try {
+    // Admin list source: GET /bots from server/app.mjs.
     const response = await fetch('/bots');
     const data = await response.json();
     const botsContainer = document.getElementById('bots');
@@ -8,6 +9,7 @@ async function loadBots() {
     data.bots.forEach((bot) => {
       const botElement = document.createElement('div');
       botElement.className = 'post-thumbnail';
+      // Thumbnail naming contract: /thumbnails/profile_pictures/<userId>-thumbnail.png
       const thumbSrc = bot.profilePictureName
         ? `/thumbnails/profile_pictures/${bot.userId}-thumbnail.png`
         : 'images/logo.png';
@@ -28,6 +30,7 @@ async function loadBots() {
 }
 
 function viewBot(bot) {
+  // random_bot.html reads this key to render the selected profile.
   localStorage.setItem('randomUser', JSON.stringify(bot));
   window.location.href = '/random_bot.html';
 }
@@ -37,6 +40,7 @@ async function deleteBot(userId) {
     return;
   }
   try {
+    // Admin delete API: DELETE /bots/:userId
     const response = await fetch(`/bots/${encodeURIComponent(userId)}`, { method: 'DELETE' });
     if (response.ok) {
       loadBots();
@@ -63,6 +67,7 @@ document.getElementById('create-bot-form').addEventListener('submit', async (e) 
   loadingOverlay.classList.remove('hidden');
 
   try {
+    // Admin create API: POST /bots (server may auto-generate missing fields).
     const response = await fetch('/bots', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,6 +76,7 @@ document.getElementById('create-bot-form').addEventListener('submit', async (e) 
     const data = await response.json();
     if (response.ok) {
       document.getElementById('create-bot-form').reset();
+      // Keep newly-created bot as active persona for downstream pages.
       localStorage.setItem('randomUser', JSON.stringify(data));
       window.location.href = '/random_bot.html';
     } else {

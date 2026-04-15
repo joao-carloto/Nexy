@@ -17,6 +17,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsRoot = path.join(__dirname, '../server/data/uploads');
+// Folder conventions used across API + frontend:
+// - originals: /post_images and /profile_pictures
+// - derived assets: /thumbnails/*
 const postImagesDir = path.join(uploadsRoot, 'post_images');
 const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
 const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
@@ -27,7 +30,7 @@ function isSafetyRejection(error) {
   return message.includes('rejected by the safety system') || message.includes('content_policy_violation');
 }
 
-// Caller should provide a stable 11-char postId to use as base filename
+// Caller should provide a stable postId so filename and DB id can stay in sync.
 async function generateImage(contents, postId) {
   try {
     const image = await openai.images.generate({
@@ -55,6 +58,7 @@ async function generateImage(contents, postId) {
     const fileExt = path.extname(imageFileName);
     const thumbnailFileName = `${safeId}-thumbnail${fileExt}`;
 
+    // Post feeds load thumbnails; full post view loads /post_images/<id>.png.
     await cropAndResizeToThumbnail(imageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200, null);
 
     return imageFileName;
@@ -144,6 +148,7 @@ async function createUserImage(userId, fullName, description) {
     fs.writeFileSync(imagePath, buffer);
     console.log(`Image saved as ${imageFileName}`);
 
+    // Keep avatar thumbnail naming predictable for frontend lookup by userId.
     const thumbnailFileName = `${userId}-thumbnail.png`;
     await resizeImage(imageFileName, profilePicturesDir, profileThumbnailsDir, thumbnailFileName, 200, null);
 
@@ -193,7 +198,7 @@ async function cropAndResizeToThumbnail(
 
   const outputFilePath = path.join(outputFolder, outputFileName);
 
-  // Use sharp to crop to square and then resize
+  // Crop from center and resize to a fixed square for consistent grid cards.
   const image = sharp(inputFilePath).ensureAlpha();
   const metadata = await image.metadata();
 
@@ -234,7 +239,7 @@ async function resizeImage(
     // Load the image
     const image = await Image.load(inputFilePath);
 
-    // Calculate the missing dimension while retaining the aspect ratio
+    // Calculate the missing dimension while retaining the aspect ratio.
     if (width && !height) {
       height = Math.round((image.height / image.width) * width);
     } else if (height && !width) {
@@ -255,6 +260,7 @@ async function resizeImage(
 }
 
 async function describeImage(imagePath) {
+  // Used by text_creator.js to derive text prompts from an uploaded image.
   const base64 = Buffer.from(fs.readFileSync(imagePath)).toString('base64');
   const response = await openai.responses.create({
     model: 'gpt-4.1-mini',

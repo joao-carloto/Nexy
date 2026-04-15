@@ -16,6 +16,11 @@ import {
   createPsyopDemolisherReply,
 } from '../server/text_creator.js';
 
+// Orchestrates post generation pipelines used by server/app.mjs routes:
+// - /create_bot_post -> createAIPost
+// - /create_human_post -> createHumanPost
+// - /create_psyop_post -> createPsyopPost
+
 const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
 const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
 const postImagesDir = path.join(uploadsRoot, 'post_images');
@@ -53,33 +58,7 @@ const serious_topics = [
   'Weather',
 ];
 
-// const lightTopics = ['social media post', 'some celebrity', 'internet influencer product placement']
-
 const lightTopics = ['some music celebrity', 'some TV celebrity', 'some movie celebrity', 'some sports celebrity'];
-
-// TODO: remove
-const userIds = [
-  'SunnySky123',
-  'MoonlightMagic',
-  'StarGazer89',
-  'DreamerGirl',
-  'TechieTom',
-  'NatureLover',
-  'BookWorm2025',
-  'TravelBug',
-  'MusicFanatic',
-  'CreativeSoul',
-  'JohnDoe',
-  'JaneSmith',
-  'AlexJohnson',
-  'EmilyBrown',
-  'MichaelWilliams',
-  'SarahDavis',
-  'DavidClark',
-  'LauraMartinez',
-  'ChrisTaylor',
-  'JessicaLee',
-];
 
 function removeHashtags(text) {
   return text.replace(/#[\w-]+/g, '').trim();
@@ -95,8 +74,9 @@ async function createAIPost({
   isFakeNews = undefined,
   numComments = undefined,
 }) {
+  // If caller does not force a user, pick one bot account from DB.
   if (userId === undefined) {
-    userId = getRandomElement(userIds); // TODO: Remove this. Get user from DB
+    userId = await getRandomUserIdFromDB();
   }
 
   if (topic === undefined || topic === '') {
@@ -112,12 +92,14 @@ async function createAIPost({
 
   console.log(`Topic: ${topic}`);
 
+  // Text generation and image generation are intentionally decoupled:
+  // text comes first, then image prompt is derived from sanitized text.
   const postText = await createPostText(topic, isFakeNews);
 
   console.log('\nCaption:');
   console.log(postText);
 
-  // Pre-generate postId so image file can share the same 11-char id
+  // Pre-generate postId so DB id and image filename stay aligned (<id>.png).
   const provisionalPostId = generateGUID(11);
   await generateImage(
     `Create a amateur-looking square photo inspired by this text: "${removeEmojis(removeHashtags(postText))}". 
@@ -133,8 +115,7 @@ async function createAIPost({
     numComments = Number(numComments);
   }
 
-  // Persist with required bot metadata defaults
-  // Use the provisionalPostId as the definitive id
+  // Persist with required bot metadata defaults using the same provisional id.
   const postId = await savePost(
     userId,
     postText,
@@ -142,7 +123,7 @@ async function createAIPost({
     provisionalPostId
   );
 
-  // Use the provisionalPostId as the definitive id
+  // Auto-seed the thread with synthetic comments for feed realism.
   for (let i = 0; i < numComments; i++) {
     const commentText = cleanUpPost(await createCommentText(postText));
 
@@ -167,6 +148,7 @@ async function savePost(
 ) {
   return new Promise((resolve, reject) => {
     const createdAt = new Date().toISOString();
+    // forcedPostId is used when the image already exists under a known id.
     const postId = forcedPostId || generateGUID(11); // becomes primary key id
     const query =
       'INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -186,6 +168,7 @@ async function savePost(
 async function saveComment(postId, userId, commentText, sourceType = null) {
   return new Promise((resolve, reject) => {
     const createdAt = new Date().toISOString();
+    // Keep one helper for both legacy rows (without sourceType) and new rows.
     const query = sourceType
       ? 'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)'
       : 'INSERT INTO comments (postId, userId, commentText, createdAt) VALUES (?, ?, ?, ?)';
@@ -218,7 +201,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     // Escape user input to prevent XSS injection
     const escapedPostText = encode(postText);
 
-    // Edit the post text
+    // Human posts are intentionally transformed into a "replying/disagreeing" style.
     let editedPostText = await editText(escapedPostText);
 
     let originalImagePath = null;
@@ -226,18 +209,18 @@ async function createHumanPost(userId, postText, originalImageFileName) {
     if (originalImageFileName) {
       originalImagePath = path.join(postImagesDir, originalImageFileName);
 
-      // Resize the image.
+      // Normalize uploaded image size before any AI or thumbnail pipeline step.
       try {
         await resizeImage(originalImageFileName, postImagesDir, postImagesDir, null, 1080, null);
       } catch (error) {
-        throw new Error('Failed to resize the image.');
+        throw new Error('Failed to resize the image.', { cause: error });
       }
 
-      // Create text making fun of the image content.
+      // Generate optional extra text based on image contents.
       try {
         mockingImageText = await mockImage(originalImagePath);
       } catch (error) {
-        throw new Error('Failed to mock the image.');
+        throw new Error('Failed to mock the image.', { cause: error });
       }
     }
 
@@ -245,7 +228,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       editedPostText = editedPostText + '</br>' + mockingImageText;
     }
 
-    // Pre-generate postId so edited image uses the same base name
+    // Pre-generate postId so edited image and DB row use the same id base.
     const postId = generateGUID(11);
     const editedImageFileName = `${postId}.png`;
     const editedImagePath = path.join(postImagesDir, editedImageFileName);
@@ -269,7 +252,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       throw new Error('Failed to create a thumbnail for the image.', { cause: error });
     }
 
-    // Save the post with the edited text and image
+    // Save post as sourceType=human for downstream moderation/analytics splits.
     return new Promise((resolve, reject) => {
       const query =
         'INSERT INTO posts (id, userId, postText, createdAt, countryCode, languageCode, sourceType) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -300,6 +283,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
 }
 
 async function createPsyopPost({ objective, target = 'general public', strategy = 'White' }) {
+  // PsyOp flow mirrors createAIPost but uses dedicated prompt families.
   const userId = await getRandomUserIdFromDB();
 
   const postText = await createPsyopPostText(objective, target, strategy);
@@ -330,7 +314,7 @@ async function createPsyopPost({ objective, target = 'general public', strategy 
     console.log(`\nPsyOp comment (${commentType}):`);
     console.log(commentText);
 
-    // If the comment is a strawman opposition, generate a demolisher reply
+    // Inject counter-reply when strawman text is generated to shape thread tone.
     if (commentType === 'strawman_opposition') {
       const replyText = await createPsyopDemolisherReply(postText, commentText, objective, commentUserId);
       const replyUserId = await getRandomUserIdFromDB();

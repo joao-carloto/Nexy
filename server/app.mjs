@@ -68,20 +68,23 @@ function requireAdminPage(req, res, next) {
   next();
 }
 
-// Intercept request for manage_posts.html before static middleware serves it
+// Route: protected admin page.
+// Used by: redirect target after successful login in public/js/login.js.
 app.get('/manage_posts.html', requireAdminPage, (req, res) => {
   // Serve the file explicitly (bypass redirect loop)
   const filePath = path.join(path.resolve(), 'public', 'html', 'manage_posts.html');
   res.sendFile(filePath);
 });
 
-// Intercept request for manage_bots.html before static middleware serves it
+// Route: protected admin page.
+// Used by: direct navigation from admin workflow to manage bots UI.
 app.get('/manage_bots.html', requireAdminPage, (req, res) => {
   const filePath = path.join(path.resolve(), 'public', 'html', 'manage_bots.html');
   res.sendFile(filePath);
 });
 
-// Login endpoint
+// Route: admin authentication API.
+// Used by: login form submit in public/js/login.js.
 app.post('/login', (req, res) => {
   const { password } = req.body || {};
   if (!ADMIN_PASSWORD) {
@@ -96,26 +99,33 @@ app.post('/login', (req, res) => {
   res.json({ ok: true });
 });
 
-// Logout endpoint
+// Route: admin logout API.
+// Used by: manual browser navigation to /logout (not currently called by frontend JS).
 app.get('/logout', (req, res) => {
   res.setHeader('Set-Cookie', 'adminAuth=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
   res.redirect('/login.html');
 });
 
-// Serve static files
-// Redirect root to explore.html
+// Route: root redirect.
+// Used by: first page load for the app (sends users to explore feed).
 app.get('/', (req, res) => {
   res.redirect('/explore.html');
 });
+// Static route: serves shared assets and top-level HTML pages in public/.
 app.use(express.static(path.join(path.resolve(), 'public')));
+// Static route: supports direct page URLs like /explore.html and /post.html.
 app.use(express.static(path.join(path.resolve(), 'public', 'html')));
 
+// Static route: serves uploaded post images referenced by posts.
 app.use('/post_images', express.static(postImagesDir));
 
+// Static route: serves uploaded profile pictures referenced by users/comments.
 app.use('/profile_pictures', express.static(profilePicturesDir));
 
+// Static route: serves generated post thumbnails for feed/cards.
 app.use('/thumbnails/post_images', express.static(postThumbnailsDir));
 
+// Static route: serves generated profile thumbnails for avatars.
 app.use('/thumbnails/profile_pictures', express.static(profileThumbnailsDir));
 
 // Set up multer for image storage
@@ -163,7 +173,8 @@ db.serialize(() => {
   )`);
 });
 
-// Route to create an AI generated post
+// Route: create AI-generated post.
+// Used by: bot post creator page in public/js/new_bot_post.js.
 app.post('/create_bot_post', async (req, res) => {
   let { topic, isFakeNews, numComments } = req.body;
   // All fields are optional
@@ -189,7 +200,8 @@ app.post('/create_bot_post', async (req, res) => {
   }
 });
 
-// Route to create a PsyOp post
+// Route: create PsyOp post.
+// Used by: psyop generator page in public/js/psyop.js.
 app.post('/create_psyop_post', async (req, res) => {
   let { objective, target, strategy } = req.body;
   if (!objective || typeof objective !== 'string' || objective.trim() === '') {
@@ -207,7 +219,8 @@ app.post('/create_psyop_post', async (req, res) => {
   }
 });
 
-// Route to save a post
+// Route: create human-authored post (supports optional uploaded image).
+// Used by: human post composer in public/js/new_human_post.js.
 app.post('/create_human_post', upload.single('image'), async (req, res) => {
   const { userId, postText } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
@@ -241,7 +254,17 @@ function resolvePostIdentifier(identifier, cb) {
   });
 }
 
-// Route to save a comment (accepts GUID or numeric in postId field, stores GUID only)
+// Helper: resolve user identifier -> { userId }
+function resolveUserIdentifier(identifier, cb) {
+  db.get('SELECT userId FROM users WHERE userId = ?', [identifier], (e, row) => {
+    if (e) return cb(e);
+    if (!row) return cb(new Error('User not found'));
+    cb(null, { userId: row.userId });
+  });
+}
+
+// Route: add a plain human comment to a post.
+// Used by: comment submission flow in public/js/post.js.
 app.post('/comments', async (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
@@ -263,9 +286,10 @@ app.post('/comments', async (req, res) => {
   });
 });
 
-// Route to save a human comment and generate a bot reply (GUID stored)
+// Route: add human comment and auto-generate antagonist bot reply.
+// Used by: "debate"/antagonist comment flow in public/js/post.js.
 app.post('/human_comment', (req, res) => {
-  const { postId, userId, commentText } = req.body;
+  const { postId, userId, commentText, antagonistUserId } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
@@ -283,9 +307,30 @@ app.post('/human_comment', (req, res) => {
           const post_text = await getPostTextFromDB(ids.id);
           const reply = await createCommentReply(post_text, commentText);
           let randomOponentId = null;
+
+          const candidateAntagonistUserId =
+            typeof antagonistUserId === 'string' && antagonistUserId.trim() !== '' ? antagonistUserId.trim() : null;
+
+          if (candidateAntagonistUserId && candidateAntagonistUserId !== userId) {
+            const antagonistExists = await new Promise((resolve, reject) => {
+              resolveUserIdentifier(candidateAntagonistUserId, (uErr, userRow) => {
+                if (uErr) {
+                  if (uErr.message === 'User not found') return resolve(false);
+                  return reject(uErr);
+                }
+                return resolve(Boolean(userRow?.userId));
+              });
+            });
+
+            if (antagonistExists) {
+              randomOponentId = candidateAntagonistUserId;
+            }
+          }
+
           while (randomOponentId === null || randomOponentId === userId) {
             randomOponentId = await getRandomUserIdFromDB();
           }
+
           const botCreatedAt = new Date().toISOString();
           // Escape HTML entities for user ID to prevent XSS injection
           const escapedUserId = encode(userId);
@@ -300,7 +345,7 @@ app.post('/human_comment', (req, res) => {
             ],
             function (botErr) {
               if (botErr) return res.status(500).json({ error: botErr.message });
-              res.status(201).json({ ok: true });
+              res.status(201).json({ ok: true, antagonistUserId: randomOponentId });
             }
           );
         } catch (e) {
@@ -311,7 +356,8 @@ app.post('/human_comment', (req, res) => {
   });
 });
 
-// Route to fetch posts and comments
+// Route: list posts (search + limit).
+// Used by: feeds in public/js/explore.js, public/js/latest_posts.js, and admin list in public/js/manage_posts.js.
 app.get('/posts', (req, res) => {
   const { search = '', limit = 20 } = req.query; // Default to no search and limit to 20 posts
 
@@ -333,7 +379,8 @@ app.get('/posts', (req, res) => {
   });
 });
 
-// Route to fetch a specific post by identifier (GUID)
+// Route: fetch one post with its comments by GUID.
+// Used by: post details page loader in public/js/post.js and admin delete flow in public/js/manage_posts.js.
 app.get('/posts/:postId', (req, res) => {
   const identifier = req.params.postId;
   resolvePostIdentifier(identifier, (rErr, ids) => {
@@ -363,7 +410,8 @@ app.get('/posts/:postId', (req, res) => {
   });
 });
 
-// Pretty URL: /post/<id> -> serve post.html if exists; otherwise 404 page
+// Route: pretty URL page entry for a specific post.
+// Used by: shared/direct links such as /post/<id>; serves post.html shell for public/js/post.js.
 app.get('/post/:postId', (req, res) => {
   const identifier = req.params.postId;
   resolvePostIdentifier(identifier, (rErr, _ids) => {
@@ -380,6 +428,8 @@ app.get('/post/:postId', (req, res) => {
   });
 });
 
+// Route: get one random user profile.
+// Used by: navbar widget in public/js/navbar.js and random bot UI in public/js/random_bot.js.
 app.get('/random-user', (req, res) => {
   const query = `
     SELECT userId, fullName, profilePictureName, description, countryRegion
@@ -400,6 +450,8 @@ app.get('/random-user', (req, res) => {
   });
 });
 
+// Route: delete a post and related media/comments (admin only).
+// Used by: post management actions in public/js/manage_posts.js.
 app.delete('/posts/:postId', (req, res) => {
   if (!isAdmin(req)) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -430,6 +482,8 @@ app.delete('/posts/:postId', (req, res) => {
   });
 });
 
+// Route: AI-assisted comment generation for a given post and tone.
+// Used by: "generate comment" helper action in public/js/post.js.
 app.post('/generate-comment', async (req, res) => {
   const { postId, tone } = req.body;
   resolvePostIdentifier(postId, (rErr, ids) => {
@@ -440,14 +494,15 @@ app.post('/generate-comment', async (req, res) => {
       try {
         const commentText = await createCommentText(row.postText, tone);
         res.status(200).json({ commentText });
-      } catch (_e) {
+      } catch {
         res.status(500).json({ error: 'Failed to generate comment' });
       }
     });
   });
 });
 
-// Route to fetch all bots
+// Route: list all bot accounts.
+// Used by: bot management table in public/js/manage_bots.js.
 app.get('/bots', (req, res) => {
   db.all(
     'SELECT userId, fullName, profilePictureName, description, countryRegion FROM users ORDER BY fullName',
@@ -458,7 +513,8 @@ app.get('/bots', (req, res) => {
   );
 });
 
-// Route to create a new bot
+// Route: create a bot account (admin only).
+// Used by: bot creation form in public/js/manage_bots.js.
 app.post('/bots', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
   let { userId, fullName, description, countryRegion } = req.body;
@@ -540,7 +596,8 @@ app.post('/bots', async (req, res) => {
   }
 });
 
-// Route to delete a bot
+// Route: delete a bot account (admin only).
+// Used by: delete action in public/js/manage_bots.js.
 app.delete('/bots/:userId', (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
   const { userId } = req.params;
