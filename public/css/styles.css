@@ -895,6 +895,20 @@ select:hover {
   line-height: 1.5;
 }
 
+.help-brand-mark {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.help-brand-mark img {
+  width: 80px;
+  height: auto;
+  opacity: 1;
+  border-radius: 6px;
+  filter: none;
+}
+
 .psyop-type {
   margin-top: 16px;
   margin-bottom: 8px;
@@ -1042,5 +1056,9 @@ select:hover {
   .psyop-info-content p,
   .psyop-info-content li {
     font-size: 0.92rem;
+  }
+
+  .help-brand-mark img {
+    width: 66px;
   }
 }
