@@ -3,7 +3,7 @@
     <img src="images/logo.png" alt="Logo" class="logo" />
     Nexy
   </div>
-  <button class="svg-button help-button" title="Help">
+  <button class="svg-button help-button" title="Help" data-i18n-title="title.help">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
       <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="3" fill="#2d4554" />
       <path d="M24 34v-3" stroke="#f4f3f1" stroke-width="3" stroke-linecap="round" />
@@ -17,18 +17,33 @@
       <circle cx="24" cy="38" r="2" fill="#f4f3f1" />
     </svg>
   </button>
+  <div class="title-language" aria-label="Language switcher">
+    <label for="language-selector" class="title-language-label" data-i18n="common.language">Language</label>
+    <select id="language-selector" class="title-language-select" aria-label="Language">
+      <option value="en">EN</option>
+      <option value="pt">PT</option>
+    </select>
+  </div>
 </div>
 
 <div id="helpInfoModal" class="psyop-info-modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpInfoTitle">
   <div class="psyop-info-dialog" role="document">
     <div class="psyop-info-header">
-      <h2 id="helpInfoTitle">Nexy Help</h2>
-      <button type="button" id="closeHelpInfo" class="psyop-info-close" aria-label="Close help dialog">&times;</button>
+      <h2 id="helpInfoTitle" data-i18n="title.nexyHelp">Nexy Help</h2>
+      <button
+        type="button"
+        id="closeHelpInfo"
+        class="psyop-info-close"
+        aria-label="Close help dialog"
+        data-i18n-aria-label="title.closeHelpDialog"
+      >
+        &times;
+      </button>
     </div>
     <div id="helpInfoContent" class="psyop-info-content">
       <section>
-        <h3>Loading Help</h3>
-        <p>Please wait while the help content is loaded.</p>
+        <h3 data-i18n="title.loadingHelp">Loading Help</h3>
+        <p data-i18n="title.loadingHelpMessage">Please wait while the help content is loaded.</p>
       </section>
     </div>
   </div>

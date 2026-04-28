@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('loginForm');
   const passwordInput = document.getElementById('password');
   const errorMsg = document.getElementById('errorMsg');
+  const t = (key, fallback) => (window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -9,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const password = passwordInput.value.trim();
     if (!password) {
-      errorMsg.textContent = 'Password required';
+      errorMsg.textContent = t('login.errors.passwordRequired', 'Password required');
       return;
     }
 
@@ -21,13 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        errorMsg.textContent = data.error || 'Login failed';
+        errorMsg.textContent = data.error || t('login.errors.loginFailed', 'Login failed');
         return;
       }
       // Redirect to manage posts
       window.location.href = '/manage_posts.html';
     } catch (err) {
-      errorMsg.textContent = 'Network error';
+      errorMsg.textContent = t('login.errors.networkError', 'Network error');
     }
   });
 });

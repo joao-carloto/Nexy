@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Bot Post</title>
+    <title data-i18n="newBotPost.pageTitle">New Bot Post</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="images/logo.png" />
   </head>
@@ -11,32 +11,42 @@
     <script src="js/title.js"></script>
     <script src="js/navbar.js"></script>
     <div id="title-container"></div>
-    <h1>New Bot Post</h1>
+    <h1 data-i18n="newBotPost.heading">New Bot Post</h1>
     <form id="postForm" class="form-container">
-      <textarea id="topic" placeholder="Enter a topic (optional)" rows="4" class="post-text" maxlength="500"></textarea>
+      <textarea
+        id="topic"
+        placeholder="Enter a topic (optional)"
+        data-i18n-placeholder="newBotPost.topicPlaceholder"
+        rows="4"
+        class="post-text"
+        maxlength="500"
+      ></textarea>
       <div>
-        <label for="isFakeNews" style="margin: 0; white-space: nowrap">Fake News:</label>
+        <label for="isFakeNews" style="margin: 0; white-space: nowrap" data-i18n="newBotPost.fakeNewsLabel"
+          >Fake News:</label
+        >
         <select id="isFakeNews">
-          <option value="false">Maybe</option>
-          <option value="true">Yes Please</option>
+          <option value="false" data-i18n="newBotPost.fakeNewsMaybe">Maybe</option>
+          <option value="true" data-i18n="newBotPost.fakeNewsYesPlease">Yes Please</option>
         </select>
         <input
           class="num-comments-input"
           type="number"
           id="numComments"
           placeholder="Number of comments (optional)"
+          data-i18n-placeholder="newBotPost.numCommentsPlaceholder"
           style="margin-left: 10px"
           min="0"
           max="10"
         />
       </div>
-      <button type="submit" class="submit-button">SUBMIT</button>
+      <button type="submit" class="submit-button" data-i18n="common.submit">SUBMIT</button>
     </form>
 
     <!-- Glass panel and spinner -->
     <div id="loadingOverlay" class="hidden">
       <div class="spinner"></div>
-      <p class="loading-message">Your overlords are working. Stay put...</p>
+      <p class="loading-message" data-i18n="common.loadingOverlords">Your overlords are working. Stay put...</p>
     </div>
 
     <div id="result"></div>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Explore Posts</title>
+    <title data-i18n="explore.pageTitle">Explore Posts</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="/images/logo.png" />
   </head>
@@ -12,8 +12,15 @@
     <script src="js/navbar.js"></script>
     <div id="title-container"></div>
     <script src="js/title.js"></script>
-    <h1>Explore Posts</h1>
-    <input type="text" id="searchBox" placeholder="Search posts..." oninput="filterPosts()" class="search-box" />
+    <h1 data-i18n="explore.heading">Explore Posts</h1>
+    <input
+      type="text"
+      id="searchBox"
+      placeholder="Search posts..."
+      data-i18n-placeholder="explore.searchPlaceholder"
+      oninput="filterPosts()"
+      class="search-box"
+    />
     <br />
     <div id="posts" class="posts-container"></div>
     <script src="js/explore.js"></script>

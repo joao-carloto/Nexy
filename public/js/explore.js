@@ -2,6 +2,10 @@ let currentSearch = ''; // Store the current search term
 let currentLimit = 10; // Default limit for the number of posts
 let debounceTimeout; // Timeout ID for debounce
 
+function t(key, fallback) {
+  return window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback;
+}
+
 async function loadThumbnails(search = '', limit = 1000) {
   try {
     currentSearch = search; // Update the current search term
@@ -24,7 +28,7 @@ async function loadThumbnails(search = '', limit = 1000) {
         postElement.innerHTML = `
             <img 
               src="/thumbnails/post_images/${thumbnailFileName}" 
-              alt="Post Thumbnail" 
+              alt="${t('explore.thumbnailAlt', 'Post Thumbnail')}" 
               class="thumbnail-image"
               onclick="viewPost('${post.id}')"
             >

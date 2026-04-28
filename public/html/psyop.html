@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New PsyOp</title>
+    <title data-i18n="psyop.pageTitle">New PsyOp</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="images/logo.png" />
   </head>
@@ -12,9 +12,11 @@
     <script src="js/navbar.js"></script>
     <div id="title-container"></div>
     <div id="navbar-container"></div>
-    <h1>New PsyOp</h1>
+    <h1 data-i18n="psyop.heading">New PsyOp</h1>
     <div class="psyop-info-trigger-container">
-      <button type="button" id="openPsyopInfo" class="psyop-info-button">What are PsyOps?</button>
+      <button type="button" id="openPsyopInfo" class="psyop-info-button" data-i18n="psyop.openInfo">
+        What are PsyOps?
+      </button>
     </div>
     <div class="form-container">
       <form id="psyopForm">
@@ -23,6 +25,7 @@
           name="objective"
           maxlength="500"
           placeholder="Define the objective of the PsyOp"
+          data-i18n-placeholder="psyop.objectivePlaceholder"
           rows="4"
           class="post-text"
         ></textarea>
@@ -32,24 +35,25 @@
           name="target"
           maxlength="100"
           placeholder="Define the target audience"
+          data-i18n-placeholder="psyop.targetPlaceholder"
           class="post-text"
         />
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1em">
-          <label for="strategy" style="margin: 0; white-space: nowrap">Strategy</label>
+          <label for="strategy" style="margin: 0; white-space: nowrap" data-i18n="psyop.strategyLabel">Strategy</label>
           <select id="strategy" name="strategy">
-            <option value="White" selected>White</option>
-            <option value="Grey">Grey</option>
-            <option value="Black">Black</option>
+            <option value="White" selected data-i18n="psyop.strategyWhite">White</option>
+            <option value="Grey" data-i18n="psyop.strategyGrey">Grey</option>
+            <option value="Black" data-i18n="psyop.strategyBlack">Black</option>
           </select>
         </div>
-        <button type="submit" class="submit-button">SUBMIT</button>
+        <button type="submit" class="submit-button" data-i18n="common.submit">SUBMIT</button>
       </form>
     </div>
 
     <!-- Glass panel and spinner -->
     <div id="loadingOverlay" class="hidden">
       <div class="spinner"></div>
-      <p class="loading-message">Crafting your PsyOp post...</p>
+      <p class="loading-message" data-i18n="psyop.loading">Crafting your PsyOp post...</p>
     </div>
     <div
       id="psyopInfoModal"
@@ -60,13 +64,19 @@
     >
       <div class="psyop-info-dialog" role="document">
         <div class="psyop-info-header">
-          <h2 id="psyopInfoTitle">What are PsyOps?</h2>
-          <button type="button" id="closePsyopInfo" class="psyop-info-close" aria-label="Close PsyOps information">
+          <h2 id="psyopInfoTitle" data-i18n="psyop.infoTitle">What are PsyOps?</h2>
+          <button
+            type="button"
+            id="closePsyopInfo"
+            class="psyop-info-close"
+            aria-label="Close PsyOps information"
+            data-i18n-aria-label="psyop.closeInfoAria"
+          >
             &times;
           </button>
         </div>
         <div class="psyop-info-content">
-          <section>
+          <section data-i18n-html="psyop.info.overview">
             <h3>Overview</h3>
             <p>
               Psychological Operations (PsyOps) are strategic communication activities aimed at influencing perceptions,
@@ -75,7 +85,7 @@
             </p>
           </section>
 
-          <section>
+          <section data-i18n-html="psyop.info.commonTactics">
             <h3>Common Tactics on Social Platforms</h3>
             <ul>
               <li>Narrative shaping: pushing specific interpretations of events to influence public opinion.</li>
@@ -94,7 +104,7 @@
             <p>These techniques exploit social media speed, virality, and algorithmic amplification.</p>
           </section>
 
-          <section>
+          <section data-i18n-html="psyop.info.whiteGreyBlack">
             <h3>White vs Grey vs Black PsyOps</h3>
             <p>These categories describe transparency of source and truthfulness of information.</p>
 
@@ -123,7 +133,7 @@
             <p>Example: Fake leaked documents allegedly from an opponent, designed to damage credibility.</p>
           </section>
 
-          <section>
+          <section data-i18n-html="psyop.info.howToSpot">
             <h3>How to Spot PsyOps on Social Media</h3>
             <p>
               PsyOps often rely on emotional manipulation, selective storytelling, and coordinated messaging. Look for
@@ -186,7 +196,7 @@
             </ul>
           </section>
 
-          <section>
+          <section data-i18n-html="psyop.info.quickChecklist">
             <h3>Quick Checklist</h3>
             <p>Ask yourself:</p>
             <ul class="psyop-checklist">

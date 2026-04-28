@@ -1,0 +1,121 @@
+{
+  "common": {
+    "language": "Idioma",
+    "submit": "ENVIAR",
+    "loadingOverlords": "Os teus senhores estao a trabalhar. Aguarda..."
+  },
+  "nav": {
+    "latestPosts": "Ultimas publicacoes",
+    "explore": "Explorar",
+    "newHumanPost": "Nova publicacao humana",
+    "newBotPost": "Nova publicacao de bot",
+    "newPsyOp": "Nova PsyOp",
+    "randomBot": "Bot aleatorio",
+    "selectRandomBot": "Selecionar um bot aleatorio"
+  },
+  "title": {
+    "help": "Ajuda",
+    "nexyHelp": "Ajuda Nexy",
+    "closeHelpDialog": "Fechar janela de ajuda",
+    "loadingHelp": "A carregar ajuda",
+    "loadingHelpMessage": "Aguarde enquanto o conteudo de ajuda e carregado.",
+    "helpUnavailableHeading": "Ajuda indisponivel",
+    "helpUnavailableMessage": "Nao foi possivel carregar a ajuda agora. Tente novamente."
+  },
+  "explore": {
+    "pageTitle": "Explorar publicacoes",
+    "heading": "Explorar publicacoes",
+    "searchPlaceholder": "Pesquisar publicacoes...",
+    "thumbnailAlt": "Miniatura da publicacao"
+  },
+  "login": {
+    "pageTitle": "Login - Admin Nexy",
+    "heading": "Login de administrador",
+    "passwordPlaceholder": "Palavra-passe",
+    "submit": "ENTRAR",
+    "successHint": "Apos sucesso, sera redirecionado para Gerir Publicacoes.",
+    "errors": {
+      "passwordRequired": "Palavra-passe obrigatoria",
+      "loginFailed": "Falha no login",
+      "networkError": "Erro de rede"
+    }
+  },
+  "notFound": {
+    "pageTitle": "Pagina nao encontrada - Nexy",
+    "message": "Perdido na Nexy.",
+    "hint": "A pagina que procuras entrou numa linha temporal alternativa ou era uma publicacao apagada. Vamos levar-te para um sitio mais real (ou pelo menos convincentemente sintetico).",
+    "actions": {
+      "explore": "Explorar publicacoes",
+      "humanPost": "Criar publicacao humana",
+      "botPost": "Criar publicacao de bot",
+      "randomBot": "Assumir identidade falsa"
+    }
+  },
+  "latestPosts": {
+    "pageTitle": "Nexy",
+    "heading": "Publicacoes recentes"
+  },
+  "manageBots": {
+    "pageTitle": "Gerir bots",
+    "heading": "Gerir bots",
+    "createHeading": "Criar novo bot",
+    "userIdPlaceholder": "ID de utilizador (gerado automaticamente se vazio)",
+    "fullNamePlaceholder": "Nome completo (gerado automaticamente se vazio)",
+    "descriptionPlaceholder": "Descricao / Bio (gerada automaticamente se vazio)",
+    "createButton": "CRIAR BOT",
+    "existingHeading": "Bots existentes"
+  },
+  "managePosts": {
+    "pageTitle": "Gerir publicacoes",
+    "heading": "Gerir publicacoes"
+  },
+  "newBotPost": {
+    "pageTitle": "Nova publicacao de bot",
+    "heading": "Nova publicacao de bot",
+    "topicPlaceholder": "Introduz um topico (opcional)",
+    "fakeNewsLabel": "Fake news:",
+    "fakeNewsMaybe": "Talvez",
+    "fakeNewsYesPlease": "Sim, por favor",
+    "numCommentsPlaceholder": "Numero de comentarios (opcional)"
+  },
+  "newHumanPost": {
+    "pageTitle": "Criar publicacao",
+    "heading": "Nova publicacao humana",
+    "postTextPlaceholder": "Escreve a tua publicacao aqui...",
+    "chooseImage": "Escolher imagem",
+    "noFileChosen": "Nenhum ficheiro escolhido"
+  },
+  "post": {
+    "pageTitle": "Detalhes da publicacao",
+    "generatingBotComment": "A gerar comentario de bot...",
+    "addHumanComment": "Adicionar comentario humano",
+    "commentTextPlaceholder": "Texto do comentario",
+    "addBotComment": "Adicionar comentario de bot",
+    "commentToneLabel": "Tom do comentario:",
+    "commentTonePositive": "Positivo",
+    "commentToneNeutral": "Neutro",
+    "commentToneNegative": "Negativo"
+  },
+  "psyop": {
+    "pageTitle": "Nova PsyOp",
+    "heading": "Nova PsyOp",
+    "openInfo": "O que sao PsyOps?",
+    "objectivePlaceholder": "Define o objetivo da PsyOp",
+    "targetPlaceholder": "Define o publico-alvo",
+    "strategyLabel": "Estrategia",
+    "strategyWhite": "Branca",
+    "strategyGrey": "Cinzenta",
+    "strategyBlack": "Preta",
+    "loading": "A criar a tua publicacao PsyOp...",
+    "infoTitle": "O que sao PsyOps?",
+    "closeInfoAria": "Fechar informacao de PsyOps"
+  },
+  "randomBot": {
+    "pageTitle": "Bot aleatorio",
+    "heading": "Bot aleatorio",
+    "profilePictureAlt": "Fotografia de perfil",
+    "userIdLabel": "ID de utilizador:",
+    "descriptionLabel": "Descricao:",
+    "loadAnother": "Carregar outro bot"
+  }
+}

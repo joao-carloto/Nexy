@@ -52,7 +52,7 @@ Current prototype constraints:
 
 For free demo access, deployment questions, or collaboration inquiries, please use the contact form:
 
-[Request information](YOUR_CONTACT_FORM_LINK)
+[Request information](TODO CONTACT_FORM_LINK)
 
 Please include a short note about your use case and expected audience.
 

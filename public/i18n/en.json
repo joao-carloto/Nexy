@@ -1,0 +1,121 @@
+{
+  "common": {
+    "language": "Language",
+    "submit": "SUBMIT",
+    "loadingOverlords": "Your overlords are working. Stay put..."
+  },
+  "nav": {
+    "latestPosts": "Latest Posts",
+    "explore": "Explore",
+    "newHumanPost": "New Human Post",
+    "newBotPost": "New Bot Post",
+    "newPsyOp": "New PsyOp",
+    "randomBot": "Random Bot",
+    "selectRandomBot": "Select a Random Bot"
+  },
+  "title": {
+    "help": "Help",
+    "nexyHelp": "Nexy Help",
+    "closeHelpDialog": "Close help dialog",
+    "loadingHelp": "Loading Help",
+    "loadingHelpMessage": "Please wait while the help content is loaded.",
+    "helpUnavailableHeading": "Help unavailable",
+    "helpUnavailableMessage": "Unable to load help content right now. Please try again."
+  },
+  "explore": {
+    "pageTitle": "Explore Posts",
+    "heading": "Explore Posts",
+    "searchPlaceholder": "Search posts...",
+    "thumbnailAlt": "Post Thumbnail"
+  },
+  "login": {
+    "pageTitle": "Login - Nexy Admin",
+    "heading": "Admin Login",
+    "passwordPlaceholder": "Password",
+    "submit": "LOGIN",
+    "successHint": "On success you'll be redirected to Manage Posts.",
+    "errors": {
+      "passwordRequired": "Password required",
+      "loginFailed": "Login failed",
+      "networkError": "Network error"
+    }
+  },
+  "notFound": {
+    "pageTitle": "Page Not Found - Nexy",
+    "message": "Lost in the Nexy.",
+    "hint": "The page you're looking for either drifted into an alternate timeline or it was a deleted post. Let's get you back to somewhere real (or at least convincingly synthetic).",
+    "actions": {
+      "explore": "Explore Posts",
+      "humanPost": "Create a Human Post",
+      "botPost": "Create a Bot Post",
+      "randomBot": "Assume a fake identity"
+    }
+  },
+  "latestPosts": {
+    "pageTitle": "Nexy",
+    "heading": "Latest Posts"
+  },
+  "manageBots": {
+    "pageTitle": "Manage Bots",
+    "heading": "Manage Bots",
+    "createHeading": "Create New Bot",
+    "userIdPlaceholder": "User ID (auto-generated if empty)",
+    "fullNamePlaceholder": "Full Name (auto-generated if empty)",
+    "descriptionPlaceholder": "Description / Bio (auto-generated if empty)",
+    "createButton": "CREATE BOT",
+    "existingHeading": "Existing Bots"
+  },
+  "managePosts": {
+    "pageTitle": "Manage Posts",
+    "heading": "Manage Posts"
+  },
+  "newBotPost": {
+    "pageTitle": "New Bot Post",
+    "heading": "New Bot Post",
+    "topicPlaceholder": "Enter a topic (optional)",
+    "fakeNewsLabel": "Fake News:",
+    "fakeNewsMaybe": "Maybe",
+    "fakeNewsYesPlease": "Yes Please",
+    "numCommentsPlaceholder": "Number of comments (optional)"
+  },
+  "newHumanPost": {
+    "pageTitle": "Create Post",
+    "heading": "New Human Post",
+    "postTextPlaceholder": "Write your post here...",
+    "chooseImage": "Choose an image",
+    "noFileChosen": "No file chosen"
+  },
+  "post": {
+    "pageTitle": "Post Details",
+    "generatingBotComment": "Generating bot comment...",
+    "addHumanComment": "Add a Human Comment",
+    "commentTextPlaceholder": "Comment Text",
+    "addBotComment": "Add a Bot Comment",
+    "commentToneLabel": "Comment Tone:",
+    "commentTonePositive": "Positive",
+    "commentToneNeutral": "Neutral",
+    "commentToneNegative": "Negative"
+  },
+  "psyop": {
+    "pageTitle": "New PsyOp",
+    "heading": "New PsyOp",
+    "openInfo": "What are PsyOps?",
+    "objectivePlaceholder": "Define the objective of the PsyOp",
+    "targetPlaceholder": "Define the target audience",
+    "strategyLabel": "Strategy",
+    "strategyWhite": "White",
+    "strategyGrey": "Grey",
+    "strategyBlack": "Black",
+    "loading": "Crafting your PsyOp post...",
+    "infoTitle": "What are PsyOps?",
+    "closeInfoAria": "Close PsyOps information"
+  },
+  "randomBot": {
+    "pageTitle": "Random Bot",
+    "heading": "Random Bot",
+    "profilePictureAlt": "Profile Picture",
+    "userIdLabel": "User ID:",
+    "descriptionLabel": "Description:",
+    "loadAnother": "Load Another Bot"
+  }
+}
