@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Nexy Admin</title>
+    <title data-i18n="login.pageTitle">Login - Nexy Admin</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="/images/logo.png" />
     <style>
@@ -59,13 +59,20 @@
   <body>
     <script src="js/navbar.js"></script>
     <div class="login-container">
-      <h1>Admin Login</h1>
+      <h1 data-i18n="login.heading">Admin Login</h1>
       <form id="loginForm">
-        <input id="password" type="password" placeholder="Password" required autocomplete="current-password" />
+        <input
+          id="password"
+          type="password"
+          placeholder="Password"
+          data-i18n-placeholder="login.passwordPlaceholder"
+          required
+          autocomplete="current-password"
+        />
         <div class="error-msg" id="errorMsg"></div>
-        <button type="submit">LOGIN</button>
+        <button type="submit" data-i18n="login.submit">LOGIN</button>
       </form>
-      <div class="logout-hint">On success you'll be redirected to Manage Posts.</div>
+      <div class="logout-hint" data-i18n="login.successHint">On success you'll be redirected to Manage Posts.</div>
     </div>
     <script src="js/login.js"></script>
   </body>

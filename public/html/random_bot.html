@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Random Bot</title>
+    <title data-i18n="randomBot.pageTitle">Random Bot</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="images/logo.png" />
   </head>
@@ -12,17 +12,23 @@
     <script src="js/title.js"></script>
     <script src="js/navbar.js"></script>
     <main class="random-bot-page">
-      <h1 class="random-bot-title">Random Bot</h1>
+      <h1 class="random-bot-title" data-i18n="randomBot.heading">Random Bot</h1>
       <div id="user-container" class="random-bot-card">
         <div class="random-bot-image-wrap">
-          <img id="profile-picture" src="" alt="Profile Picture" class="profile-picture" />
+          <img
+            id="profile-picture"
+            src=""
+            alt="Profile Picture"
+            data-i18n-alt="randomBot.profilePictureAlt"
+            class="profile-picture"
+          />
         </div>
         <h2 id="full-name"></h2>
         <div class="random-bot-meta">
-          <p><strong>User ID:</strong> <span id="user-id"></span></p>
-          <p><strong>Description:</strong> <span id="description"></span></p>
+          <p><strong data-i18n="randomBot.userIdLabel">User ID:</strong> <span id="user-id"></span></p>
+          <p><strong data-i18n="randomBot.descriptionLabel">Description:</strong> <span id="description"></span></p>
         </div>
-        <button class="submit-button" id="load-user">Load Another Bot</button>
+        <button class="submit-button" id="load-user" data-i18n="randomBot.loadAnother">Load Another Bot</button>
       </div>
     </main>
     <script src="js/random_bot.js"></script>

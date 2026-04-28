@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', function () {
       .then((response) => response.text())
       .then((html) => {
         container.innerHTML = html;
+        if (window.NexyI18n) {
+          // title.html is loaded dynamically, so translate it after injection.
+          window.NexyI18n.applyTranslations(container);
+        }
       });
   }
 
@@ -40,12 +44,39 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .then((html) => {
         elements.content.innerHTML = html;
+        if (window.NexyI18n) {
+          // Help body is a fragment, so it also needs an explicit translation pass.
+          window.NexyI18n.applyTranslations(elements.content);
+        }
         helpContentLoaded = true;
       })
       .catch(() => {
-        elements.content.innerHTML =
-          '<section><h3>Help unavailable</h3><p>Unable to load help content right now. Please try again.</p></section>';
+        const t = (key, fallback) => (window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback);
+        elements.content.innerHTML = `<section><h3>${t('title.helpUnavailableHeading', 'Help unavailable')}</h3><p>${t('title.helpUnavailableMessage', 'Unable to load help content right now. Please try again.')}</p></section>`;
       });
+  }
+
+  function setupLanguageSelector() {
+    const selector = document.getElementById('language-selector');
+    if (!selector || !window.NexyI18n) {
+      return;
+    }
+
+    selector.value = window.NexyI18n.getLocale();
+
+    selector.addEventListener('change', async (event) => {
+      try {
+        await window.NexyI18n.setLocale(event.target.value);
+      } catch (error) {
+        console.error('Error changing locale:', error);
+      }
+    });
+
+    window.NexyI18n.onChange(({ locale }) => {
+      if (selector.value !== locale) {
+        selector.value = locale;
+      }
+    });
   }
 
   function openHelpModal() {
@@ -89,4 +120,14 @@ document.addEventListener('DOMContentLoaded', function () {
       closeHelpModal();
     }
   });
+
+  // title.html and navbar.html are injected independently, so initialize after insertion.
+  const titleObserver = new MutationObserver(() => {
+    if (document.getElementById('language-selector')) {
+      setupLanguageSelector();
+      titleObserver.disconnect();
+    }
+  });
+
+  titleObserver.observe(document.body, { childList: true, subtree: true });
 });

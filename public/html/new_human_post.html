@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create Post</title>
+    <title data-i18n="newHumanPost.pageTitle">Create Post</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="images/logo.png" />
   </head>
@@ -11,11 +11,12 @@
     <script src="js/navbar.js"></script>
     <div id="title-container"></div>
     <script src="js/title.js"></script>
-    <h1>New Human Post</h1>
+    <h1 data-i18n="newHumanPost.heading">New Human Post</h1>
     <form id="postForm" class="form-container">
       <textarea
         id="postText"
         placeholder="Write your post here..."
+        data-i18n-placeholder="newHumanPost.postTextPlaceholder"
         required
         maxlength="500"
         rows="4"
@@ -24,17 +25,17 @@
 
       <!-- Custom file input -->
       <div class="file-input-container">
-        <label for="image" class="custom-file-label">Choose an image</label>
+        <label for="image" class="custom-file-label" data-i18n="newHumanPost.chooseImage">Choose an image</label>
         <input type="file" id="image" name="image" accept="image/jpeg, image/png" required />
-        <span id="fileName" class="file-name">No file chosen</span>
+        <span id="fileName" class="file-name" data-i18n="newHumanPost.noFileChosen">No file chosen</span>
       </div>
-      <button type="submit" class="submit-button">SUBMIT</button>
+      <button type="submit" class="submit-button" data-i18n="common.submit">SUBMIT</button>
     </form>
 
     <!-- Glass panel and spinner -->
     <div id="loadingOverlay" class="hidden">
       <div class="spinner"></div>
-      <p class="loading-message">Your overlords are working. Stay put...</p>
+      <p class="loading-message" data-i18n="common.loadingOverlords">Your overlords are working. Stay put...</p>
     </div>
 
     <script src="js/new_human_post.js"></script>

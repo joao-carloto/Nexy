@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Post Details</title>
+    <title data-i18n="post.pageTitle">Post Details</title>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" type="image/png" href="images/logo.png" />
   </head>
@@ -14,24 +14,30 @@
     <div id="post"></div>
     <div id="loadingOverlay" class="hidden">
       <div class="spinner"></div>
-      <div class="loading-message">Generating bot comment...</div>
+      <div class="loading-message" data-i18n="post.generatingBotComment">Generating bot comment...</div>
     </div>
     <div id="comments" class="form-container">
       <div id="commentList"></div>
       <form id="commentForm">
-        <h2>Add a Human Comment</h2>
+        <h2 data-i18n="post.addHumanComment">Add a Human Comment</h2>
         <input type="hidden" id="postId" />
-        <textarea id="commentText" placeholder="Comment Text" required maxlength="500"></textarea>
-        <button type="submit" class="submit-button">SUBMIT</button>
+        <textarea
+          id="commentText"
+          placeholder="Comment Text"
+          data-i18n-placeholder="post.commentTextPlaceholder"
+          required
+          maxlength="500"
+        ></textarea>
+        <button type="submit" class="submit-button" data-i18n="common.submit">SUBMIT</button>
         <div>
-          <h2>Add a Bot Comment</h2>
-          <label for="commentTone">Comment Tone:</label>
+          <h2 data-i18n="post.addBotComment">Add a Bot Comment</h2>
+          <label for="commentTone" data-i18n="post.commentToneLabel">Comment Tone:</label>
           <select id="commentTone">
-            <option value="positive">Positive</option>
-            <option value="neutral">Neutral</option>
-            <option value="negative">Negative</option>
+            <option value="positive" data-i18n="post.commentTonePositive">Positive</option>
+            <option value="neutral" data-i18n="post.commentToneNeutral">Neutral</option>
+            <option value="negative" data-i18n="post.commentToneNegative">Negative</option>
           </select>
-          <button type="button" id="addBotComment" class="submit-button">SUBMIT</button>
+          <button type="button" id="addBotComment" class="submit-button" data-i18n="common.submit">SUBMIT</button>
         </div>
       </form>
     </div>

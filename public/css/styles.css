@@ -135,6 +135,32 @@ nav {
   border: 2px solid #f4f3f1;
 }
 
+.nav-language {
+  width: 216px;
+  margin: auto auto 12px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-language label {
+  display: block;
+  margin-bottom: 6px;
+  color: #f4f3f1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.nav-language select {
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f4f3f1;
+  background: #1d3042;
+}
+
 /* ==============================
    Title
 ============================== */
@@ -226,6 +252,44 @@ nav {
   background: none;
   outline: 2px solid rgba(116, 187, 238, 0.85);
   outline-offset: 2px;
+}
+
+.title-language {
+  position: absolute;
+  right: 116px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-language-label {
+  color: #f4f3f1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.title-language-select {
+  width: 74px;
+  margin: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(244, 243, 241, 0.3);
+  background: rgba(29, 48, 66, 0.95);
+  color: #f4f3f1;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.title-language-select:focus-visible {
+  outline: 2px solid rgba(116, 187, 238, 0.85);
+  outline-offset: 2px;
+}
+
+/* Legacy navbar selector is intentionally hidden after moving locale control to title bar. */
+.nav-language {
+  display: none;
 }
 
 /* ==============================
@@ -1035,6 +1099,21 @@ select:hover {
 
   .help-button {
     right: 0;
+  }
+
+  .title-language {
+    right: 54px;
+    gap: 6px;
+  }
+
+  .title-language-label {
+    display: none;
+  }
+
+  .title-language-select {
+    width: 64px;
+    font-size: 0.8rem;
+    padding: 6px 6px;
   }
 
   .psyop-info-dialog {
