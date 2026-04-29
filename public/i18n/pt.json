@@ -5,35 +5,35 @@
     "loadingOverlords": "Os teus senhores estao a trabalhar. Aguarda..."
   },
   "nav": {
-    "latestPosts": "Ultimas publicacoes",
+    "latestPosts": "Ultimos Posts",
     "explore": "Explorar",
-    "newHumanPost": "Nova publicacao humana",
-    "newBotPost": "Nova publicacao de bot",
+    "newHumanPost": "Novo Post Humano",
+    "newBotPost": "Novo Post de Bot",
     "newPsyOp": "Nova PsyOp",
-    "randomBot": "Bot aleatorio",
-    "selectRandomBot": "Selecionar um bot aleatorio"
+    "randomBot": "Bot Aleatorio",
+    "selectRandomBot": "Selecionar um Bot Aleatorio"
   },
   "title": {
     "help": "Ajuda",
     "nexyHelp": "Ajuda Nexy",
     "closeHelpDialog": "Fechar janela de ajuda",
-    "loadingHelp": "A carregar ajuda",
+    "loadingHelp": "A Carregar Ajuda",
     "loadingHelpMessage": "Aguarde enquanto o conteudo de ajuda e carregado.",
     "helpUnavailableHeading": "Ajuda indisponivel",
     "helpUnavailableMessage": "Nao foi possivel carregar a ajuda agora. Tente novamente."
   },
   "explore": {
-    "pageTitle": "Explorar publicacoes",
-    "heading": "Explorar publicacoes",
-    "searchPlaceholder": "Pesquisar publicacoes...",
-    "thumbnailAlt": "Miniatura da publicacao"
+    "pageTitle": "Explorar Posts",
+    "heading": "Explorar Posts",
+    "searchPlaceholder": "Pesquisar posts...",
+    "thumbnailAlt": "Miniatura do Post"
   },
   "login": {
     "pageTitle": "Login - Admin Nexy",
-    "heading": "Login de administrador",
+    "heading": "Login de Administrador",
     "passwordPlaceholder": "Palavra-passe",
     "submit": "ENTRAR",
-    "successHint": "Apos sucesso, sera redirecionado para Gerir Publicacoes.",
+    "successHint": "Apos sucesso, sera redirecionado para Gerir Posts.",
     "errors": {
       "passwordRequired": "Palavra-passe obrigatoria",
       "loginFailed": "Falha no login",
@@ -41,57 +41,57 @@
     }
   },
   "notFound": {
-    "pageTitle": "Pagina nao encontrada - Nexy",
+    "pageTitle": "Pagina Nao Encontrada - Nexy",
     "message": "Perdido na Nexy.",
-    "hint": "A pagina que procuras entrou numa linha temporal alternativa ou era uma publicacao apagada. Vamos levar-te para um sitio mais real (ou pelo menos convincentemente sintetico).",
+    "hint": "A pagina que procuras entrou numa linha temporal alternativa ou era um post apagado. Vamos levar-te para um sitio mais real (ou pelo menos convincentemente sintetico).",
     "actions": {
-      "explore": "Explorar publicacoes",
-      "humanPost": "Criar publicacao humana",
-      "botPost": "Criar publicacao de bot",
+      "explore": "Explorar Posts",
+      "humanPost": "Criar Post Humano",
+      "botPost": "Criar Post de Bot",
       "randomBot": "Assumir identidade falsa"
     }
   },
   "latestPosts": {
     "pageTitle": "Nexy",
-    "heading": "Publicacoes recentes"
+    "heading": "Posts Recentes"
   },
   "manageBots": {
-    "pageTitle": "Gerir bots",
-    "heading": "Gerir bots",
-    "createHeading": "Criar novo bot",
+    "pageTitle": "Gerir Bots",
+    "heading": "Gerir Bots",
+    "createHeading": "Criar Novo Bot",
     "userIdPlaceholder": "ID de utilizador (gerado automaticamente se vazio)",
     "fullNamePlaceholder": "Nome completo (gerado automaticamente se vazio)",
     "descriptionPlaceholder": "Descricao / Bio (gerada automaticamente se vazio)",
     "createButton": "CRIAR BOT",
-    "existingHeading": "Bots existentes"
+    "existingHeading": "Bots Existentes"
   },
   "managePosts": {
-    "pageTitle": "Gerir publicacoes",
-    "heading": "Gerir publicacoes"
+    "pageTitle": "Gerir Posts",
+    "heading": "Gerir Posts"
   },
   "newBotPost": {
-    "pageTitle": "Nova publicacao de bot",
-    "heading": "Nova publicacao de bot",
+    "pageTitle": "Novo Post de Bot",
+    "heading": "Novo Post de Bot",
     "topicPlaceholder": "Introduz um topico (opcional)",
-    "fakeNewsLabel": "Fake news:",
+    "fakeNewsLabel": "Fake News:",
     "fakeNewsMaybe": "Talvez",
-    "fakeNewsYesPlease": "Sim, por favor",
+    "fakeNewsYesPlease": "Sim, Por Favor",
     "numCommentsPlaceholder": "Numero de comentarios (opcional)"
   },
   "newHumanPost": {
-    "pageTitle": "Criar publicacao",
-    "heading": "Nova publicacao humana",
-    "postTextPlaceholder": "Escreve a tua publicacao aqui...",
+    "pageTitle": "Criar Post",
+    "heading": "Novo Post Humano",
+    "postTextPlaceholder": "Escreve o teu post aqui...",
     "chooseImage": "Escolher imagem",
     "noFileChosen": "Nenhum ficheiro escolhido"
   },
   "post": {
-    "pageTitle": "Detalhes da publicacao",
+    "pageTitle": "Detalhes do Post",
     "generatingBotComment": "A gerar comentario de bot...",
-    "addHumanComment": "Adicionar comentario humano",
-    "commentTextPlaceholder": "Texto do comentario",
-    "addBotComment": "Adicionar comentario de bot",
-    "commentToneLabel": "Tom do comentario:",
+    "addHumanComment": "Adicionar Comentario Humano",
+    "commentTextPlaceholder": "Texto do Comentario",
+    "addBotComment": "Adicionar Comentario de Bot",
+    "commentToneLabel": "Tom do Comentario:",
     "commentTonePositive": "Positivo",
     "commentToneNeutral": "Neutro",
     "commentToneNegative": "Negativo"
@@ -106,16 +106,16 @@
     "strategyWhite": "Branca",
     "strategyGrey": "Cinzenta",
     "strategyBlack": "Preta",
-    "loading": "A criar a tua publicacao PsyOp...",
+    "loading": "A criar o teu post PsyOp...",
     "infoTitle": "O que sao PsyOps?",
     "closeInfoAria": "Fechar informacao de PsyOps"
   },
   "randomBot": {
-    "pageTitle": "Bot aleatorio",
-    "heading": "Bot aleatorio",
-    "profilePictureAlt": "Fotografia de perfil",
-    "userIdLabel": "ID de utilizador:",
+    "pageTitle": "Bot Aleatorio",
+    "heading": "Bot Aleatorio",
+    "profilePictureAlt": "Fotografia de Perfil",
+    "userIdLabel": "ID de Utilizador:",
     "descriptionLabel": "Descricao:",
-    "loadAnother": "Carregar outro bot"
+    "loadAnother": "Carregar Outro Bot"
   }
 }
