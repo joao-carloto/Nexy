@@ -13,7 +13,7 @@ const tones = ['positive', 'neutral', 'negative'];
 
 // Centralized prompt + cleanup helpers for post/comment text used by server routes.
 
-async function createPostText(topic, isFakeNews) {
+async function createPostText(topic, isFakeNews, locale = 'en') {
   const model = 'gpt-4.1-mini';
 
   let options = '';
@@ -22,14 +22,17 @@ async function createPostText(topic, isFakeNews) {
     options = options + ' It should be a fictious story about real people.';
   }
 
+  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
+  const languageInstructions = ` Respond only in ${languageName}.`;
+
   // Two-step generation: first an inspiration snippet, then final user-facing post.
   let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, 
-  that can serve as inspiration for a social media post. ${options}. Don't explain it, just give me the content.`;
+  that can serve as inspiration for a social media post. ${options}. ${languageInstructions} Don't explain it, just give me the content.`;
   let topicText = await generateText(topicPrompt, model);
   console.log(`\nResponse 1: ${topicText}`);
 
   let postPrompt = `Social media post inspired on this text: "${topicText}". Just one option. Include some emoji. 
-  Don't explain it, just give me the content.`;
+  ${languageInstructions} Don't explain it, just give me the content.`;
   let postTextRaw = await generateText(postPrompt, model);
   console.log(`\nResponse 2: ${postTextRaw}`);
 
@@ -37,10 +40,12 @@ async function createPostText(topic, isFakeNews) {
   return postText;
 }
 
-async function editText(originalPostText) {
+async function editText(originalPostText, locale = 'en') {
   const model = 'gpt-4.1-mini';
   // Used by createHumanPost to intentionally change the original author tone.
-  const postPrompt = `Write a small text that digrees with this one: "${originalPostText}".`;
+  // Generate in the user's selected language to maintain linguistic consistency.
+  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
+  const postPrompt = `Write a small text that disagrees with this one: "${originalPostText}". Write only in ${languageName}. Keep the response concise and natural for social media.`;
   const postText = await generateText(postPrompt, model);
 
   console.log(postText);
@@ -48,7 +53,7 @@ async function editText(originalPostText) {
   return cleanUpPost(postText);
 }
 
-async function createCommentText(postText, tone = undefined) {
+async function createCommentText(postText, tone = undefined, locale = 'en') {
   const model = 'gpt-4.1-mini';
   let options = '';
   // If not defined, pick a tone for variability in generated threads.
@@ -56,18 +61,25 @@ async function createCommentText(postText, tone = undefined) {
     tone = getRandomElement(tones);
   }
   options = options + ` The comment should have a ${tone} tone.`;
+
+  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
+  const languageInstructions = ` Respond only in ${languageName}.`;
+
   const commentPrompt = `Small social media comment responding to ${postText}. 
-  Just one option. Include some emoji.${options} Don't explain it, just give me the content.`;
+  Just one option. Include some emoji.${options}${languageInstructions} Don't explain it, just give me the content.`;
   const commentText = await generateText(commentPrompt, model);
   return commentText;
 }
 
-async function createCommentReply(postText, postCommentText) {
+async function createCommentReply(postText, postCommentText, locale = 'en') {
   const model = 'gpt-4.1-mini';
+
+  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
+  const languageInstructions = ` Respond only in ${languageName}.`;
 
   const commentPrompt = `Small social media comment, responding in a confrontational manner,
    to this comment: "${postCommentText}", made on this social media post: "${postText}". 
-   Just one option. Include some emoji. Don't explain it, just give me the content.`;
+   Just one option. Include some emoji.${languageInstructions} Don't explain it, just give me the content.`;
   const commentText = cleanUpPost(await generateText(commentPrompt, model));
 
   console.log(commentText);
@@ -111,13 +123,14 @@ function cleanUpPost(str) {
   return str;
 }
 
-async function mockImage(imagePath) {
+async function mockImage(imagePath, locale = 'en') {
   // Image-to-text caption is generated first, then converted to short mocking text.
-  const description = await describeImage(imagePath);
+  // Pass locale so description is generated in the appropriate language.
+  const description = await describeImage(imagePath, locale);
   const model = 'gpt-4.1-mini';
 
-  const prompt = `Create a small text making fun of an image described in this manner: ${description}.
-   Don't explain it, just give me the content.`;
+  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
+  const prompt = `Create a small text making fun of an image described in this manner: ${description}. Write only in ${languageName}. Keep it concise and natural for social media. Don't explain it, just give me the content.`;
   const mockingText = await generateText(prompt, model);
 
   console.log('');

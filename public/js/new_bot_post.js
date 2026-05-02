@@ -5,6 +5,17 @@ document.getElementById('postForm').addEventListener('submit', async (event) => 
   const isFakeNews = document.getElementById('isFakeNews').value === 'true';
   const numComments = document.getElementById('numComments').value;
 
+  // Read current UI language from i18n storage and send with post.
+  let locale = 'en';
+  try {
+    const saved = localStorage.getItem('nexy.locale');
+    if (saved) {
+      locale = String(saved).toLowerCase();
+    }
+  } catch (e) {
+    // Fallback to default if storage read fails
+  }
+
   // Show the loading overlay
   const loadingOverlay = document.getElementById('loadingOverlay');
   loadingOverlay.classList.remove('hidden');
@@ -15,7 +26,7 @@ document.getElementById('postForm').addEventListener('submit', async (event) => 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ topic, isFakeNews, numComments }),
+      body: JSON.stringify({ topic, isFakeNews, numComments, locale }),
     });
 
     if (response.ok) {

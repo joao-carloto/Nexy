@@ -172,11 +172,10 @@ db.serialize(() => {
     countryRegion TEXT
   )`);
 });
-
 // Route: create AI-generated post.
 // Used by: bot post creator page in public/js/new_bot_post.js.
 app.post('/create_bot_post', async (req, res) => {
-  let { topic, isFakeNews, numComments } = req.body;
+  let { topic, isFakeNews, numComments, locale } = req.body;
   // All fields are optional
   if (typeof topic !== 'string') topic = '';
   if (typeof isFakeNews === 'undefined') isFakeNews = false;
@@ -184,12 +183,13 @@ app.post('/create_bot_post', async (req, res) => {
   if (typeof numComments === 'undefined' || isNaN(Number(numComments))) {
     numComments = Math.floor(Math.random() * 5) + 1;
   }
-  console.log('/create_bot_post received:', { topic, isFakeNews, numComments });
+  console.log('/create_bot_post received:', { topic, isFakeNews, numComments, locale });
   try {
     const postId = await createAIPost({
       topic,
       isFakeNews,
       numComments,
+      locale,
     });
     res.status(201).json({ postId });
   } catch (error) {
@@ -222,7 +222,7 @@ app.post('/create_psyop_post', async (req, res) => {
 // Route: create human-authored post (supports optional uploaded image).
 // Used by: human post composer in public/js/new_human_post.js.
 app.post('/create_human_post', upload.single('image'), async (req, res) => {
-  const { userId, postText } = req.body;
+  const { userId, postText, locale } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
   try {
     // Validate postText length
@@ -232,8 +232,8 @@ app.post('/create_human_post', upload.single('image'), async (req, res) => {
     if (postText.length > 500) {
       return res.status(400).json({ success: false, error: 'Post text exceeds maximum length of 500 characters' });
     }
-    // Call the createHumanPost function
-    const result = await createHumanPost(userId, postText, originalImageFileName);
+    // Call the createHumanPost function, passing locale so text generation can be language-aware.
+    const result = await createHumanPost(userId, postText, originalImageFileName, locale);
 
     // Send a success response back to the client
     res.status(200).json({ success: true, postId: result.postId });
@@ -304,8 +304,20 @@ app.post('/human_comment', (req, res) => {
 
         // Then insert bot reply
         try {
-          const post_text = await getPostTextFromDB(ids.id);
-          const reply = await createCommentReply(post_text, commentText);
+          // Fetch both post text and language code to match reply language to post.
+          const post = await new Promise((resolve, reject) => {
+            db.get('SELECT postText, languageCode FROM posts WHERE id = ?', [ids.id], (err, row) => {
+              if (err) reject(err);
+              else resolve(row);
+            });
+          });
+
+          if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+          }
+
+          const locale = post.languageCode && post.languageCode.toLowerCase() === 'pt' ? 'pt' : 'en';
+          const reply = await createCommentReply(post.postText, commentText, locale);
           let randomOponentId = null;
 
           const candidateAntagonistUserId =
@@ -488,11 +500,13 @@ app.post('/generate-comment', async (req, res) => {
   const { postId, tone } = req.body;
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
-    db.get('SELECT postText FROM posts WHERE id = ?', [ids.id], async (err, row) => {
+    db.get('SELECT postText, languageCode FROM posts WHERE id = ?', [ids.id], async (err, row) => {
       if (err) return res.status(500).json({ error: 'Failed to fetch post text' });
       if (!row) return res.status(404).json({ error: 'Post not found' });
       try {
-        const commentText = await createCommentText(row.postText, tone);
+        // Use the post's language so generated comments match the post language.
+        const locale = row.languageCode && row.languageCode.toLowerCase() === 'pt' ? 'pt' : 'en';
+        const commentText = await createCommentText(row.postText, tone, locale);
         res.status(200).json({ commentText });
       } catch {
         res.status(500).json({ error: 'Failed to generate comment' });

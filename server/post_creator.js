@@ -73,6 +73,7 @@ async function createAIPost({
   topic = undefined,
   isFakeNews = undefined,
   numComments = undefined,
+  locale = 'en',
 }) {
   // If caller does not force a user, pick one bot account from DB.
   if (userId === undefined) {
@@ -90,11 +91,15 @@ async function createAIPost({
     isFakeNews = getRandomBoolean();
   }
 
+  // Normalize locale to a supported value
+  const normalizedLocale = locale && String(locale).toLowerCase() === 'pt' ? 'pt' : 'en';
+
   console.log(`Topic: ${topic}`);
 
   // Text generation and image generation are intentionally decoupled:
   // text comes first, then image prompt is derived from sanitized text.
-  const postText = await createPostText(topic, isFakeNews);
+  // Pass locale so text generation can produce language-aware output.
+  const postText = await createPostText(topic, isFakeNews, normalizedLocale);
 
   console.log('\nCaption:');
   console.log(postText);
@@ -116,16 +121,18 @@ async function createAIPost({
   }
 
   // Persist with required bot metadata defaults using the same provisional id.
+  // Save the user's selected language instead of hardcoded EN.
   const postId = await savePost(
     userId,
     postText,
-    { countryCode: 'US', languageCode: 'EN', sourceType: 'bot' },
+    { countryCode: 'US', languageCode: normalizedLocale.toUpperCase(), sourceType: 'bot' },
     provisionalPostId
   );
 
   // Auto-seed the thread with synthetic comments for feed realism.
   for (let i = 0; i < numComments; i++) {
-    const commentText = cleanUpPost(await createCommentText(postText));
+    // Pass locale so comments are generated in the same language as the post.
+    const commentText = cleanUpPost(await createCommentText(postText, undefined, normalizedLocale));
 
     console.log('\nComment:');
     console.log(commentText);
@@ -189,7 +196,7 @@ async function saveComment(postId, userId, commentText, sourceType = null) {
   });
 }
 
-async function createHumanPost(userId, postText, originalImageFileName) {
+async function createHumanPost(userId, postText, originalImageFileName, locale = 'en') {
   const createdAt = new Date().toISOString();
 
   try {
@@ -198,11 +205,15 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       throw new Error('User ID and post text are required.');
     }
 
+    // Normalize locale to a supported value
+    const normalizedLocale = locale && String(locale).toLowerCase() === 'pt' ? 'pt' : 'en';
+
     // Escape user input to prevent XSS injection
     const escapedPostText = encode(postText);
 
     // Human posts are intentionally transformed into a "replying/disagreeing" style.
-    let editedPostText = await editText(escapedPostText);
+    // Pass locale so text generation can produce language-aware output.
+    let editedPostText = await editText(escapedPostText, normalizedLocale);
 
     let originalImagePath = null;
     let mockingImageText = null;
@@ -217,8 +228,9 @@ async function createHumanPost(userId, postText, originalImageFileName) {
       }
 
       // Generate optional extra text based on image contents.
+      // Pass locale so image-to-text pipeline produces language-aware output.
       try {
-        mockingImageText = await mockImage(originalImagePath);
+        mockingImageText = await mockImage(originalImagePath, normalizedLocale);
       } catch (error) {
         throw new Error('Failed to mock the image.', { cause: error });
       }
@@ -264,7 +276,7 @@ async function createHumanPost(userId, postText, originalImageFileName) {
           editedPostText,
           createdAt,
           'US', // countryCode default for human post
-          'EN', // languageCode default for human post
+          normalizedLocale.toUpperCase(), // Save the user's selected language
           'human', // sourceType
         ],
         function (err) {
