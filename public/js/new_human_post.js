@@ -1,26 +1,36 @@
 // Client-side guard: current UX requires image selection before submit.
-document.getElementById('postForm').addEventListener('submit', function (event) {
-  const imageInput = document.getElementById('image');
-  if (!imageInput.files || imageInput.files.length === 0) {
-    event.preventDefault(); // Prevent form submission
-    alert('Please select an image before submitting.');
-    imageInput.focus(); // Focus the file input
-  }
-});
-
 document.getElementById('postForm').addEventListener('submit', async (event) => {
   event.preventDefault();
+  const imageInput = document.getElementById('image');
+  if (!imageInput.files || imageInput.files.length === 0) {
+    alert('Please select an image before submitting.');
+    imageInput.focus();
+    return;
+  }
+
   const postText = document.getElementById('postText').value;
-  const image = document.getElementById('image').files[0];
+  const image = imageInput.files[0];
 
   let userId = localStorage.getItem('randomUser')
     ? JSON.parse(localStorage.getItem('randomUser')).userId
     : 'RockStrongo'; // Default userId if not found
 
+  // Read current UI language from i18n storage and send with post.
+  let locale = 'en';
+  try {
+    const saved = localStorage.getItem('nexy.locale');
+    if (saved) {
+      locale = String(saved).toLowerCase();
+    }
+  } catch (e) {
+    // Fallback to default if storage read fails
+  }
+
   // Multipart contract expected by POST /create_human_post.
   const formData = new FormData();
   formData.append('userId', userId);
   formData.append('postText', postText);
+  formData.append('locale', locale);
   if (image) {
     formData.append('image', image);
   }
@@ -52,17 +62,6 @@ document.getElementById('postForm').addEventListener('submit', async (event) => 
   } finally {
     // Hide the loading overlay
     loadingOverlay.classList.add('hidden');
-  }
-});
-
-// Note: this repeats the same image-required guard as the first listener.
-// Keeping both for now preserves current behavior; consider deduplicating later.
-document.getElementById('postForm').addEventListener('submit', function (event) {
-  const imageInput = document.getElementById('image');
-  if (!imageInput.files || imageInput.files.length === 0) {
-    event.preventDefault(); // Prevent form submission
-    alert('Please select an image before submitting.');
-    imageInput.focus(); // Focus the file input
   }
 });
 

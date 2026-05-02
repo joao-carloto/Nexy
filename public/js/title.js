@@ -56,15 +56,50 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  function setupLanguageSelector() {
-    const selector = document.getElementById('language-selector');
-    if (!selector || !window.NexyI18n) {
-      return;
+  // Mirrors the storage key used by NexyI18n so we can seed the selector before
+  // i18n.init() finishes loading the locale resources.
+  const I18N_STORAGE_KEY = 'nexy.locale';
+
+  function readPersistedLocale(selector) {
+    let stored = null;
+    try {
+      stored = localStorage.getItem(I18N_STORAGE_KEY);
+    } catch (error) {
+      stored = null;
     }
 
-    selector.value = window.NexyI18n.getLocale();
+    if (!stored) {
+      return null;
+    }
+
+    const lower = String(stored).toLowerCase();
+    const primary = lower.split('-')[0];
+    const options = Array.from(selector.options).map((option) => option.value);
+
+    if (options.includes(lower)) {
+      return lower;
+    }
+    if (options.includes(primary)) {
+      return primary;
+    }
+    return null;
+  }
+
+  function setupLanguageSelector(selector) {
+    // Seed the visible value from persisted locale immediately. NexyI18n.getLocale()
+    // may still report the default 'en' if init() hasn't resolved its fetch yet,
+    // which is what causes the dropdown to lag behind the actual UI language.
+    const persisted = readPersistedLocale(selector);
+    if (persisted) {
+      selector.value = persisted;
+    } else if (window.NexyI18n) {
+      selector.value = window.NexyI18n.getLocale();
+    }
 
     selector.addEventListener('change', async (event) => {
+      if (!window.NexyI18n) {
+        return;
+      }
       try {
         await window.NexyI18n.setLocale(event.target.value);
       } catch (error) {
@@ -72,11 +107,14 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    window.NexyI18n.onChange(({ locale }) => {
-      if (selector.value !== locale) {
-        selector.value = locale;
-      }
-    });
+    if (window.NexyI18n) {
+      // Keep the dropdown synced once init() (or any later setLocale) completes.
+      window.NexyI18n.onChange(({ locale }) => {
+        if (selector.value !== locale) {
+          selector.value = locale;
+        }
+      });
+    }
   }
 
   function openHelpModal() {
@@ -123,8 +161,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // title.html and navbar.html are injected independently, so initialize after insertion.
   const titleObserver = new MutationObserver(() => {
-    if (document.getElementById('language-selector')) {
-      setupLanguageSelector();
+    const selector = document.getElementById('language-selector');
+    if (selector && !selector.dataset.nexyLanguageBound) {
+      selector.dataset.nexyLanguageBound = 'true';
+      setupLanguageSelector(selector);
       titleObserver.disconnect();
     }
   });

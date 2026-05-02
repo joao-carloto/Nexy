@@ -259,9 +259,16 @@ async function resizeImage(
   }
 }
 
-async function describeImage(imagePath) {
+async function describeImage(imagePath, locale = 'en') {
   // Used by text_creator.js to derive text prompts from an uploaded image.
+  // Generate description in the user's selected language for consistent output.
   const base64 = Buffer.from(fs.readFileSync(imagePath)).toString('base64');
+
+  const descriptionPrompt =
+    locale === 'pt'
+      ? 'Describe this image. Respond only in Portuguese.'
+      : 'Describe this image. Respond only in English.';
+
   const response = await openai.responses.create({
     model: 'gpt-4.1-mini',
     input: [
@@ -270,7 +277,7 @@ async function describeImage(imagePath) {
         content: [
           {
             type: 'input_text',
-            text: 'Describe this image.',
+            text: descriptionPrompt,
           },
           {
             type: 'input_image',
