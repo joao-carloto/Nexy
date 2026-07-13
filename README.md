@@ -50,7 +50,7 @@ Current prototype constraints:
 
 ## Contact
 
-For free demo access, deployment questions, collaboration inquiries, bug reports, or feature ideas, the preferred
+For deployment questions, collaboration inquiries, bug reports, or feature ideas, the preferred
 channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
 
 1. Go to the [Issues tab](https://github.com/joao-carloto/nexy/issues) of this repository.
@@ -58,12 +58,13 @@ channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
 3. Give it a short, descriptive title and include a short note about your use case and expected audience.
 4. Submit. No fork or clone required — just a free GitHub account.
 
-This keeps requests public and trackable, so others can follow along or find an answer that already exists.
+This keeps requests public and trackable, so others can follow along or find an answer that already exists. Note that
+GitHub has no private messaging between users, so anything posted as an Issue is visible to everyone.
 
-Alternatives:
+For anything private (e.g. requesting the live demo URL), use one of these instead:
 
-- The live demo has an in-app contact form (Help menu → Contact) that emails the maintainer directly.
 - [LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/)
+- This demo has an in-app contact form (Help menu → Contact) that emails the maintainer directly. If you install this on your system you can also use that form.
 
 ## Tech Stack
 
