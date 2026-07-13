@@ -1,5 +1,7 @@
 # Nexy
 
+<img src="public/images/logo.png" alt="Nexy logo" width="120" />
+
 Media literacy and misinformation awareness tool.
 
 ## What Is Nexy?
