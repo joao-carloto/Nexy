@@ -50,11 +50,20 @@ Current prototype constraints:
 
 ## Contact
 
-For free demo access, deployment questions, or collaboration inquiries, please use the contact form:
+For free demo access, deployment questions, collaboration inquiries, bug reports, or feature ideas, the preferred
+channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
 
-[Request information](TODO CONTACT_FORM_LINK)
+1. Go to the [Issues tab](https://github.com/joao-carloto/nexy/issues) of this repository.
+2. Click **New issue**.
+3. Give it a short, descriptive title and include a short note about your use case and expected audience.
+4. Submit. No fork or clone required — just a free GitHub account.
 
-Please include a short note about your use case and expected audience.
+This keeps requests public and trackable, so others can follow along or find an answer that already exists.
+
+Alternatives:
+
+- The live demo has an in-app contact form (Help menu → Contact) that emails the maintainer directly.
+- [LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/)
 
 ## Tech Stack
 

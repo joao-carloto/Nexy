@@ -20,7 +20,29 @@
     "loadingHelp": "Loading Help",
     "loadingHelpMessage": "Please wait while the help content is loaded.",
     "helpUnavailableHeading": "Help unavailable",
-    "helpUnavailableMessage": "Unable to load help content right now. Please try again."
+    "helpUnavailableMessage": "Unable to load help content right now. Please try again.",
+    "helpMenu": "Help menu",
+    "contact": "Contact",
+    "contactModalTitle": "Contact",
+    "closeContactDialog": "Close contact dialog",
+    "contactIntro": "Use this form to reach out about suggestions, deployment questions, demo access, translations, contributions, or funding. It goes straight to the project maintainer",
+    "contactNameLabel": "Name",
+    "contactEmailLabel": "Your email",
+    "contactMessageLabel": "Message",
+    "contactSubmit": "Send",
+    "contactAlternativesIntro": "Or reach out directly:",
+    "contactGithub": "GitHub repository",
+    "contactLinkedin": "LinkedIn",
+    "admin": "Admin",
+    "adminMenu": "Admin menu",
+    "managePosts": "Manage Posts",
+    "manageBots": "Manage Bots",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "helpPopup": {
+    "contactSuccess": "Thanks! Your message has been sent.",
+    "contactError": "Something went wrong. Please try again later."
   },
   "explore": {
     "pageTitle": "Explore Posts",
