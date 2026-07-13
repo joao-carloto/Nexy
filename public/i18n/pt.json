@@ -20,7 +20,29 @@
     "loadingHelp": "A Carregar Ajuda",
     "loadingHelpMessage": "Aguarde enquanto o conteudo de ajuda e carregado.",
     "helpUnavailableHeading": "Ajuda indisponivel",
-    "helpUnavailableMessage": "Nao foi possivel carregar a ajuda agora. Tente novamente."
+    "helpUnavailableMessage": "Nao foi possivel carregar a ajuda agora. Tente novamente.",
+    "helpMenu": "Menu de ajuda",
+    "contact": "Contacto",
+    "contactModalTitle": "Contacto",
+    "closeContactDialog": "Fechar janela de contacto",
+    "contactIntro": "Usa este formulario para sugestoes, questoes sobre a instalação, acesso a demo, traducoes, contribuicoes ou financiamento. A mensagem vai diretamente para o responsavel do projeto.",
+    "contactNameLabel": "Nome",
+    "contactEmailLabel": "O teu email",
+    "contactMessageLabel": "Mensagem",
+    "contactSubmit": "Enviar",
+    "contactAlternativesIntro": "Ou contacta diretamente:",
+    "contactGithub": "Repositorio no GitHub",
+    "contactLinkedin": "LinkedIn",
+    "admin": "Admin",
+    "adminMenu": "Menu de administracao",
+    "managePosts": "Gerir Posts",
+    "manageBots": "Gerir Bots",
+    "login": "Entrar",
+    "logout": "Sair"
+  },
+  "helpPopup": {
+    "contactSuccess": "Obrigado! A tua mensagem foi enviada.",
+    "contactError": "Algo correu mal. Tenta novamente mais tarde."
   },
   "explore": {
     "pageTitle": "Explorar Posts",

@@ -7,6 +7,67 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   window.__nexyTitleInitialized = true;
 
+  const t = (key, fallback) => (window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback);
+
+  // adminAuth is an HttpOnly cookie, so the client can't read it directly to tell
+  // login from logout; ask the server instead.
+  function refreshAdminAuthAction() {
+    const link = document.getElementById('adminAuthAction');
+    if (!link) {
+      return;
+    }
+    fetch('/admin/status')
+      .then((response) => response.json())
+      .then(({ authenticated }) => {
+        const key = authenticated ? 'title.logout' : 'title.login';
+        const href = authenticated ? '/logout' : '/login.html';
+        link.setAttribute('data-i18n', key);
+        link.setAttribute('href', href);
+        link.textContent = t(key, authenticated ? 'Logout' : 'Login');
+      })
+      .catch(() => {});
+  }
+
+  function bindContactForm(root) {
+    const form = root.querySelector('#helpContactForm');
+    const status = root.querySelector('#contactFormStatus');
+    if (!form || !status) {
+      return;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      status.textContent = '';
+      status.className = 'help-contact-status';
+      button.disabled = true;
+
+      const formData = new FormData(form);
+      try {
+        const response = await fetch('/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.get('name'),
+            email: formData.get('email'),
+            message: formData.get('message'),
+          }),
+        });
+        if (!response.ok) {
+          throw new Error('Contact form submission failed');
+        }
+        form.reset();
+        status.textContent = t('helpPopup.contactSuccess', 'Thanks! Your message has been sent.');
+        status.classList.add('success');
+      } catch {
+        status.textContent = t('helpPopup.contactError', 'Something went wrong. Please try again later.');
+        status.classList.add('error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
   const container = document.getElementById('title-container');
   if (container) {
     fetch('/title.html')
@@ -17,6 +78,10 @@ document.addEventListener('DOMContentLoaded', function () {
           // title.html is loaded dynamically, so translate it after injection.
           window.NexyI18n.applyTranslations(container);
         }
+        refreshAdminAuthAction();
+        // The contact form lives directly in title.html (not lazily fetched like the
+        // help FAQ), so bind it once, right after this injection.
+        bindContactForm(container);
       });
   }
 
@@ -51,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function () {
         helpContentLoaded = true;
       })
       .catch(() => {
-        const t = (key, fallback) => (window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback);
         elements.content.innerHTML = `<section><h3>${t('title.helpUnavailableHeading', 'Help unavailable')}</h3><p>${t('title.helpUnavailableMessage', 'Unable to load help content right now. Please try again.')}</p></section>`;
       });
   }
@@ -136,26 +200,108 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.style.overflow = '';
   }
 
+  function openContactModal() {
+    const modal = document.getElementById('contactModal');
+    if (!modal) {
+      return;
+    }
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeContactModal() {
+    const modal = document.getElementById('contactModal');
+    if (!modal) {
+      return;
+    }
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  // Shared toggle/close logic for the Help and Admin icon dropdowns in the title bar.
+  function getMenuElements(buttonId, dropdownId) {
+    return {
+      button: document.getElementById(buttonId),
+      dropdown: document.getElementById(dropdownId),
+    };
+  }
+
+  function closeMenu(buttonId, dropdownId) {
+    const { button, dropdown } = getMenuElements(buttonId, dropdownId);
+    if (!dropdown || !button) {
+      return;
+    }
+    dropdown.classList.add('hidden');
+    button.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleMenu(buttonId, dropdownId) {
+    const { button, dropdown } = getMenuElements(buttonId, dropdownId);
+    if (!dropdown || !button) {
+      return;
+    }
+    const willOpen = dropdown.classList.contains('hidden');
+    dropdown.classList.toggle('hidden', !willOpen);
+    button.setAttribute('aria-expanded', String(willOpen));
+  }
+
   document.addEventListener('click', function (event) {
-    if (event.target.closest && event.target.closest('.help-button')) {
+    const target = event.target;
+    const closest = (selector) => target.closest && target.closest(selector);
+
+    // Checked by class first: admin-button also carries the help-button class for
+    // styling reuse, so #helpMenuButton is matched by id below to avoid ambiguity.
+    if (closest('.admin-button')) {
       event.preventDefault();
+      closeMenu('helpMenuButton', 'helpDropdown');
+      toggleMenu('adminMenuButton', 'adminDropdown');
+      return;
+    }
+
+    if (closest('#helpMenuButton')) {
+      event.preventDefault();
+      closeMenu('adminMenuButton', 'adminDropdown');
+      toggleMenu('helpMenuButton', 'helpDropdown');
+      return;
+    }
+
+    if (target.id === 'openHelpAction') {
+      event.preventDefault();
+      closeMenu('helpMenuButton', 'helpDropdown');
       openHelpModal();
       return;
     }
 
-    if (event.target.id === 'closeHelpInfo') {
+    if (target.id === 'openContactAction') {
+      event.preventDefault();
+      closeMenu('helpMenuButton', 'helpDropdown');
+      openContactModal();
+      return;
+    }
+
+    if (!closest('.admin-menu')) {
+      closeMenu('adminMenuButton', 'adminDropdown');
+    }
+    if (!closest('.help-menu')) {
+      closeMenu('helpMenuButton', 'helpDropdown');
+    }
+
+    if (target.id === 'closeHelpInfo' || target.id === 'helpInfoModal') {
       closeHelpModal();
       return;
     }
 
-    if (event.target.id === 'helpInfoModal') {
-      closeHelpModal();
+    if (target.id === 'closeContactModal' || target.id === 'contactModal') {
+      closeContactModal();
     }
   });
 
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
       closeHelpModal();
+      closeContactModal();
+      closeMenu('adminMenuButton', 'adminDropdown');
+      closeMenu('helpMenuButton', 'helpDropdown');
     }
   });
 

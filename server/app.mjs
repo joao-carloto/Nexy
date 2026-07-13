@@ -160,10 +160,80 @@ app.post('/login', loginLimiter, (req, res) => {
 });
 
 // Route: admin logout API.
-// Used by: manual browser navigation to /logout (not currently called by frontend JS).
+// Used by: Logout link in the admin menu (public/js/title.js) and manual navigation to /logout.
 app.get('/logout', (req, res) => {
   res.setHeader('Set-Cookie', 'adminAuth=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
   res.redirect('/login.html');
+});
+
+// Route: admin session status check.
+// Used by: admin menu in public/js/title.js, to show Login vs Logout since adminAuth
+// is an HttpOnly cookie and can't be read directly by client-side JS.
+app.get('/admin/status', (req, res) => {
+  res.json({ authenticated: isAdmin(req) });
+});
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Limits contact form submissions per IP to bound spam/abuse from anonymous callers.
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many messages sent. Please try again later.' },
+});
+
+// Route: contact form submission, relayed by email via Resend.
+// Used by: contact form in public/html/help_popup_content.html (public/js/title.js).
+// Keeps the maintainer's real address out of the page source.
+app.post('/contact', contactLimiter, async (req, res) => {
+  const { name, email, message } = req.body || {};
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+  if (!email || typeof email !== 'string' || !EMAIL_PATTERN.test(email.trim())) {
+    return res.status(400).json({ error: 'A valid email is required' });
+  }
+  if (!message || typeof message !== 'string' || message.trim() === '') {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  if (name.length > 100 || email.length > 200 || message.length > 5000) {
+    return res.status(400).json({ error: 'Input exceeds maximum length' });
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const contactToEmail = process.env.CONTACT_TO_EMAIL;
+  if (!resendApiKey || !contactToEmail) {
+    console.error('Contact form submitted but RESEND_API_KEY / CONTACT_TO_EMAIL is not configured');
+    return res.status(500).json({ error: 'Contact form is not configured on the server' });
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.CONTACT_FROM_EMAIL || 'Nexy Contact Form <onboarding@resend.dev>',
+        to: contactToEmail,
+        reply_to: email.trim(),
+        subject: `Nexy contact form: ${name.trim()}`,
+        text: `Name: ${name.trim()}\nEmail: ${email.trim()}\n\n${message.trim()}`,
+      }),
+    });
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error('Resend API error:', response.status, errBody);
+      return res.status(502).json({ error: 'Failed to send message' });
+    }
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error('Error sending contact form email:', error);
+    res.status(502).json({ error: 'Failed to send message' });
+  }
 });
 
 // Route: root redirect.

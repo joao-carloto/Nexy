@@ -215,8 +215,6 @@ nav {
 }
 
 .help-button {
-  flex-shrink: 0;
-  order: 3;
   width: 48px;
   height: 48px;
   display: flex;
@@ -260,6 +258,59 @@ nav {
   background: none;
   outline: 2px solid rgba(116, 187, 238, 0.85);
   outline-offset: 2px;
+}
+
+.help-menu {
+  position: relative;
+  flex-shrink: 0;
+  order: 3;
+}
+
+.admin-menu {
+  position: relative;
+  flex-shrink: 0;
+  order: 4;
+}
+
+.icon-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 6px;
+  background: #1d3042;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.icon-dropdown.hidden {
+  display: none;
+}
+
+.icon-dropdown a {
+  padding: 10px 12px;
+  color: #f4f3f1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.icon-dropdown a:hover,
+.icon-dropdown a:focus-visible {
+  background: rgba(116, 187, 238, 0.25);
+  color: #74bbee;
+}
+
+.icon-dropdown-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .title-language {
@@ -991,6 +1042,124 @@ select:hover {
   opacity: 1;
   border-radius: 6px;
   filter: none;
+}
+
+.help-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.help-contact-form label {
+  color: #2d4554;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.help-contact-form input,
+.help-contact-form textarea {
+  margin: 0 0 10px;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #fff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 10px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.help-contact-form input:focus,
+.help-contact-form textarea:focus {
+  outline: none;
+  border-color: #3b8fd4;
+  box-shadow: 0 0 0 3px rgba(59, 143, 212, 0.2);
+}
+
+.help-contact-form textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.help-contact-form button {
+  align-self: flex-start;
+  margin: 0;
+  padding: 9px 20px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: #1f6aa3;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.help-contact-form button:hover {
+  background: #15507c;
+}
+
+.help-contact-form button:disabled {
+  background: #9db6c6;
+  cursor: not-allowed;
+}
+
+.help-contact-status {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+}
+
+.help-contact-status.success {
+  color: #1a7a3c;
+}
+
+.help-contact-status.error {
+  color: #c0392b;
+}
+
+.help-contact-alternatives {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e4e8ec;
+}
+
+.help-contact-alternatives p {
+  margin: 0 0 10px;
+  color: #2d4554;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.help-contact-alt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 10px 8px 0;
+  padding: 8px 14px;
+  color: #1a3648;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: #eef3f7;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.help-contact-alt-link svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.help-contact-alt-link:hover {
+  background: #dde7ee;
+  border-color: #3b8fd4;
 }
 
 .psyop-type {
