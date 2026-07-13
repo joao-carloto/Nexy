@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import process from 'process';
+import { encode } from 'html-entities';
 import { getRandomElement } from './utils.js';
 import OpenAI from 'openai';
 import { describeImage } from './image_creator.js';
@@ -209,10 +210,13 @@ async function createPsyopDemolisherReply(postText, strawmanComment, _objective,
     `Include some emoji. Output only the reply text with no explanation.`;
 
   const replyText = await generateText(prompt, model);
-  const cleanReply = cleanUpPost(replyText);
+  // Encode the AI-generated reply before it's wrapped in literal HTML below — the
+  // combined string is stored and rendered raw, so only the intentional <span>
+  // markup itself should remain unescaped.
+  const cleanReply = encode(cleanUpPost(replyText));
   // Return tagged mention when caller provides the target comment author id.
   if (commentUserId) {
-    return `<span style="color: red; font-weight: bold;">@${commentUserId}</span> ${cleanReply}`;
+    return `<span style="color: red; font-weight: bold;">@${encode(commentUserId)}</span> ${cleanReply}`;
   }
   return cleanReply;
 }

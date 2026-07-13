@@ -6,6 +6,7 @@ import path from 'path';
 import multer from 'multer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import { encode } from 'html-entities';
 import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
 import { createCommentText, createCommentReply } from './text_creator.js';
@@ -20,6 +21,13 @@ const postImagesDir = path.join(uploadsRoot, 'post_images');
 const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
 const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
 const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures');
+// Quarantine dir for raw uploads: NOT mounted as static, so an uploaded file is never
+// web-accessible until it has been validated and processed into postImagesDir.
+const tempUploadsDir = path.join(uploadsRoot, 'tmp_uploads');
+
+// Reserved userId that a deleted bot's posts/comments get reassigned to (see
+// DELETE /bots/:userId), so the feed never shows content with a dangling author.
+const DELETED_USER_ID = 'deleted_user';
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
@@ -31,6 +39,16 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// Rate limiter for routes that trigger paid OpenAI calls, to bound API cost/abuse
+// from anonymous callers (these routes have no auth requirement by design).
+const aiGenerationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many generation requests. Please try again later.' },
+});
 
 // Simple cookie parser (no external dependency)
 function parseCookies(header) {
@@ -46,18 +64,47 @@ function parseCookies(header) {
 }
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || 'nexy-admin-secret';
+// Never fall back to a fixed, publicly-known secret: generate a random one per
+// process start if .env doesn't provide one. This means existing admin sessions
+// won't survive a restart, but a leaked/guessed secret is no longer possible.
+let ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET;
+if (!ADMIN_TOKEN_SECRET) {
+  ADMIN_TOKEN_SECRET = crypto.randomBytes(32).toString('hex');
+  console.warn(
+    'ADMIN_TOKEN_SECRET not set in .env; generated a random secret for this run. ' +
+      'Admin sessions will not survive a server restart. Set ADMIN_TOKEN_SECRET in .env to avoid this.'
+  );
+}
+
+const ADMIN_SESSION_TTL_SECONDS = 60 * 60; // also used as the cookie's Max-Age
+
+function signAdminPayload(issuedAt) {
+  return crypto.createHmac('sha256', ADMIN_TOKEN_SECRET).update(`${ADMIN_PASSWORD}.${issuedAt}`).digest('hex');
+}
 
 function generateAdminToken() {
-  // Derive a stable HMAC from password + secret
-  return crypto.createHmac('sha256', ADMIN_TOKEN_SECRET).update(ADMIN_PASSWORD).digest('hex');
+  // Token embeds its own issuance time so expiry can be enforced server-side,
+  // instead of relying solely on the client-controlled cookie Max-Age.
+  const issuedAt = Date.now().toString();
+  return `${issuedAt}.${signAdminPayload(issuedAt)}`;
 }
 
 function isAdmin(req) {
   const cookies = parseCookies(req.headers.cookie || '');
   const token = cookies.adminAuth;
   if (!token || !ADMIN_PASSWORD) return false;
-  return token === generateAdminToken();
+
+  const [issuedAt, signature] = token.split('.');
+  if (!issuedAt || !signature) return false;
+
+  const issuedAtMs = Number(issuedAt);
+  if (!Number.isFinite(issuedAtMs)) return false;
+  if (Date.now() - issuedAtMs > ADMIN_SESSION_TTL_SECONDS * 1000) return false;
+
+  const expected = Buffer.from(signAdminPayload(issuedAt));
+  const actual = Buffer.from(signature);
+  if (expected.length !== actual.length) return false;
+  return crypto.timingSafeEqual(expected, actual);
 }
 
 // Middleware to protect admin pages
@@ -83,9 +130,19 @@ app.get('/manage_bots.html', requireAdminPage, (req, res) => {
   res.sendFile(filePath);
 });
 
+// Limits password-guessing attempts against /login. Counts failed and successful
+// attempts alike (deliberately not skipSuccessfulRequests) to bound total guesses per IP.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again later.' },
+});
+
 // Route: admin authentication API.
 // Used by: login form submit in public/js/login.js.
-app.post('/login', (req, res) => {
+app.post('/login', loginLimiter, (req, res) => {
   const { password } = req.body || {};
   if (!ADMIN_PASSWORD) {
     return res.status(500).json({ error: 'Admin password not configured on server' });
@@ -95,7 +152,10 @@ app.post('/login', (req, res) => {
   }
   const token = generateAdminToken();
   // Set HttpOnly cookie (no secure flag since may be served over http locally)
-  res.setHeader('Set-Cookie', `adminAuth=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${60 * 60}`);
+  res.setHeader(
+    'Set-Cookie',
+    `adminAuth=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${ADMIN_SESSION_TTL_SECONDS}`
+  );
   res.json({ ok: true });
 });
 
@@ -128,17 +188,43 @@ app.use('/thumbnails/post_images', express.static(postThumbnailsDir));
 // Static route: serves generated profile thumbnails for avatars.
 app.use('/thumbnails/profile_pictures', express.static(profileThumbnailsDir));
 
-// Set up multer for image storage
+// Set up multer for image uploads. Files land in a private quarantine directory
+// (not statically served) and are only moved into postImagesDir after createHumanPost
+// validates and processes them.
+const ALLOWED_UPLOAD_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    fs.mkdirSync(postImagesDir, { recursive: true });
-    cb(null, postImagesDir);
+    fs.mkdirSync(tempUploadsDir, { recursive: true });
+    cb(null, tempUploadsDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, `${crypto.randomUUID()}${path.extname(file.originalname).slice(0, 10)}`);
   },
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    // Content-Type is client-supplied and can be spoofed; this is a cheap first filter.
+    // The real check is the sharp()-based image validation in createHumanPost, which
+    // reads actual file bytes before the upload is used for anything.
+    if (!ALLOWED_UPLOAD_MIME_TYPES.has(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, or WEBP images are allowed.'));
+    }
+    cb(null, true);
+  },
+});
+
+// Wraps upload.single('image') so multer/file-filter errors return a clean 400
+// instead of falling through to Express's default HTML error page.
+function handleImageUpload(req, res, next) {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err.message || 'Failed to process uploaded file' });
+    }
+    next();
+  });
+}
 
 // Initialize database tables
 db.serialize(() => {
@@ -171,10 +257,19 @@ db.serialize(() => {
     description TEXT,
     countryRegion TEXT
   )`);
+
+  // Reserved placeholder author: posts/comments from a deleted bot are reassigned
+  // here (see DELETE /bots/:userId) instead of being left pointing at a userId
+  // that no longer exists in this table.
+  db.run(
+    `INSERT OR IGNORE INTO users (userId, fullName, profilePictureName, description, countryRegion)
+     VALUES (?, 'Deleted User', NULL, 'This account has been deleted.', NULL)`,
+    [DELETED_USER_ID]
+  );
 });
 // Route: create AI-generated post.
 // Used by: bot post creator page in public/js/new_bot_post.js.
-app.post('/create_bot_post', async (req, res) => {
+app.post('/create_bot_post', aiGenerationLimiter, async (req, res) => {
   let { topic, isFakeNews, numComments, locale } = req.body;
   // All fields are optional
   if (typeof topic !== 'string') topic = '';
@@ -202,7 +297,7 @@ app.post('/create_bot_post', async (req, res) => {
 
 // Route: create PsyOp post.
 // Used by: psyop generator page in public/js/psyop.js.
-app.post('/create_psyop_post', async (req, res) => {
+app.post('/create_psyop_post', aiGenerationLimiter, async (req, res) => {
   let { objective, target, strategy } = req.body;
   if (!objective || typeof objective !== 'string' || objective.trim() === '') {
     return res.status(400).json({ error: 'objective is required' });
@@ -221,7 +316,7 @@ app.post('/create_psyop_post', async (req, res) => {
 
 // Route: create human-authored post (supports optional uploaded image).
 // Used by: human post composer in public/js/new_human_post.js.
-app.post('/create_human_post', upload.single('image'), async (req, res) => {
+app.post('/create_human_post', aiGenerationLimiter, handleImageUpload, async (req, res) => {
   const { userId, postText, locale } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
   try {
@@ -288,7 +383,7 @@ app.post('/comments', async (req, res) => {
 
 // Route: add human comment and auto-generate antagonist bot reply.
 // Used by: "debate"/antagonist comment flow in public/js/post.js.
-app.post('/human_comment', (req, res) => {
+app.post('/human_comment', aiGenerationLimiter, (req, res) => {
   const { postId, userId, commentText, antagonistUserId } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
@@ -339,19 +434,26 @@ app.post('/human_comment', (req, res) => {
             }
           }
 
-          while (randomOponentId === null || randomOponentId === userId) {
-            randomOponentId = await getRandomUserIdFromDB();
+          if (randomOponentId === null) {
+            try {
+              // Excludes userId in the query itself so this can't loop forever
+              // when userId is the only (or only remaining) user in the DB.
+              randomOponentId = await getRandomUserIdFromDB(userId);
+            } catch {
+              return res.status(422).json({ error: 'No other bot account available to reply.' });
+            }
           }
 
           const botCreatedAt = new Date().toISOString();
-          // Escape HTML entities for user ID to prevent XSS injection
+          // Escape HTML entities for user ID and AI-generated reply to prevent XSS injection
           const escapedUserId = encode(userId);
+          const escapedReply = encode(reply);
           db.run(
             'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)',
             [
               ids.id,
               randomOponentId,
-              `<span style="color: red; font-weight: bold;">@${escapedUserId}</span> ${reply}`,
+              `<span style="color: red; font-weight: bold;">@${escapedUserId}</span> ${escapedReply}`,
               botCreatedAt,
               'bot',
             ],
@@ -446,11 +548,12 @@ app.get('/random-user', (req, res) => {
   const query = `
     SELECT userId, fullName, profilePictureName, description, countryRegion
     FROM users
+    WHERE userId != ?
     ORDER BY RANDOM()
     LIMIT 1
   `;
 
-  db.get(query, (err, user) => {
+  db.get(query, [DELETED_USER_ID], (err, user) => {
     if (err) {
       console.error('Error fetching random user:', err.message);
       res.status(500).json({ error: 'Failed to fetch random user' });
@@ -496,7 +599,7 @@ app.delete('/posts/:postId', (req, res) => {
 
 // Route: AI-assisted comment generation for a given post and tone.
 // Used by: "generate comment" helper action in public/js/post.js.
-app.post('/generate-comment', async (req, res) => {
+app.post('/generate-comment', aiGenerationLimiter, async (req, res) => {
   const { postId, tone } = req.body;
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
@@ -519,7 +622,8 @@ app.post('/generate-comment', async (req, res) => {
 // Used by: bot management table in public/js/manage_bots.js.
 app.get('/bots', (req, res) => {
   db.all(
-    'SELECT userId, fullName, profilePictureName, description, countryRegion FROM users ORDER BY fullName',
+    'SELECT userId, fullName, profilePictureName, description, countryRegion FROM users WHERE userId != ? ORDER BY fullName',
+    [DELETED_USER_ID],
     (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
       res.status(200).json({ bots: rows || [] });
@@ -615,19 +719,38 @@ app.post('/bots', async (req, res) => {
 app.delete('/bots/:userId', (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
   const { userId } = req.params;
+  if (userId === DELETED_USER_ID) {
+    return res.status(400).json({ error: 'Cannot delete the reserved placeholder account.' });
+  }
   db.get('SELECT userId, profilePictureName FROM users WHERE userId = ?', [userId], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!row) return res.status(404).json({ error: 'Bot not found' });
-    // Delete profile picture and thumbnail
-    if (row.profilePictureName) {
-      const picPath = path.join(profilePicturesDir, row.profilePictureName);
-      const thumbPath = path.join(profileThumbnailsDir, `${userId}-thumbnail.png`);
-      fs.unlink(picPath, () => {});
-      fs.unlink(thumbPath, () => {});
-    }
-    db.run('DELETE FROM users WHERE userId = ?', [userId], function (delErr) {
-      if (delErr) return res.status(500).json({ error: 'Failed to delete bot' });
-      res.status(200).json({ message: 'Bot deleted successfully' });
+
+    // Reassign this bot's existing posts/comments to the placeholder account
+    // rather than leaving them pointing at a userId that's about to stop existing.
+    db.run('UPDATE posts SET userId = ? WHERE userId = ?', [DELETED_USER_ID, userId], (postsErr) => {
+      if (postsErr) {
+        console.error('Error reassigning posts to placeholder user:', postsErr.message);
+        return res.status(500).json({ error: 'Failed to reassign posts before deleting bot' });
+      }
+      db.run('UPDATE comments SET userId = ? WHERE userId = ?', [DELETED_USER_ID, userId], (commentsErr) => {
+        if (commentsErr) {
+          console.error('Error reassigning comments to placeholder user:', commentsErr.message);
+          return res.status(500).json({ error: 'Failed to reassign comments before deleting bot' });
+        }
+
+        // Delete profile picture and thumbnail
+        if (row.profilePictureName) {
+          const picPath = path.join(profilePicturesDir, row.profilePictureName);
+          const thumbPath = path.join(profileThumbnailsDir, `${userId}-thumbnail.png`);
+          fs.unlink(picPath, () => {});
+          fs.unlink(thumbPath, () => {});
+        }
+        db.run('DELETE FROM users WHERE userId = ?', [userId], function (delErr) {
+          if (delErr) return res.status(500).json({ error: 'Failed to delete bot' });
+          res.status(200).json({ message: 'Bot deleted successfully' });
+        });
+      });
     });
   });
 });

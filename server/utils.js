@@ -2,6 +2,11 @@ import sqlite3 from 'sqlite3';
 
 const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
 
+// Must match DELETED_USER_ID in server/app.mjs: the reserved placeholder author
+// that a deleted bot's posts/comments get reassigned to. Never eligible to be
+// picked as a real content author or antagonist.
+const DELETED_USER_PLACEHOLDER_ID = 'deleted_user';
+
 function getRandomElement(arr) {
   // Generate a random index based on the array length
   const randomIndex = Math.floor(Math.random() * arr.length);
@@ -13,16 +18,17 @@ function getRandomBoolean() {
   return Math.random() >= 0.5;
 }
 
-async function getRandomUserIdFromDB() {
+// excludeUserId lets callers ask for "any user but this one" in a single query,
+// instead of looping client-side until a different random id turns up (which
+// never terminates if that's the only user in the DB).
+async function getRandomUserIdFromDB(excludeUserId = null) {
   return new Promise((resolve, reject) => {
-    const query = `
-      SELECT userId
-      FROM users
-      ORDER BY RANDOM()
-      LIMIT 1
-    `;
+    const excludedIds = [DELETED_USER_PLACEHOLDER_ID];
+    if (excludeUserId) excludedIds.push(excludeUserId);
+    const placeholders = excludedIds.map(() => '?').join(', ');
+    const query = `SELECT userId FROM users WHERE userId NOT IN (${placeholders}) ORDER BY RANDOM() LIMIT 1`;
 
-    db.get(query, (err, row) => {
+    db.get(query, excludedIds, (err, row) => {
       if (err) {
         console.error('Error fetching random userId from database:', err.message);
         reject(new Error('Failed to fetch random userId from the database.'));

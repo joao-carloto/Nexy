@@ -30,6 +30,21 @@ function isSafetyRejection(error) {
   return message.includes('rejected by the safety system') || message.includes('content_policy_violation');
 }
 
+// Verifies a file is a real, decodable raster image by reading its actual bytes
+// (via sharp/libvips), rather than trusting the client-supplied extension/mimetype.
+// Throws if the file is not a valid image (e.g. a renamed non-image upload).
+async function assertValidImageFile(filePath) {
+  let metadata;
+  try {
+    metadata = await sharp(filePath).metadata();
+  } catch {
+    throw new Error('Uploaded file is not a valid image.');
+  }
+  if (!metadata.width || !metadata.height) {
+    throw new Error('Uploaded file is not a valid image.');
+  }
+}
+
 // Caller should provide a stable postId so filename and DB id can stay in sync.
 async function generateImage(contents, postId) {
   try {
@@ -104,6 +119,9 @@ async function editImage(inputImagePath, outputImagePath) {
       // If edit is blocked, keep workflow running by using the original image.
       await sharp(inputImagePath).png().toFile(outputImagePath);
       console.warn('Image edit rejected by safety system; using original image instead.');
+      if (inputImagePath !== outputImagePath && fs.existsSync(inputImagePath)) {
+        fs.unlinkSync(inputImagePath);
+      }
       return;
     }
     console.error('Error generating content:', error);
@@ -301,6 +319,7 @@ export {
   resizeImages,
   describeImage,
   cropAndResizeToThumbnail,
+  assertValidImageFile,
 };
 
 // editImage("C:/Users/joao-carloto/Downloads/img_2.jpg", "edited.png");
