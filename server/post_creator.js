@@ -1,9 +1,16 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import sqlite3 from 'sqlite3';
 import { encode } from 'html-entities';
 
-import { generateImage, editImage, resizeImage, cropAndResizeToThumbnail } from './image_creator.js';
+import {
+  generateImage,
+  editImage,
+  resizeImage,
+  cropAndResizeToThumbnail,
+  assertValidImageFile,
+} from './image_creator.js';
 import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from '../server/utils.js';
 import {
   createPostText,
@@ -25,6 +32,9 @@ const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
 const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
 const postImagesDir = path.join(uploadsRoot, 'post_images');
 const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
+// Matches the quarantine directory multer writes uploads to in server/app.mjs.
+// Files here are not web-accessible until moved into postImagesDir by editImage().
+const tempUploadsDir = path.join(uploadsRoot, 'tmp_uploads');
 
 // Generate a random alphanumeric GUID with specified length
 function generateGUID(length) {
@@ -122,9 +132,11 @@ async function createAIPost({
 
   // Persist with required bot metadata defaults using the same provisional id.
   // Save the user's selected language instead of hardcoded EN.
+  // AI-generated text is HTML-encoded before storage (same as human posts/comments)
+  // since it's rendered raw into the DOM and the generating prompt is user-influenced.
   const postId = await savePost(
     userId,
-    postText,
+    encode(postText),
     { countryCode: 'US', languageCode: normalizedLocale.toUpperCase(), sourceType: 'bot' },
     provisionalPostId
   );
@@ -138,7 +150,7 @@ async function createAIPost({
     console.log(commentText);
 
     const commentUserId = await getRandomUserIdFromDB();
-    await saveComment(postId, commentUserId, commentText, 'bot');
+    await saveComment(postId, commentUserId, encode(commentText), 'bot');
   }
 
   console.log(`Post created with id: ${postId}`);
@@ -218,26 +230,32 @@ async function createHumanPost(userId, postText, originalImageFileName, locale =
     let originalImagePath = null;
     let mockingImageText = null;
     if (originalImageFileName) {
-      originalImagePath = path.join(postImagesDir, originalImageFileName);
+      // Uploads land in a private quarantine dir (server/app.mjs) that is never
+      // web-served, so nothing here is publicly reachable until editImage() below
+      // copies the processed result into postImagesDir.
+      originalImagePath = path.join(tempUploadsDir, originalImageFileName);
 
-      // Normalize uploaded image size before any AI or thumbnail pipeline step.
       try {
-        await resizeImage(originalImageFileName, postImagesDir, postImagesDir, null, 1080, null);
-      } catch (error) {
-        throw new Error('Failed to resize the image.', { cause: error });
-      }
+        // Reject anything that isn't a real, decodable image (e.g. a renamed
+        // non-image file) before it reaches any further processing or AI call.
+        await assertValidImageFile(originalImagePath);
 
-      // Generate optional extra text based on image contents.
-      // Pass locale so image-to-text pipeline produces language-aware output.
-      try {
+        // Normalize uploaded image size before any AI or thumbnail pipeline step.
+        await resizeImage(originalImageFileName, tempUploadsDir, tempUploadsDir, null, 1080, null);
+
+        // Generate optional extra text based on image contents.
+        // Pass locale so image-to-text pipeline produces language-aware output.
         mockingImageText = await mockImage(originalImagePath, normalizedLocale);
       } catch (error) {
-        throw new Error('Failed to mock the image.', { cause: error });
+        fs.unlink(originalImagePath, () => {});
+        throw new Error('Failed to process the uploaded image.', { cause: error });
       }
     }
 
     if (mockingImageText) {
-      editedPostText = editedPostText + '</br>' + mockingImageText;
+      // Encode the AI-generated caption before storage/render, matching the human
+      // post text above — it's rendered raw into the DOM elsewhere.
+      editedPostText = editedPostText + '</br>' + encode(mockingImageText);
     }
 
     // Pre-generate postId so edited image and DB row use the same id base.
@@ -311,9 +329,10 @@ async function createPsyopPost({ objective, target = 'general public', strategy 
   );
 
   const numComments = Math.floor(Math.random() * 7) + 1;
+  // AI-generated text is HTML-encoded before storage since it's rendered raw into the DOM.
   const postId = await savePost(
     userId,
-    postText,
+    encode(postText),
     { countryCode: 'US', languageCode: 'EN', sourceType: 'bot' },
     provisionalPostId
   );
@@ -321,7 +340,7 @@ async function createPsyopPost({ objective, target = 'general public', strategy 
   for (let i = 0; i < numComments; i++) {
     const { text: commentText, type: commentType } = await createPsyopCommentText(postText, objective);
     const commentUserId = await getRandomUserIdFromDB();
-    await saveComment(postId, commentUserId, commentText, 'bot');
+    await saveComment(postId, commentUserId, encode(commentText), 'bot');
 
     console.log(`\nPsyOp comment (${commentType}):`);
     console.log(commentText);
