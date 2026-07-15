@@ -41,18 +41,11 @@ The application supports activities such as:
 
 Live proof of concept:
 
-Free demo access is shared on request.
-
-Current prototype constraints:
-
-- Cold start can take up to about 1 minute
-- Service may sleep after inactivity
-- Generated content may be reset
-- API funding limits can block generation after monthly quota.
+Free live demo URL is shared on request. See linkedin contact below.
 
 ## Contact
 
-For deployment questions, collaboration inquiries, bug reports, or feature ideas, the preferred
+For deployment questions, bug reports, or feature ideas, the preferred
 channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
 
 1. Go to the [Issues tab](https://github.com/joao-carloto/nexy/issues) of this repository.
@@ -63,10 +56,10 @@ channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
 This keeps requests public and trackable, so others can follow along or find an answer that already exists. Note that
 GitHub has no private messaging between users, so anything posted as an Issue is visible to everyone.
 
-For anything private (e.g. requesting the live demo URL), use one of these instead:
+For anything private (e.g. requesting the live demo URL or collaboration inquiries), use one of these instead:
 
 - [LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/)
-- This demo has an in-app contact form (Help menu → Contact) that emails the maintainer directly. If you install this on your system you can also use that form.
+- The live demo has an in-app contact form (Help menu → Contact) that emails the maintainer directly.
 
 ## Tech Stack
 

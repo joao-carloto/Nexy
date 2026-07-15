@@ -260,22 +260,16 @@ nav {
   outline-offset: 2px;
 }
 
-.help-menu {
+.main-menu {
   position: relative;
   flex-shrink: 0;
-  order: 3;
-}
-
-.admin-menu {
-  position: relative;
-  flex-shrink: 0;
-  order: 4;
+  order: 1;
 }
 
 .icon-dropdown {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  left: 0;
   z-index: 2000;
   display: flex;
   flex-direction: column;
@@ -288,6 +282,12 @@ nav {
 }
 
 .icon-dropdown.hidden {
+  display: none;
+}
+
+/* Higher specificity than the generic .hidden utility, so admin-only menu items
+   (Manage Posts/Manage Bots) stay hidden even while the dropdown itself is open. */
+.admin-only-menu-item.hidden {
   display: none;
 }
 
@@ -315,7 +315,7 @@ nav {
 
 .title-language {
   flex-shrink: 0;
-  order: 1;
+  order: 3;
   display: flex;
   align-items: center;
   gap: 8px;

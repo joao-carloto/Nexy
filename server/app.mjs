@@ -184,6 +184,14 @@ const contactLimiter = rateLimit({
   message: { error: 'Too many messages sent. Please try again later.' },
 });
 
+// Route: reports whether the contact form is usable, so the client can hide it
+// (keeping only the GitHub/LinkedIn links) on installations that haven't set up Resend.
+// Used by: public/js/title.js, to toggle the contact form in title.html.
+app.get('/contact/status', (req, res) => {
+  const available = Boolean(process.env.RESEND_API_KEY && process.env.CONTACT_TO_EMAIL && process.env.CONTACT_FROM_EMAIL);
+  res.json({ available });
+});
+
 // Route: contact form submission, relayed by email via Resend.
 // Used by: contact form in public/html/help_popup_content.html (public/js/title.js).
 // Keeps the maintainer's real address out of the page source.

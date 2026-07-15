@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const t = (key, fallback) => (window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback);
 
   // adminAuth is an HttpOnly cookie, so the client can't read it directly to tell
-  // login from logout; ask the server instead.
+  // login from logout; ask the server instead. Also toggles the Manage Posts/Manage
+  // Bots menu items, which should only be reachable once actually logged in.
   function refreshAdminAuthAction() {
     const link = document.getElementById('adminAuthAction');
     if (!link) {
@@ -24,8 +25,28 @@ document.addEventListener('DOMContentLoaded', function () {
         link.setAttribute('data-i18n', key);
         link.setAttribute('href', href);
         link.textContent = t(key, authenticated ? 'Logout' : 'Login');
+        document.querySelectorAll('.admin-only-menu-item').forEach((item) => {
+          item.classList.toggle('hidden', !authenticated);
+        });
       })
       .catch(() => {});
+  }
+
+  // Personal installations typically don't set up Resend, so the contact form has
+  // nowhere to send its message; hide it and keep only the GitHub/LinkedIn links.
+  function applyContactAvailability(root, available) {
+    if (available) {
+      return;
+    }
+    const section = root.querySelector('#contactFormSection');
+    if (section) {
+      section.classList.add('hidden');
+    }
+    const alternativesIntro = root.querySelector('#contactAlternativesIntro');
+    if (alternativesIntro) {
+      alternativesIntro.setAttribute('data-i18n', 'title.contactAlternativesOnlyIntro');
+      alternativesIntro.textContent = t('title.contactAlternativesOnlyIntro', 'Reach out directly:');
+    }
   }
 
   function bindContactForm(root) {
@@ -82,6 +103,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // The contact form lives directly in title.html (not lazily fetched like the
         // help FAQ), so bind it once, right after this injection.
         bindContactForm(container);
+        fetch('/contact/status')
+          .then((response) => response.json())
+          .then(({ available }) => applyContactAvailability(container, available))
+          .catch(() => applyContactAvailability(container, false));
       });
   }
 
@@ -218,16 +243,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.style.overflow = '';
   }
 
-  // Shared toggle/close logic for the Help and Admin icon dropdowns in the title bar.
-  function getMenuElements(buttonId, dropdownId) {
-    return {
-      button: document.getElementById(buttonId),
-      dropdown: document.getElementById(dropdownId),
-    };
-  }
-
-  function closeMenu(buttonId, dropdownId) {
-    const { button, dropdown } = getMenuElements(buttonId, dropdownId);
+  // Toggle/close logic for the single Help/Contact/Admin icon dropdown in the title bar.
+  function closeMenu() {
+    const button = document.getElementById('mainMenuButton');
+    const dropdown = document.getElementById('mainDropdown');
     if (!dropdown || !button) {
       return;
     }
@@ -235,8 +254,9 @@ document.addEventListener('DOMContentLoaded', function () {
     button.setAttribute('aria-expanded', 'false');
   }
 
-  function toggleMenu(buttonId, dropdownId) {
-    const { button, dropdown } = getMenuElements(buttonId, dropdownId);
+  function toggleMenu() {
+    const button = document.getElementById('mainMenuButton');
+    const dropdown = document.getElementById('mainDropdown');
     if (!dropdown || !button) {
       return;
     }
@@ -249,41 +269,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const target = event.target;
     const closest = (selector) => target.closest && target.closest(selector);
 
-    // Checked by class first: admin-button also carries the help-button class for
-    // styling reuse, so #helpMenuButton is matched by id below to avoid ambiguity.
-    if (closest('.admin-button')) {
+    if (closest('#mainMenuButton')) {
       event.preventDefault();
-      closeMenu('helpMenuButton', 'helpDropdown');
-      toggleMenu('adminMenuButton', 'adminDropdown');
-      return;
-    }
-
-    if (closest('#helpMenuButton')) {
-      event.preventDefault();
-      closeMenu('adminMenuButton', 'adminDropdown');
-      toggleMenu('helpMenuButton', 'helpDropdown');
+      toggleMenu();
       return;
     }
 
     if (target.id === 'openHelpAction') {
       event.preventDefault();
-      closeMenu('helpMenuButton', 'helpDropdown');
+      closeMenu();
       openHelpModal();
       return;
     }
 
     if (target.id === 'openContactAction') {
       event.preventDefault();
-      closeMenu('helpMenuButton', 'helpDropdown');
+      closeMenu();
       openContactModal();
       return;
     }
 
-    if (!closest('.admin-menu')) {
-      closeMenu('adminMenuButton', 'adminDropdown');
-    }
-    if (!closest('.help-menu')) {
-      closeMenu('helpMenuButton', 'helpDropdown');
+    if (!closest('.main-menu')) {
+      closeMenu();
     }
 
     if (target.id === 'closeHelpInfo' || target.id === 'helpInfoModal') {
@@ -300,8 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (event.key === 'Escape') {
       closeHelpModal();
       closeContactModal();
-      closeMenu('adminMenuButton', 'adminDropdown');
-      closeMenu('helpMenuButton', 'helpDropdown');
+      closeMenu();
     }
   });
 

@@ -3,43 +3,14 @@
     <img src="images/logo.png" alt="Logo" class="logo" />
     Nexy
   </div>
-  <div class="help-menu">
+  <div class="main-menu">
     <button
       class="svg-button help-button"
-      id="helpMenuButton"
-      title="Help"
-      data-i18n-title="title.help"
-      aria-label="Help menu"
-      data-i18n-aria-label="title.helpMenu"
-      aria-haspopup="true"
-      aria-expanded="false"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-        <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="3" fill="#2d4554" />
-        <path d="M24 34v-3" stroke="#f4f3f1" stroke-width="3" stroke-linecap="round" />
-        <path
-          d="M24 30c0-6 8-5.5 8-12a8 8 0 1 0-16 0"
-          stroke="#f4f3f1"
-          stroke-width="3"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-        <circle cx="24" cy="38" r="2" fill="#f4f3f1" />
-      </svg>
-    </button>
-    <div class="icon-dropdown hidden" id="helpDropdown" role="menu" aria-label="Help menu">
-      <a href="#" id="openHelpAction" role="menuitem" data-i18n="title.help">Help</a>
-      <a href="#" id="openContactAction" role="menuitem" data-i18n="title.contact">Contact</a>
-    </div>
-  </div>
-  <div class="admin-menu">
-    <button
-      class="svg-button help-button admin-button"
-      id="adminMenuButton"
-      title="Admin"
-      data-i18n-title="title.admin"
-      aria-label="Admin menu"
-      data-i18n-aria-label="title.adminMenu"
+      id="mainMenuButton"
+      title="Menu"
+      data-i18n-title="title.menu"
+      aria-label="Menu"
+      data-i18n-aria-label="title.menu"
       aria-haspopup="true"
       aria-expanded="false"
     >
@@ -51,18 +22,22 @@
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
-        class="feather feather-settings"
       >
-        <circle cx="12" cy="12" r="3"></circle>
-        <path
-          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-        ></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
       </svg>
     </button>
-    <div class="icon-dropdown hidden" id="adminDropdown" role="menu" aria-label="Admin menu">
-      <a href="/manage_posts.html" role="menuitem" data-i18n="title.managePosts">Manage Posts</a>
-      <a href="/manage_bots.html" role="menuitem" data-i18n="title.manageBots">Manage Bots</a>
-      <div class="icon-dropdown-divider" role="separator"></div>
+    <div class="icon-dropdown hidden" id="mainDropdown" role="menu" aria-label="Menu">
+      <a href="#" id="openHelpAction" role="menuitem" data-i18n="title.help">Help</a>
+      <a href="#" id="openContactAction" role="menuitem" data-i18n="title.contact">Contact</a>
+      <div class="icon-dropdown-divider admin-only-menu-item hidden" role="separator"></div>
+      <a href="/manage_posts.html" class="admin-only-menu-item hidden" role="menuitem" data-i18n="title.managePosts"
+        >Manage Posts</a
+      >
+      <a href="/manage_bots.html" class="admin-only-menu-item hidden" role="menuitem" data-i18n="title.manageBots"
+        >Manage Bots</a
+      >
       <a href="/login.html" id="adminAuthAction" role="menuitem" data-i18n="title.login">Login</a>
     </div>
   </div>
@@ -119,22 +94,24 @@
       </button>
     </div>
     <div class="psyop-info-content">
-      <p data-i18n="title.contactIntro">
-        Use this form to reach out about suggestions, deployment questions, demo access, translations, contributions, or
-        funding. It goes straight to the project maintainer.
-      </p>
-      <form id="helpContactForm" class="help-contact-form">
-        <label for="contactName" data-i18n="title.contactNameLabel">Name</label>
-        <input type="text" id="contactName" name="name" autocomplete="name" required />
-        <label for="contactEmail" data-i18n="title.contactEmailLabel">Your email</label>
-        <input type="email" id="contactEmail" name="email" autocomplete="email" required />
-        <label for="contactMessage" data-i18n="title.contactMessageLabel">Message</label>
-        <textarea id="contactMessage" name="message" rows="5" required></textarea>
-        <button type="submit" data-i18n="title.contactSubmit">Send</button>
-        <p id="contactFormStatus" class="help-contact-status" role="status" aria-live="polite"></p>
-      </form>
+      <div id="contactFormSection">
+        <p data-i18n="title.contactIntro">
+          Use this form to reach out about suggestions, deployment questions, demo access, translations, contributions, or
+          funding. It goes straight to the project maintainer.
+        </p>
+        <form id="helpContactForm" class="help-contact-form">
+          <label for="contactName" data-i18n="title.contactNameLabel">Name</label>
+          <input type="text" id="contactName" name="name" autocomplete="name" required />
+          <label for="contactEmail" data-i18n="title.contactEmailLabel">Your email</label>
+          <input type="email" id="contactEmail" name="email" autocomplete="email" required />
+          <label for="contactMessage" data-i18n="title.contactMessageLabel">Message</label>
+          <textarea id="contactMessage" name="message" rows="5" required></textarea>
+          <button type="submit" data-i18n="title.contactSubmit">Send</button>
+          <p id="contactFormStatus" class="help-contact-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
       <div class="help-contact-alternatives">
-        <p data-i18n="title.contactAlternativesIntro">Or reach out directly:</p>
+        <p id="contactAlternativesIntro" data-i18n="title.contactAlternativesIntro">Or reach out directly:</p>
         <a
           href="https://github.com/joao-carloto/nexy"
           target="_blank"
