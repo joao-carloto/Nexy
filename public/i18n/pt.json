@@ -2,37 +2,37 @@
   "common": {
     "language": "Idioma",
     "submit": "ENVIAR",
-    "loadingOverlords": "Os teus senhores estao a trabalhar. Aguarda..."
+    "loadingOverlords": "Os teus senhores estão a trabalhar. Aguarda..."
   },
   "nav": {
-    "latestPosts": "Ultimos Posts",
+    "latestPosts": "Últimos Posts",
     "explore": "Explorar",
     "newHumanPost": "Novo Post Humano",
     "newBotPost": "Novo Post de Bot",
     "newPsyOp": "Nova PsyOp",
-    "randomBot": "Bot Aleatorio",
-    "selectRandomBot": "Selecionar um Bot Aleatorio"
+    "randomBot": "Bot Aleatório",
+    "selectRandomBot": "Selecionar um Bot Aleatório"
   },
   "title": {
     "help": "Ajuda",
     "nexyHelp": "Ajuda Nexy",
     "closeHelpDialog": "Fechar janela de ajuda",
     "loadingHelp": "A Carregar Ajuda",
-    "loadingHelpMessage": "Aguarde enquanto o conteudo de ajuda e carregado.",
-    "helpUnavailableHeading": "Ajuda indisponivel",
-    "helpUnavailableMessage": "Nao foi possivel carregar a ajuda agora. Tente novamente.",
+    "loadingHelpMessage": "Aguarde enquanto o conteúdo de ajuda é carregado.",
+    "helpUnavailableHeading": "Ajuda indisponível",
+    "helpUnavailableMessage": "Não foi possível carregar a ajuda agora. Tente novamente.",
     "menu": "Menu",
     "contact": "Contacto",
     "contactModalTitle": "Contacto",
     "closeContactDialog": "Fechar janela de contacto",
-    "contactIntro": "Usa este formulario para sugestoes, questoes sobre a instalação, traducoes, contribuicoes ou financiamento.",
+    "contactIntro": "Usa este formulário para sugestões, questões sobre a instalação, traduções, contribuições ou financiamento.",
     "contactNameLabel": "Nome",
     "contactEmailLabel": "O teu email",
     "contactMessageLabel": "Mensagem",
     "contactSubmit": "Enviar",
     "contactAlternativesIntro": "Ou contacta diretamente:",
     "contactAlternativesOnlyIntro": "Contacta diretamente:",
-    "contactGithub": "Repositorio no GitHub",
+    "contactGithub": "Repositório no GitHub",
     "contactLinkedin": "LinkedIn",
     "managePosts": "Gerir Posts",
     "manageBots": "Gerir Bots",
@@ -54,17 +54,17 @@
     "heading": "Login de Administrador",
     "passwordPlaceholder": "Palavra-passe",
     "submit": "ENTRAR",
-    "successHint": "Apos sucesso, sera redirecionado para Gerir Posts.",
+    "successHint": "Após sucesso, será redirecionado para Gerir Posts.",
     "errors": {
-      "passwordRequired": "Palavra-passe obrigatoria",
+      "passwordRequired": "Palavra-passe obrigatória",
       "loginFailed": "Falha no login",
       "networkError": "Erro de rede"
     }
   },
   "notFound": {
-    "pageTitle": "Pagina Nao Encontrada - Nexy",
+    "pageTitle": "Página Não Encontrada - Nexy",
     "message": "Perdido na Nexy.",
-    "hint": "A pagina que procuras entrou numa linha temporal alternativa ou era um post apagado. Vamos levar-te para um sitio mais real (ou pelo menos convincentemente sintetico).",
+    "hint": "A página que procuras entrou numa linha temporal alternativa ou era um post apagado. Vamos levar-te para um sítio mais real (ou pelo menos convincentemente sintético).",
     "actions": {
       "explore": "Explorar Posts",
       "humanPost": "Criar Post Humano",
@@ -82,7 +82,7 @@
     "createHeading": "Criar Novo Bot",
     "userIdPlaceholder": "ID de utilizador (gerado automaticamente se vazio)",
     "fullNamePlaceholder": "Nome completo (gerado automaticamente se vazio)",
-    "descriptionPlaceholder": "Descricao / Bio (gerada automaticamente se vazio)",
+    "descriptionPlaceholder": "Descrição / Bio (gerada automaticamente se vazio)",
     "createButton": "CRIAR BOT",
     "existingHeading": "Bots Existentes"
   },
@@ -93,7 +93,7 @@
   "newBotPost": {
     "pageTitle": "Novo Post de Bot",
     "heading": "Novo Post de Bot",
-    "topicPlaceholder": "Introduz um topico (opcional)",
+    "topicPlaceholder": "Introduz um tópico (opcional)",
     "fakeNewsLabel": "Fake News:",
     "fakeNewsMaybe": "Talvez",
     "fakeNewsYesPlease": "Sim, Por Favor",
@@ -108,11 +108,11 @@
   },
   "post": {
     "pageTitle": "Detalhes do Post",
-    "generatingBotComment": "A gerar comentario de bot...",
-    "addHumanComment": "Adicionar Comentario Humano",
-    "commentTextPlaceholder": "Texto do Comentario",
-    "addBotComment": "Adicionar Comentario de Bot",
-    "commentToneLabel": "Tom do Comentario:",
+    "generatingBotComment": "A gerar comentário de bot...",
+    "addHumanComment": "Adicionar Comentário Humano",
+    "commentTextPlaceholder": "Texto do Comentário",
+    "addBotComment": "Adicionar Comentário de Bot",
+    "commentToneLabel": "Tom do Comentário:",
     "commentTonePositive": "Positivo",
     "commentToneNeutral": "Neutro",
     "commentToneNegative": "Negativo"
@@ -120,23 +120,23 @@
   "psyop": {
     "pageTitle": "Nova PsyOp",
     "heading": "Nova PsyOp",
-    "openInfo": "O que sao PsyOps?",
+    "openInfo": "O que são PsyOps?",
     "objectivePlaceholder": "Define o objetivo da PsyOp",
-    "targetPlaceholder": "Define o publico-alvo",
-    "strategyLabel": "Estrategia",
+    "targetPlaceholder": "Define o público-alvo",
+    "strategyLabel": "Estratégia",
     "strategyWhite": "Branca",
     "strategyGrey": "Cinzenta",
     "strategyBlack": "Preta",
     "loading": "A criar o teu post PsyOp...",
-    "infoTitle": "O que sao PsyOps?",
-    "closeInfoAria": "Fechar informacao de PsyOps"
+    "infoTitle": "O que são PsyOps?",
+    "closeInfoAria": "Fechar informação de PsyOps"
   },
   "randomBot": {
-    "pageTitle": "Bot Aleatorio",
-    "heading": "Bot Aleatorio",
+    "pageTitle": "Bot Aleatório",
+    "heading": "Bot Aleatório",
     "profilePictureAlt": "Fotografia de Perfil",
     "userIdLabel": "ID de Utilizador:",
-    "descriptionLabel": "Descricao:",
+    "descriptionLabel": "Descrição:",
     "loadAnother": "Carregar Outro Bot"
   }
 }
