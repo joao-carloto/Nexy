@@ -121,7 +121,7 @@ Quick onboarding matrix to understand which frontend page/script calls which ser
 
 Related server-only routes:
 
-- `GET /` redirects to `/explore.html`
+- `GET /` redirects to `/latest_posts.html`
 - `GET /post/:postId` serves the pretty URL entry page for a specific post
 - `GET /logout` clears admin session cookie and redirects to `/login.html`
 - Static media mounts: `/post_images`, `/profile_pictures`, `/thumbnails/post_images`, `/thumbnails/profile_pictures`

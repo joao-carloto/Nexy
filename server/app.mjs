@@ -245,9 +245,9 @@ app.post('/contact', contactLimiter, async (req, res) => {
 });
 
 // Route: root redirect.
-// Used by: first page load for the app (sends users to explore feed).
+// Used by: first page load for the app (sends users to the latest posts feed).
 app.get('/', (req, res) => {
-  res.redirect('/explore.html');
+  res.redirect('/latest_posts.html');
 });
 // Static route: serves shared assets and top-level HTML pages in public/.
 app.use(express.static(path.join(path.resolve(), 'public')));
