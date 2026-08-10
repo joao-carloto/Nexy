@@ -1,5 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* One accent scale reused for every primary action, link, and focus state —
+   avoids mixing unrelated blues (e.g. the old Bootstrap #007bff) across pages. */
+:root {
+  --accent: #1f6aa3;
+  --accent-hover: #15507c;
+  --accent-light: #3b8fd4;
+  --accent-soft: #74bbee;
+  --success: #28a745;
+  --success-hover: #218838;
+  --success-text: #1a7a3c;
+  --danger: #ff4d4d;
+  --danger-hover: #c9001a;
+  --danger-text: #c0392b;
+}
+
 /* ==============================
    Base
 ============================== */
@@ -118,7 +133,7 @@ nav {
 
 .nav-item:hover {
   background: rgba(59, 143, 212, 0.3);
-  color: #74bbee;
+  color: var(--accent-soft);
   box-shadow: 0 0 0 1px rgba(116, 187, 238, 0.35) inset;
   transform: translateY(-1px);
 }
@@ -250,7 +265,7 @@ nav {
 }
 
 .help-button:hover svg {
-  stroke: #74bbee;
+  stroke: var(--accent-soft);
   filter: drop-shadow(0 0 6px rgba(116, 187, 238, 0.4));
 }
 
@@ -304,7 +319,7 @@ nav {
 .icon-dropdown a:hover,
 .icon-dropdown a:focus-visible {
   background: rgba(116, 187, 238, 0.25);
-  color: #74bbee;
+  color: var(--accent-soft);
 }
 
 .icon-dropdown-divider {
@@ -423,7 +438,7 @@ textarea::placeholder {
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: #3b8fd4;
+  border-color: var(--accent-light);
   box-shadow: 0 0 0 3px rgba(59, 143, 212, 0.2);
 }
 
@@ -431,7 +446,7 @@ button {
   border: none;
   cursor: pointer;
   color: #fff;
-  background-color: #007bff;
+  background-color: var(--accent);
   font-family: 'Inter', Arial, sans-serif;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -439,7 +454,7 @@ button {
 }
 
 button:hover {
-  background-color: #0069d9;
+  background-color: var(--accent-hover);
   transform: translateY(-1px);
 }
 
@@ -459,7 +474,7 @@ button:hover {
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #fff;
-  background-color: #28a745;
+  background-color: var(--success);
   border-radius: 50px;
   box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
   transition:
@@ -469,19 +484,19 @@ button:hover {
 }
 
 .submit-button:hover {
-  background-color: #218838;
+  background-color: var(--success-hover);
   box-shadow: 0 6px 22px rgba(40, 167, 69, 0.45);
   transform: translateY(-2px);
 }
 
 #load-user {
-  background-color: #007bff;
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
+  background-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(31, 106, 163, 0.3);
 }
 
 #load-user:hover {
-  background-color: #0069d9;
-  box-shadow: 0 6px 22px rgba(0, 123, 255, 0.45);
+  background-color: var(--accent-hover);
+  box-shadow: 0 6px 22px rgba(31, 106, 163, 0.45);
 }
 
 .file-input-container {
@@ -502,7 +517,7 @@ button:hover {
   padding: 10px 20px;
   font-size: 1rem;
   color: #fff;
-  background-color: #007bff;
+  background-color: var(--accent);
   border-radius: 4px;
   text-align: center;
   cursor: pointer;
@@ -544,7 +559,7 @@ select {
 }
 
 select:focus {
-  border-color: #3b8fd4;
+  border-color: var(--accent-light);
   box-shadow: 0 0 0 3px rgba(59, 143, 212, 0.2);
 }
 
@@ -573,50 +588,129 @@ select:hover {
   justify-content: center;
 }
 
+/* Latest Posts feed is the only page wrapping .posts-container in #content;
+   keep it a single narrow column instead of Explore's wide thumbnail grid. */
+#content .posts-container {
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
 .post-thumbnail,
 .post-frame {
   display: inline-block;
   vertical-align: top;
   height: auto;
-  padding: 16px;
   overflow: hidden;
   text-align: center;
   color: inherit;
   cursor: pointer;
   background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
   transition:
     box-shadow 0.25s ease,
     transform 0.25s ease;
 }
 
+.post-thumbnail {
+  padding: 16px;
+}
+
 .post-thumbnail:hover,
 .post-frame:hover {
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
   transform: translateY(-3px);
 }
 
-.post-thumbnail,
-.post-frame img {
+.post-thumbnail img {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
 }
 
+/* ---- Feed card (Latest Posts) ---- */
+
 .post-frame {
-  max-width: 800px;
+  width: 100%;
+  max-width: 640px;
+  text-align: left;
+  cursor: default;
 }
 
-.post-frame h3 {
-  margin: 8px 0;
-  font-size: 1.2em;
+.post-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
 }
 
-.post-frame p {
-  font-size: 1.1em;
-  color: #666;
+.post-card-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.post-card-username {
+  overflow: hidden;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.98rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-card-date {
+  color: #8a94a6;
+  font-size: 0.82rem;
+}
+
+.post-card-text {
+  margin: 0;
+  padding: 0 18px 14px;
+  color: #3d4d57;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.post-card-image {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.post-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 18px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.post-card-view-btn {
+  width: auto;
+  margin: 0;
+  padding: 8px 18px;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(31, 106, 163, 0.08);
+  border: 1px solid rgba(31, 106, 163, 0.25);
+  border-radius: 50px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.post-card-view-btn:hover {
+  color: #fff;
+  background-color: var(--accent);
+  transform: none;
 }
 
 #post {
@@ -730,9 +824,9 @@ select:hover {
   padding: 8px 16px;
   font-size: 1em;
   color: #fff;
-  background-color: #ff4d4d;
+  background-color: var(--danger);
   border-radius: 50px;
-  box-shadow: 0 4px 14px rgba(220, 53, 69, 0.28);
+  box-shadow: 0 4px 14px rgba(255, 77, 77, 0.35);
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -740,8 +834,8 @@ select:hover {
 }
 
 .delete-post-button:hover {
-  background-color: #c9001a;
-  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.45);
+  background-color: var(--danger-hover);
+  box-shadow: 0 6px 20px rgba(201, 0, 26, 0.45);
   transform: translateY(-1px);
 }
 
@@ -866,7 +960,7 @@ select:hover {
   height: 50px;
   margin-bottom: 20px;
   border: 5px solid rgba(0, 0, 0, 0.1);
-  border-top: 5px solid #007bff;
+  border-top: 5px solid var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -904,7 +998,7 @@ select:hover {
   color: #f4f3f1;
   font-size: 1rem;
   font-weight: 700;
-  background-color: #1f6aa3;
+  background-color: var(--accent);
   border: 1px solid #89bddf;
   border-radius: 8px;
   transition:
@@ -913,7 +1007,7 @@ select:hover {
 }
 
 .psyop-info-button:hover {
-  background-color: #15507c;
+  background-color: var(--accent-hover);
   transform: translateY(-1px);
 }
 
@@ -946,7 +1040,7 @@ select:hover {
   justify-content: space-between;
   gap: 12px;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #1a3648 0%, #1f6aa3 100%);
+  background: linear-gradient(135deg, #1a3648 0%, var(--accent) 100%);
 }
 
 .psyop-info-header h2 {
@@ -1001,7 +1095,7 @@ select:hover {
   color: #1a3648;
   font-size: 1.15rem;
   font-weight: 700;
-  border-left: 4px solid #1f6aa3;
+  border-left: 4px solid var(--accent);
 }
 
 .psyop-info-content h4 {
@@ -1075,7 +1169,7 @@ select:hover {
 .help-contact-form input:focus,
 .help-contact-form textarea:focus {
   outline: none;
-  border-color: #3b8fd4;
+  border-color: var(--accent-light);
   box-shadow: 0 0 0 3px rgba(59, 143, 212, 0.2);
 }
 
@@ -1091,7 +1185,7 @@ select:hover {
   color: #fff;
   font-size: 0.95rem;
   font-weight: 600;
-  background: #1f6aa3;
+  background: var(--accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -1099,7 +1193,7 @@ select:hover {
 }
 
 .help-contact-form button:hover {
-  background: #15507c;
+  background: var(--accent-hover);
 }
 
 .help-contact-form button:disabled {
@@ -1113,11 +1207,11 @@ select:hover {
 }
 
 .help-contact-status.success {
-  color: #1a7a3c;
+  color: var(--success-text);
 }
 
 .help-contact-status.error {
-  color: #c0392b;
+  color: var(--danger-text);
 }
 
 .help-contact-alternatives {
@@ -1159,7 +1253,7 @@ select:hover {
 
 .help-contact-alt-link:hover {
   background: #dde7ee;
-  border-color: #3b8fd4;
+  border-color: var(--accent-light);
 }
 
 .psyop-type {
@@ -1172,8 +1266,8 @@ select:hover {
 }
 
 .psyop-white {
-  color: #2e7d32;
-  border-color: #2e7d32;
+  color: var(--success-text);
+  border-color: var(--success-text);
 }
 
 .psyop-grey {
@@ -1182,8 +1276,8 @@ select:hover {
 }
 
 .psyop-black {
-  color: #b52020;
-  border-color: #b52020;
+  color: var(--danger-text);
+  border-color: var(--danger-text);
 }
 
 .psyop-warning {
@@ -1193,7 +1287,7 @@ select:hover {
   color: #1a3648;
   font-size: 1rem;
   font-weight: 700;
-  border-left: 3px solid #1f6aa3;
+  border-left: 3px solid var(--accent);
 }
 
 .psyop-checklist {
@@ -1204,7 +1298,7 @@ select:hover {
 
 .psyop-checklist li::before {
   content: '\2713\00a0';
-  color: #2e7d32;
+  color: var(--success-text);
   font-weight: 700;
 }
 

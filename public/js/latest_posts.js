@@ -1,4 +1,19 @@
 /* eslint-disable indent */
+function t(key, fallback) {
+  return window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback;
+}
+
+function formatPostDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 async function loadPosts() {
   try {
     const response = await fetch('/posts');
@@ -14,13 +29,18 @@ async function loadPosts() {
           ? `/thumbnails/profile_pictures/${post.userId}-thumbnail.png`
           : 'images/logo.png';
         postElement.innerHTML = `
-        <div class="post-user-header">
+        <div class="post-card-header">
           <img src="${thumbSrc}" alt="${post.userId}" class="post-user-thumbnail" onerror="this.src='images/logo.png'" />
-          <h3>${post.userId}</h3>
+          <div class="post-card-identity">
+            <span class="post-card-username">${post.userId}</span>
+            <span class="post-card-date">${formatPostDate(post.createdAt)}</span>
+          </div>
         </div>
-        <p>${post.postText.substring(0, 250)}...</p>
-        ${post.imageFileName ? `<img src="/post_images/${post.imageFileName}" alt="Post Image" onclick="viewPost('${post.id}')" style="cursor: pointer;">` : ''}
-  <button onclick="viewPost('${post.id}')">View Post</button>
+        <p class="post-card-text">${post.postText.substring(0, 250)}...</p>
+        <img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-card-image" onclick="viewPost('${post.id}')" />
+        <div class="post-card-footer">
+          <button class="post-card-view-btn" onclick="viewPost('${post.id}')">${t('latestPosts.viewPost', 'View Post')}</button>
+        </div>
       `;
         postsContainer.appendChild(postElement);
       }

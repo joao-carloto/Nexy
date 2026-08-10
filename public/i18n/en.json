@@ -86,7 +86,8 @@
   },
   "latestPosts": {
     "pageTitle": "Nexy",
-    "heading": "Latest Posts"
+    "heading": "Latest Posts",
+    "viewPost": "View Post"
   },
   "manageBots": {
     "pageTitle": "Manage Bots",
