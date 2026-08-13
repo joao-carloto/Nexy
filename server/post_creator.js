@@ -21,6 +21,7 @@ import {
   createPsyopPostText,
   createPsyopCommentText,
   createPsyopDemolisherReply,
+  looksLikePortuguese,
 } from '../server/text_creator.js';
 
 // Orchestrates post generation pipelines used by server/app.mjs routes:
@@ -328,17 +329,25 @@ async function createPsyopPost({ objective, target = 'general public', strategy 
     provisionalPostId
   );
 
-  const numComments = Math.floor(Math.random() * 7) + 1;
+  // At least 2 comments so there's always room for the strawman comment plus its demolisher reply.
+  const numComments = Math.floor(Math.random() * 6) + 2;
+  // Exactly one comment slot demonstrates the strawman tactic; all others are forced supportive
+  // so a thread never reads as all-strawman (only the designated slot gets the demolisher reply).
+  const strawmanIndex = Math.floor(Math.random() * numComments);
+  // Detected from input text since the PsyOp UI has no locale selector — keeps stored
+  // metadata consistent with the language createPsyopPostText actually generated.
+  const languageCode = looksLikePortuguese(`${objective} ${target}`) ? 'PT' : 'EN';
   // AI-generated text is HTML-encoded before storage since it's rendered raw into the DOM.
   const postId = await savePost(
     userId,
     encode(postText),
-    { countryCode: 'US', languageCode: 'EN', sourceType: 'bot' },
+    { countryCode: 'US', languageCode, sourceType: 'bot' },
     provisionalPostId
   );
 
   for (let i = 0; i < numComments; i++) {
-    const { text: commentText, type: commentType } = await createPsyopCommentText(postText, objective);
+    const forcedType = i === strawmanIndex ? 'strawman_opposition' : 'supportive';
+    const { text: commentText, type: commentType } = await createPsyopCommentText(postText, objective, forcedType);
     const commentUserId = await getRandomUserIdFromDB();
     await saveComment(postId, commentUserId, encode(commentText), 'bot');
 

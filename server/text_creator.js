@@ -14,6 +14,28 @@ const tones = ['positive', 'neutral', 'negative'];
 
 // Centralized prompt + cleanup helpers for post/comment text used by server routes.
 
+// PT locale must always resolve to European Portuguese, not PT-BR — the target audience is Portugal.
+function languageInstructionFor(locale) {
+  return locale === 'pt'
+    ? ' Respond only in European Portuguese (Portugal Portuguese, not Brazilian Portuguese).'
+    : ' Respond only in English.';
+}
+
+// Heuristic check for Portuguese-language input (accented PT letters or common PT stopwords),
+// used where no explicit locale is available (e.g. PsyOp inputs) to decide whether to force PT-PT.
+function looksLikePortuguese(text) {
+  if (!text) return false;
+  if (/[ãõçáéíóúâêô]/i.test(text)) return true;
+  return /\b(de|para|que|não|com|uma|este|esta|são)\b/i.test(text);
+}
+
+// Same PT-PT enforcement as languageInstructionFor, but derived from free-text input instead
+// of an explicit locale — for callers (PsyOp, mockPost) that have no locale parameter.
+function languageInstructionFromText(...texts) {
+  const isPt = texts.some(looksLikePortuguese);
+  return isPt ? languageInstructionFor('pt') : '';
+}
+
 async function createPostText(topic, isFakeNews, locale = 'en') {
   const model = 'gpt-4.1-mini';
 
@@ -23,8 +45,7 @@ async function createPostText(topic, isFakeNews, locale = 'en') {
     options = options + ' It should be a fictious story about real people.';
   }
 
-  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
-  const languageInstructions = ` Respond only in ${languageName}.`;
+  const languageInstructions = languageInstructionFor(locale);
 
   // Two-step generation: first an inspiration snippet, then final user-facing post.
   let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, 
@@ -45,8 +66,7 @@ async function editText(originalPostText, locale = 'en') {
   const model = 'gpt-4.1-mini';
   // Used by createHumanPost to intentionally change the original author tone.
   // Generate in the user's selected language to maintain linguistic consistency.
-  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
-  const postPrompt = `Write a small text that disagrees with this one: "${originalPostText}". Write only in ${languageName}. Keep the response concise and natural for social media.`;
+  const postPrompt = `Write a small text that disagrees with this one: "${originalPostText}".${languageInstructionFor(locale)} Keep the response concise and natural for social media.`;
   const postText = await generateText(postPrompt, model);
 
   console.log(postText);
@@ -63,10 +83,9 @@ async function createCommentText(postText, tone = undefined, locale = 'en') {
   }
   options = options + ` The comment should have a ${tone} tone.`;
 
-  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
-  const languageInstructions = ` Respond only in ${languageName}.`;
+  const languageInstructions = languageInstructionFor(locale);
 
-  const commentPrompt = `Small social media comment responding to ${postText}. 
+  const commentPrompt = `Small social media comment responding to ${postText}.
   Just one option. Include some emoji.${options}${languageInstructions} Don't explain it, just give me the content.`;
   const commentText = await generateText(commentPrompt, model);
   return commentText;
@@ -75,8 +94,7 @@ async function createCommentText(postText, tone = undefined, locale = 'en') {
 async function createCommentReply(postText, postCommentText, locale = 'en') {
   const model = 'gpt-4.1-mini';
 
-  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
-  const languageInstructions = ` Respond only in ${languageName}.`;
+  const languageInstructions = languageInstructionFor(locale);
 
   const commentPrompt = `Small social media comment, responding in a confrontational manner,
    to this comment: "${postCommentText}", made on this social media post: "${postText}". 
@@ -130,8 +148,7 @@ async function mockImage(imagePath, locale = 'en') {
   const description = await describeImage(imagePath, locale);
   const model = 'gpt-4.1-mini';
 
-  const languageName = locale === 'pt' ? 'Portuguese' : 'English';
-  const prompt = `Create a small text making fun of an image described in this manner: ${description}. Write only in ${languageName}. Keep it concise and natural for social media. Don't explain it, just give me the content.`;
+  const prompt = `Create a small text making fun of an image described in this manner: ${description}.${languageInstructionFor(locale)} Keep it concise and natural for social media. Don't explain it, just give me the content.`;
   const mockingText = await generateText(prompt, model);
 
   console.log('');
@@ -144,8 +161,10 @@ async function mockPost(originalText, imagePath) {
   const description = await describeImage(imagePath);
   const model = 'gpt-4.1-mini';
 
+  const languageInstructions = languageInstructionFromText(originalText);
+
   const prompt = `Create a small text making fun of a social media post with the following text: "${originalText}"
-   and with an associated image described in this manner: "${description}". Don't explain it, just give me the content.`;
+   and with an associated image described in this manner: "${description}".${languageInstructions} Don't explain it, just give me the content.`;
   const mockingText = await generateText(prompt, model);
 
   console.log('');
@@ -176,6 +195,8 @@ async function createPsyopCommentText(postText, objective, type = undefined) {
     type = getRandomElement(psyopCommentTypes);
   }
 
+  const languageInstructions = languageInstructionFromText(postText, objective);
+
   // Type controls the rhetorical role of the generated comment.
   let prompt;
   if (type === 'strawman_opposition') {
@@ -184,13 +205,13 @@ async function createPsyopCommentText(postText, objective, type = undefined) {
       `However, the comment must be poorly written and unconvincing: use clumsy phrasing, weak logic, ` +
       `emotional outbursts, spelling mistakes, incoherent reasoning, or conspiracy-like rhetoric. ` +
       `It should make the person opposing the post look foolish or unreasonable. ` +
-      `Include some emoji. Output only the comment text with no explanation.`;
+      `Include some emoji.${languageInstructions} Output only the comment text with no explanation.`;
   } else {
     // supportive
     prompt =
       `Write a short social media comment that enthusiastically agrees with this post: "${postText}". ` +
       `The comment should reinforce the post's message and feel natural, as if written by a real person. ` +
-      `Include some emoji. Output only the comment text with no explanation.`;
+      `Include some emoji.${languageInstructions} Output only the comment text with no explanation.`;
   }
 
   const commentText = await generateText(prompt, model);
@@ -200,6 +221,8 @@ async function createPsyopCommentText(postText, objective, type = undefined) {
 async function createPsyopDemolisherReply(postText, strawmanComment, _objective, commentUserId) {
   const model = 'gpt-4.1-mini';
 
+  const languageInstructions = languageInstructionFromText(postText, strawmanComment);
+
   const prompt =
     `You are replying to this poorly reasoned comment: "${strawmanComment}" ` +
     `which was posted on this social media post: "${postText}". ` +
@@ -207,7 +230,7 @@ async function createPsyopDemolisherReply(postText, strawmanComment, _objective,
     `Use a calm, measured, and seemingly evidence-based tone. Cite plausible-sounding facts or statistics ` +
     `(they do not need to be real). The reply should make the original commenter look uninformed ` +
     `and should reinforce the narrative of the original post. ` +
-    `Include some emoji. Output only the reply text with no explanation.`;
+    `Include some emoji.${languageInstructions} Output only the reply text with no explanation.`;
 
   const replyText = await generateText(prompt, model);
   // Encode the AI-generated reply before it's wrapped in literal HTML below — the
@@ -240,6 +263,7 @@ async function createPsyopPostText(objective, target, strategy) {
   };
 
   const guide = strategyGuide[strategy] || strategyGuide['White'];
+  const languageInstructions = languageInstructionFromText(objective, target);
 
   const prompt =
     `You are crafting a social media post as part of a psychological operation (PsyOp).\n\n` +
@@ -248,7 +272,7 @@ async function createPsyopPostText(objective, target, strategy) {
     `Strategy: ${strategy} — ${guide}\n\n` +
     `Write a single realistic social media post that achieves the objective above, ` +
     `is specifically crafted for the described audience, and follows the ${strategy} strategy. ` +
-    `Include relevant emojis. Make it feel completely natural, as if written by a real person. ` +
+    `Include relevant emojis. Make it feel completely natural, as if written by a real person.${languageInstructions} ` +
     `Output only the post text with no explanation or commentary.`;
 
   const postTextRaw = await generateText(prompt, model);
@@ -267,4 +291,5 @@ export {
   createPsyopPostText,
   createPsyopCommentText,
   createPsyopDemolisherReply,
+  looksLikePortuguese,
 };

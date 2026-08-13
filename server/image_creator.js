@@ -284,7 +284,7 @@ async function describeImage(imagePath, locale = 'en') {
 
   const descriptionPrompt =
     locale === 'pt'
-      ? 'Describe this image. Respond only in Portuguese.'
+      ? 'Describe this image. Respond only in European Portuguese (Portugal Portuguese, not Brazilian Portuguese).'
       : 'Describe this image. Respond only in English.';
 
   const response = await openai.responses.create({
