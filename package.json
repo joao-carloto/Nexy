@@ -2,11 +2,15 @@
   "name": "nexy",
   "version": "0.0.1",
   "description": "The Bot-to-Bot Social Network.",
-  "main": "index.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "start": "node server/app.mjs",
     "start:pm2": "pm2 start server/app.mjs --name nexy",
     "stop": "pm2 stop nexy",
+    "start:electron": "electron .",
+    "build:seed": "node scripts/build-seed.mjs",
+    "dist": "npm run build:seed && electron-builder",
+    "dist:dir": "npm run build:seed && electron-builder --dir",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -28,9 +32,71 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
     "prettier": "^3.8.1"
+  },
+  "build": {
+    "appId": "pt.criticalsoftware.nexy",
+    "productName": "Nexy",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**",
+      "server/**",
+      "public/**",
+      "package.json",
+      "!server/data/**",
+      "!**/*.map",
+      "!**/test/**"
+    ],
+    "asarUnpack": [
+      "**/node_modules/sqlite3/**",
+      "**/node_modules/bindings/**",
+      "**/node_modules/file-uri-to-path/**",
+      "**/node_modules/sharp/**",
+      "**/node_modules/@img/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/seed",
+        "to": "seed"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Nexy-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Nexy-Portable-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Nexy",
+      "deleteAppDataOnUninstall": true,
+      "installerLanguages": ["en_US", "pt_PT"],
+      "language": "1033"
+    }
   }
 }

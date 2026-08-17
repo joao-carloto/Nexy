@@ -2,7 +2,7 @@
 
 <img src="public/images/logo.png" alt="Nexy logo" width="120" />
 
-Media literacy and misinformation awareness tool.
+Media literacy and misinformation awareness tool for the classroom.
 
 ## Demo Video
 
@@ -41,42 +41,120 @@ The application supports activities such as:
 5. Human comments with immediate confrontational bot replies (rage bait discussion).
 6. One-click creation of bot posts (including fake/real variants).
 7. Human post creation with machine manipulation of text/image.
-8. Planned PsyOp/disinformation campaign simulation (white/grey/black).
+8. PsyOp/disinformation campaign simulation (white/grey/black).
 
-## Prototype
+Note: the two activities above involving text/image manipulation and PsyOp campaigns require an
+OpenAI key to be configured (see below). Everything else is fully explorable in the ready-made
+demo world with no key at all.
 
-Live proof of concept:
+---
 
-Free live demo URL is shared on request. See linkedin contact below.
+## For Teachers: Install and Use It
 
-## Contact
+### Download
 
-For deployment questions, bug reports, or feature ideas, the preferred
-channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
+**[⬇ Download Nexy for Windows](https://github.com/joao-carloto/nexy/releases)**. Pick the
+latest release; two options are provided:
 
-1. Go to the [Issues tab](https://github.com/joao-carloto/nexy/issues) of this repository.
-2. Click **New issue**.
-3. Give it a short, descriptive title and include a short note about your use case and expected audience.
-4. Submit. No fork or clone required — just a free GitHub account.
+- **Installer** (`Nexy-Setup-*.exe`): the normal choice. Installs to your own user folder, no
+  administrator rights needed, adds a Start Menu and Desktop shortcut.
+- **Portable** (`Nexy-Portable-*.exe`): no installation at all. Runs directly from a USB stick
+  or your Desktop. Use this if your school's IT policy blocks installers.
 
-This keeps requests public and trackable, so others can follow along or find an answer that already exists. Note that
-GitHub has no private messaging between users, so anything posted as an Issue is visible to everyone.
+Both are around 130 MB.
 
-For anything private (e.g. requesting the live demo URL or collaboration inquiries), use one of these instead:
+### If Windows tries to stop you
 
-- [LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/)
-- The live demo has an in-app contact form (Help menu → Contact) that emails the maintainer directly.
+When you open the installer, Windows may show a blue screen saying **"Windows protected your
+PC"** with the app's publisher listed as **"Unknown"**. This is not a virus warning: it's what
+Windows shows for any program that hasn't paid for a certificate from Microsoft, which costs
+several hundred euros a year. Nexy is a free project built in one person's spare time, so it
+doesn't have one, the same as a lot of legitimate small free software.
 
-## Tech Stack
+To continue, click **More info**, and a **Run anyway** button will appear below it. Click that to
+install Nexy normally.
 
-- Node.js
-- Express
+If you'd rather check first: the installer comes from this page, the source code is public in
+this repository, and you're welcome to scan the file with your own antivirus software or upload
+it to [virustotal.com](https://www.virustotal.com) before running it.
+
+### What you get
+
+Nexy installs on your own computer and opens like any other program. It comes with a complete
+made-up social network already inside it: dozens of invented accounts, over a hundred posts, and
+hundreds of comments, pictures included. No account, no sign-up, and no internet connection is
+needed to explore it. Your students' work never leaves your computer.
+
+The first time you open Nexy, a short wizard walks you through the (optional) setup:
+
+1. Choose a language.
+2. Decide whether to set up AI content creation now, later, or not at all. You can always come
+   back to this afterwards: open **File → Settings** from the menu bar along the top of the Nexy
+   window.
+3. A teacher-only password is generated for you, so students can't reach the admin screens.
+
+### Optional: let Nexy invent new content
+
+Nexy can also create brand-new posts, comments, and disinformation campaigns live in your lesson.
+That needs a paid OpenAI account and costs roughly 2 euro cents per post, around 30 cents for a
+full lesson. It's entirely optional, and you can turn it on or off at any time: open **File →
+Settings** from the menu bar along the top of the Nexy window.
+
+### Letting students join from their own devices
+
+Classroom mode lets students on the same Wi-Fi open Nexy from their own computers or phones and
+share the same world with you, instead of everyone crowding around one screen. To turn it on:
+
+1. Open **File → Settings** from the menu bar along the top of the Nexy window.
+2. Under **Classroom mode**, check **Turn on classroom mode**.
+3. Nexy restarts automatically to apply the change.
+4. Reopen **File → Settings** afterwards. Under **Classroom mode**, it now shows the address your
+   students should open (for example `http://192.168.1.23:51234`), with a **Copy** button next to
+   it. Share that address with your students; each of them types it into a browser on their own
+   device, on the same Wi-Fi network.
+
+To turn it off again, uncheck the same box in Settings; Nexy restarts and goes back to being
+reachable only on this computer. Do this after the lesson: while classroom mode is on, anyone on
+the network can use Nexy, including generating content that spends your OpenAI credit.
+
+### Uninstalling Nexy
+
+Uninstall Nexy the same way as any other Windows program: Start menu → Settings → Apps → find
+**Nexy** → Uninstall.
+
+Uninstalling removes everything: your saved OpenAI key, your teacher password, and any posts or
+comments your class created beyond the ready-made demo world. There's no way to recover any of
+this afterwards, and Nexy has no way to show you your saved key again to copy it out (that's
+deliberate, so it can't be read off your screen by anyone else). If you might reinstall later and
+want to reuse the same key, keep a copy of it somewhere safe yourself, such as your OpenAI account
+at platform.openai.com/api-keys, rather than relying on Nexy to remember it for you.
+
+If you're only installing a newer version of Nexy, you don't need to uninstall first: running the
+new installer over an existing install updates it in place and keeps everything.
+
+### Guides
+
+- **In-app Help**: the Help menu inside Nexy covers what the tool is for, how the PsyOp
+  strategies work, and how to get involved.
+- For anything else, see [Contact](#contact) below.
+
+---
+
+## For Developers: Run From Source
+
+<details>
+<summary>Expand for local setup, architecture, and packaging details</summary>
+
+### Tech Stack
+
+- Node.js, Express
 - SQLite (portable local database)
+- Electron (desktop packaging, see `electron/`)
 - OpenAI API model variants:
   - gpt-4.1-mini
   - gpt-image-1.5
 
-## Local Run
+### Local Run (plain Node, no Electron)
 
 1. Install dependencies:
 
@@ -84,13 +162,15 @@ For anything private (e.g. requesting the live demo URL or collaboration inquiri
 npm install
 ```
 
-2. Configure environment variables in `.env` (including OpenAI API key).
+2. Configure environment variables in `.env` (see `.env.example`), including your OpenAI API key.
 
 3. Start the app:
 
 ```bash
 npm run start
 ```
+
+Then open `http://localhost:3000` in a browser.
 
 Optional PM2 process management:
 
@@ -99,7 +179,30 @@ npm run start:pm2
 npm run stop
 ```
 
-## Lint and Format
+### Running as a desktop app (Electron)
+
+```bash
+npm run start:electron
+```
+
+Launches the same server inside an Electron window, using the config/wizard flow a teacher would
+see (config and seeded data land under Electron's `userData` directory, not `.env`/`server/data`).
+
+### Building the installer
+
+```bash
+npm run dist
+```
+
+Runs `scripts/build-seed.mjs` (recompresses `server/data/uploads` into a much smaller seed bundle
+under `resources/seed/`) and then `electron-builder`, producing an NSIS installer and a portable
+`.exe` under `dist/`. See the `build` section of `package.json` for the packaging configuration
+(asar unpacking for the native `sqlite3`/`sharp` modules, per-user install with no elevation, etc).
+
+`npm run dist:dir` produces an unpacked build (`dist/win-unpacked/`) without building the
+installer. Useful for quickly checking packaging output.
+
+### Lint and Format
 
 ```bash
 npm run lint
@@ -108,7 +211,7 @@ npm run format
 npm run format:check
 ```
 
-## Page to API Route Map
+### Page to API Route Map
 
 Quick onboarding matrix to understand which frontend page/script calls which server routes.
 
@@ -130,7 +233,40 @@ Related server-only routes:
 - `GET /` redirects to `/latest_posts.html`
 - `GET /post/:postId` serves the pretty URL entry page for a specific post
 - `GET /logout` clears admin session cookie and redirects to `/login.html`
+- `GET /ai/status` reports whether an OpenAI key is configured, so the client can disable AI
+  features gracefully instead of erroring
 - Static media mounts: `/post_images`, `/profile_pictures`, `/thumbnails/post_images`, `/thumbnails/profile_pictures`
+
+### Electron App Structure
+
+- `electron/main.cjs`: main process. Starts the Express server in-process, manages the main
+  window, the first-run wizard, and Settings.
+- `electron/wizard/`: first-run wizard (`setup.html`/`setup.js`) and the Settings window
+  (`settings.html`/`settings.js`), sharing `shared.js` for common validation/status-message logic.
+- `electron/config.cjs`: JSON config store at `<userData>/config.json` (API key, admin password,
+  classroom mode, etc).
+- `electron/seed.cjs`: first-run copy of the bundled demo world into `<userData>/data`.
+- `server/paths.mjs`: resolves app/data paths from `__dirname`, never CWD, so the server works
+  identically under plain `node` and inside a packaged Electron app.
+
+</details>
+
+## Contact
+
+For deployment questions, bug reports, or feature ideas, the preferred
+channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
+
+1. Go to the [Issues tab](https://github.com/joao-carloto/nexy/issues) of this repository.
+2. Click **New issue**.
+3. Give it a short, descriptive title and include a short note about your use case and expected audience.
+4. Submit. No fork or clone required — just a free GitHub account.
+
+This keeps requests public and trackable, so others can follow along or find an answer that already exists. Note that
+GitHub has no private messaging between users, so anything posted as an Issue is visible to everyone.
+
+For anything private (e.g. collaboration inquiries), use linkedin instead:
+
+- [LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/)
 
 ## Project Status
 

@@ -1,14 +1,11 @@
 import dotenv from 'dotenv';
-import process from 'process';
 import { encode } from 'html-entities';
 import { getRandomElement } from './utils.js';
-import OpenAI from 'openai';
 import { describeImage } from './image_creator.js';
+import { getOpenAI } from './openai_client.mjs';
 
 // Load environment variables from .env file
 dotenv.config();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const tones = ['positive', 'neutral', 'negative'];
 
@@ -175,7 +172,7 @@ async function mockPost(originalText, imagePath) {
 
 async function generateText(prompt, model = 'gpt-4.1-mini') {
   // Wrapper kept minimal so callers can fully control prompt shape.
-  const response = await openai.responses.create({
+  const response = await getOpenAI().responses.create({
     model,
     input: prompt,
   });

@@ -4,7 +4,9 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/', 'public/'],
+    // electron/wizard/*.js runs in a sandboxed renderer (browser globals, no
+    // Node), same as everything under public/ -- excluded for the same reason.
+    ignores: ['node_modules/', 'public/', 'electron/wizard/*.js'],
   },
   js.configs.recommended,
   prettierConfig,

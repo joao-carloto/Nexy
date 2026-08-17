@@ -11,7 +11,7 @@ import {
   cropAndResizeToThumbnail,
   assertValidImageFile,
 } from './image_creator.js';
-import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from '../server/utils.js';
+import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from './utils.js';
 import {
   createPostText,
   createCommentText,
@@ -22,20 +22,24 @@ import {
   createPsyopCommentText,
   createPsyopDemolisherReply,
   looksLikePortuguese,
-} from '../server/text_creator.js';
+} from './text_creator.js';
+import {
+  DB_PATH,
+  POST_IMAGES_DIR as postImagesDir,
+  POST_THUMBNAILS_DIR as postThumbnailsDir,
+  TEMP_UPLOADS_DIR as tempUploadsDir,
+} from './paths.mjs';
 
 // Orchestrates post generation pipelines used by server/app.mjs routes:
 // - /create_bot_post -> createAIPost
 // - /create_human_post -> createHumanPost
 // - /create_psyop_post -> createPsyopPost
 
-const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
-const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
-const postImagesDir = path.join(uploadsRoot, 'post_images');
-const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
-// Matches the quarantine directory multer writes uploads to in server/app.mjs.
-// Files here are not web-accessible until moved into postImagesDir by editImage().
-const tempUploadsDir = path.join(uploadsRoot, 'tmp_uploads');
+const db = new sqlite3.Database(DB_PATH);
+// busy_timeout MUST be set before journal_mode -- see the matching comment in
+// server/utils.js for why (three connections race to open this same file).
+db.run('PRAGMA busy_timeout = 5000');
+db.run('PRAGMA journal_mode = WAL');
 
 // Generate a random alphanumeric GUID with specified length
 function generateGUID(length) {

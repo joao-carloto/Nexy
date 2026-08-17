@@ -1,29 +1,20 @@
 import fs from 'fs';
+import path from 'path';
 import { Buffer } from 'buffer';
 import dotenv from 'dotenv';
-import path from 'path';
-import process from 'process';
-import { fileURLToPath } from 'url';
-import OpenAI, { toFile } from 'openai';
+import { toFile } from 'openai';
 import { Image } from 'image-js';
 import sharp from 'sharp';
+import { getOpenAI } from './openai_client.mjs';
+import {
+  POST_IMAGES_DIR as postImagesDir,
+  POST_THUMBNAILS_DIR as postThumbnailsDir,
+  PROFILE_PICTURES_DIR as profilePicturesDir,
+  PROFILE_THUMBNAILS_DIR as profileThumbnailsDir,
+} from './paths.mjs';
 
 // Load environment variables from .env file
 dotenv.config();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Define __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsRoot = path.join(__dirname, '../server/data/uploads');
-// Folder conventions used across API + frontend:
-// - originals: /post_images and /profile_pictures
-// - derived assets: /thumbnails/*
-const postImagesDir = path.join(uploadsRoot, 'post_images');
-const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
-const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
-const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures');
 
 function isSafetyRejection(error) {
   const message = String(error?.message || '').toLowerCase();
@@ -48,7 +39,7 @@ async function assertValidImageFile(filePath) {
 // Caller should provide a stable postId so filename and DB id can stay in sync.
 async function generateImage(contents, postId) {
   try {
-    const image = await openai.images.generate({
+    const image = await getOpenAI().images.generate({
       model: 'gpt-image-1.5',
       prompt: typeof contents === 'string' ? contents : String(contents),
       size: '1024x1024',
@@ -92,7 +83,7 @@ async function editImage(inputImagePath, outputImagePath) {
     const pngBuffer = fs.readFileSync(tempPngInputPath);
     const pngFile = await toFile(pngBuffer, 'image.png', { type: 'image/png' });
 
-    const response = await openai.images.edit({
+    const response = await getOpenAI().images.edit({
       model: 'gpt-image-1.5',
       image: pngFile,
       prompt: `Add a pigeon to the image.
@@ -145,7 +136,7 @@ async function createUserImage(userId, fullName, description) {
   The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
 
   try {
-    const image = await openai.images.generate({
+    const image = await getOpenAI().images.generate({
       model: 'gpt-image-1.5',
       prompt: contents,
       size: '1024x1024',
@@ -287,7 +278,7 @@ async function describeImage(imagePath, locale = 'en') {
       ? 'Describe this image. Respond only in European Portuguese (Portugal Portuguese, not Brazilian Portuguese).'
       : 'Describe this image. Respond only in English.';
 
-  const response = await openai.responses.create({
+  const response = await getOpenAI().responses.create({
     model: 'gpt-4.1-mini',
     input: [
       {

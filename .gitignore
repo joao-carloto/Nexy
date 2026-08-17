@@ -34,3 +34,15 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Local editor config
 .vscode/
+
+# SQLite WAL-mode sidecar files (runtime-only; the app now runs the DB with
+# PRAGMA journal_mode = WAL, which creates these next to nexyDB.sqlite)
+*.sqlite-wal
+*.sqlite-shm
+
+# Electron packaging output (npm run dist / dist:dir) and the recompressed seed
+# bundle it's built from (npm run build:seed) -- both are generated artifacts,
+# not source. resources/seed's real source content is server/data/uploads,
+# which IS tracked (see .gitignore note there is none -- it's intentional).
+/dist/
+/resources/seed/

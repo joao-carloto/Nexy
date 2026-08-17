@@ -12,28 +12,45 @@ import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.j
 import { createCommentText, createCommentReply } from './text_creator.js';
 import { getPostTextFromDB, getRandomUserIdFromDB } from './utils.js';
 import { createUserImage } from './image_creator.js';
+import { isAIAvailable } from './openai_client.mjs';
+import {
+  PUBLIC_DIR,
+  PUBLIC_HTML_DIR,
+  DB_PATH,
+  POST_IMAGES_DIR as postImagesDir,
+  PROFILE_PICTURES_DIR as profilePicturesDir,
+  POST_THUMBNAILS_DIR as postThumbnailsDir,
+  PROFILE_THUMBNAILS_DIR as profileThumbnailsDir,
+  TEMP_UPLOADS_DIR as tempUploadsDir,
+  // Not called explicitly here: paths.mjs runs ensureDataDirs() itself as a
+  // module-load side effect, precisely so it happens before post_creator.js/
+  // utils.js's own top-level DB connections (imported above, and therefore
+  // evaluated before this module's own top-level code, per ES module hoisting).
+} from './paths.mjs';
 
 dotenv.config();
 const app = express();
-const dbPath = path.join(path.resolve(), 'server/data/nexyDB.sqlite');
-const uploadsRoot = path.join(path.resolve(), 'server/data/uploads');
-const postImagesDir = path.join(uploadsRoot, 'post_images');
-const profilePicturesDir = path.join(uploadsRoot, 'profile_pictures');
-const postThumbnailsDir = path.join(uploadsRoot, 'thumbnails/post_images');
-const profileThumbnailsDir = path.join(uploadsRoot, 'thumbnails/profile_pictures');
-// Quarantine dir for raw uploads: NOT mounted as static, so an uploaded file is never
-// web-accessible until it has been validated and processed into postImagesDir.
-const tempUploadsDir = path.join(uploadsRoot, 'tmp_uploads');
 
 // Reserved userId that a deleted bot's posts/comments get reassigned to (see
 // DELETE /bots/:userId), so the feed never shows content with a dangling author.
 const DELETED_USER_ID = 'deleted_user';
 
-const db = new sqlite3.Database(dbPath, (err) => {
+// Exported so a caller managing this module's lifecycle (e.g. Electron's main
+// process, retrying app.listen() after a port conflict) can close this
+// connection instead of leaking it when discarding a failed server instance.
+export const db = new sqlite3.Database(DB_PATH, (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
   } else {
     console.log('Database opened successfully');
+    // This file is opened by three separate connections (app.mjs, utils.js,
+    // post_creator.js), all racing to open it at startup. busy_timeout MUST be
+    // set before journal_mode: switching a database INTO WAL mode takes a
+    // brief exclusive lock, which is often already held by one of the other
+    // two connections -- without busy_timeout already in effect, sqlite3 fails
+    // immediately with SQLITE_BUSY instead of waiting (reproduced in testing).
+    db.run('PRAGMA busy_timeout = 5000');
+    db.run('PRAGMA journal_mode = WAL');
   }
 });
 
@@ -48,6 +65,20 @@ const aiGenerationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many generation requests. Please try again later.' },
+});
+
+// Rate limiter for the plain (no-AI, free) comment route. Distinct from
+// aiGenerationLimiter -- this route costs nothing per-request, so the limit
+// is generous enough not to bother normal classroom use, but still bounded.
+// Matters most in "classroom mode" (server bound to 0.0.0.0 for LAN access,
+// see HOST below): without this, any device on the network could flood the
+// comments table with unlimited unauthenticated writes.
+const commentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many comments. Please try again later.' },
 });
 
 // Simple cookie parser (no external dependency)
@@ -119,14 +150,14 @@ function requireAdminPage(req, res, next) {
 // Used by: redirect target after successful login in public/js/login.js.
 app.get('/manage_posts.html', requireAdminPage, (req, res) => {
   // Serve the file explicitly (bypass redirect loop)
-  const filePath = path.join(path.resolve(), 'public', 'html', 'manage_posts.html');
+  const filePath = path.join(PUBLIC_HTML_DIR, 'manage_posts.html');
   res.sendFile(filePath);
 });
 
 // Route: protected admin page.
 // Used by: direct navigation from admin workflow to manage bots UI.
 app.get('/manage_bots.html', requireAdminPage, (req, res) => {
-  const filePath = path.join(path.resolve(), 'public', 'html', 'manage_bots.html');
+  const filePath = path.join(PUBLIC_HTML_DIR, 'manage_bots.html');
   res.sendFile(filePath);
 });
 
@@ -192,6 +223,23 @@ app.get('/contact/status', (req, res) => {
   res.json({ available });
 });
 
+// Loopback-only request check, used to decide whether a caller may be offered the
+// "set up AI" flow. In classroom mode the server may be reachable from other
+// devices on the network (see HOST above); those callers should never be nudged
+// to open Settings, since they aren't the teacher at the keyboard.
+function isLoopbackRequest(req) {
+  const ip = req.ip || '';
+  return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+}
+
+// Route: reports whether AI content generation is usable, so the client can
+// disable-with-explanation (not hide -- these features are documented and
+// expected) the generator pages on installs with no OpenAI API key configured.
+// Mirrors /contact/status above. Used by: public/js/ai_availability.js.
+app.get('/ai/status', (req, res) => {
+  res.json({ available: isAIAvailable(), canConfigure: isLoopbackRequest(req) });
+});
+
 // Route: contact form submission, relayed by email via Resend.
 // Used by: contact form in public/html/help_popup_content.html (public/js/title.js).
 // Keeps the maintainer's real address out of the page source.
@@ -250,9 +298,9 @@ app.get('/', (req, res) => {
   res.redirect('/latest_posts.html');
 });
 // Static route: serves shared assets and top-level HTML pages in public/.
-app.use(express.static(path.join(path.resolve(), 'public')));
+app.use(express.static(PUBLIC_DIR));
 // Static route: supports direct page URLs like /explore.html and /post.html.
-app.use(express.static(path.join(path.resolve(), 'public', 'html')));
+app.use(express.static(PUBLIC_HTML_DIR));
 
 // Static route: serves uploaded post images referenced by posts.
 app.use('/post_images', express.static(postImagesDir));
@@ -345,9 +393,19 @@ db.serialize(() => {
     [DELETED_USER_ID]
   );
 });
+// Rejects AI-dependent routes early with a clean, teacher-readable 503 when no
+// OpenAI key is configured, instead of letting the request fail deep inside the
+// generation pipeline with a raw SDK error.
+function requireAI(req, res, next) {
+  if (!isAIAvailable()) {
+    return res.status(503).json({ error: 'ai_not_configured' });
+  }
+  next();
+}
+
 // Route: create AI-generated post.
 // Used by: bot post creator page in public/js/new_bot_post.js.
-app.post('/create_bot_post', aiGenerationLimiter, async (req, res) => {
+app.post('/create_bot_post', aiGenerationLimiter, requireAI, async (req, res) => {
   let { topic, isFakeNews, numComments, locale } = req.body;
   // All fields are optional
   if (typeof topic !== 'string') topic = '';
@@ -375,7 +433,7 @@ app.post('/create_bot_post', aiGenerationLimiter, async (req, res) => {
 
 // Route: create PsyOp post.
 // Used by: psyop generator page in public/js/psyop.js.
-app.post('/create_psyop_post', aiGenerationLimiter, async (req, res) => {
+app.post('/create_psyop_post', aiGenerationLimiter, requireAI, async (req, res) => {
   let { objective, target, strategy } = req.body;
   if (!objective || typeof objective !== 'string' || objective.trim() === '') {
     return res.status(400).json({ error: 'objective is required' });
@@ -394,7 +452,7 @@ app.post('/create_psyop_post', aiGenerationLimiter, async (req, res) => {
 
 // Route: create human-authored post (supports optional uploaded image).
 // Used by: human post composer in public/js/new_human_post.js.
-app.post('/create_human_post', aiGenerationLimiter, handleImageUpload, async (req, res) => {
+app.post('/create_human_post', aiGenerationLimiter, requireAI, handleImageUpload, async (req, res) => {
   const { userId, postText, locale } = req.body;
   const originalImageFileName = req.file ? req.file.filename : null;
   try {
@@ -438,7 +496,7 @@ function resolveUserIdentifier(identifier, cb) {
 
 // Route: add a plain human comment to a post.
 // Used by: comment submission flow in public/js/post.js.
-app.post('/comments', async (req, res) => {
+app.post('/comments', commentLimiter, async (req, res) => {
   const { postId, userId, commentText } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
@@ -461,7 +519,7 @@ app.post('/comments', async (req, res) => {
 
 // Route: add human comment and auto-generate antagonist bot reply.
 // Used by: "debate"/antagonist comment flow in public/js/post.js.
-app.post('/human_comment', aiGenerationLimiter, (req, res) => {
+app.post('/human_comment', aiGenerationLimiter, requireAI, (req, res) => {
   const { postId, userId, commentText, antagonistUserId } = req.body;
   const createdAt = new Date().toISOString();
   resolvePostIdentifier(postId, (rErr, ids) => {
@@ -609,13 +667,13 @@ app.get('/post/:postId', (req, res) => {
   resolvePostIdentifier(identifier, (rErr, _ids) => {
     if (rErr) {
       // Not found -> 404 page
-      const notFoundPath = path.join(path.resolve(), 'public', 'html', '404.html');
+      const notFoundPath = path.join(PUBLIC_HTML_DIR, '404.html');
       return fs.existsSync(notFoundPath)
         ? res.status(404).sendFile(notFoundPath)
         : res.status(404).send('404 Not Found');
     }
     // Found -> serve static post.html (client will still fetch JSON via /posts/:id)
-    const postHtml = path.join(path.resolve(), 'public', 'html', 'post.html');
+    const postHtml = path.join(PUBLIC_HTML_DIR, 'post.html');
     res.sendFile(postHtml);
   });
 });
@@ -677,7 +735,7 @@ app.delete('/posts/:postId', (req, res) => {
 
 // Route: AI-assisted comment generation for a given post and tone.
 // Used by: "generate comment" helper action in public/js/post.js.
-app.post('/generate-comment', aiGenerationLimiter, async (req, res) => {
+app.post('/generate-comment', aiGenerationLimiter, requireAI, async (req, res) => {
   const { postId, tone } = req.body;
   resolvePostIdentifier(postId, (rErr, ids) => {
     if (rErr) return res.status(404).json({ error: rErr.message });
@@ -839,7 +897,7 @@ app.use((req, res) => {
   if (req.accepts('json') && !req.accepts('html')) {
     return res.status(404).json({ error: 'Not Found' });
   }
-  const notFoundPath = path.join(path.resolve(), 'public', 'html', '404.html');
+  const notFoundPath = path.join(PUBLIC_HTML_DIR, '404.html');
   if (fs.existsSync(notFoundPath)) {
     res.status(404).sendFile(notFoundPath);
   } else {
@@ -847,8 +905,13 @@ app.use((req, res) => {
   }
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+// Start the server.
+// HOST defaults to loopback-only: this app has unauthenticated, credit-spending
+// endpoints (see aiGenerationLimiter above), so it must not be reachable from the
+// network unless a caller (e.g. an explicit "classroom mode") opts in via HOST=0.0.0.0.
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || '127.0.0.1';
+export const server = app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
 });
+export default app;

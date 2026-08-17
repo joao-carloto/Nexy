@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to Nexy</title>
+    <style>
+      :root {
+        --accent: #1f6aa3;
+        --accent-hover: #15507c;
+        --success: #28a745;
+        --success-text: #1a7a3c;
+        --danger: #ff4d4d;
+        --danger-text: #c0392b;
+        --bg: #f4f6f8;
+        --card-bg: #ffffff;
+        --text: #1a2733;
+        --muted: #5b6b78;
+        --border: #dce3e8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family:
+          'Segoe UI',
+          system-ui,
+          -apple-system,
+          Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+      .screen {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        padding: 28px 32px;
+      }
+      .screen.active {
+        display: flex;
+      }
+      h1 {
+        font-size: 21px;
+        margin: 0 0 6px;
+      }
+      p.lead {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0 0 20px;
+      }
+      .lang-choice {
+        display: flex;
+        gap: 14px;
+        margin-top: 4px;
+      }
+      .lang-btn {
+        flex: 1;
+        padding: 22px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+        font-size: 16px;
+        font-family: inherit;
+        text-align: center;
+      }
+      .lang-btn:hover {
+        border-color: var(--accent);
+      }
+      .path-cards {
+        display: flex;
+        gap: 14px;
+        margin-top: 6px;
+        flex: 1;
+      }
+      .path-card {
+        flex: 1;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        background: white;
+      }
+      .path-card h2 {
+        font-size: 16px;
+        margin: 0 0 8px;
+      }
+      .path-card p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+        flex: 1;
+      }
+      button {
+        border: none;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      button.primary {
+        background: var(--accent);
+        color: white;
+      }
+      button.primary:hover {
+        background: var(--accent-hover);
+      }
+      button.secondary {
+        background: #eef2f5;
+        color: var(--text);
+      }
+      button.secondary:hover {
+        background: #e2e8ed;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .footer-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+      .footer-nav .spacer {
+        flex: 1;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input[type='text'],
+      input[type='password'] {
+        width: 100%;
+        padding: 10px 11px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .row > input {
+        flex: 1;
+      }
+      .password-display {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        background: #eef2f5;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 10px 0;
+        text-align: center;
+      }
+      .status-msg {
+        margin-top: 12px;
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 9px 11px;
+        display: none;
+      }
+      .status-msg.ok {
+        display: block;
+        background: #eaf7ec;
+        color: var(--success-text);
+      }
+      .status-msg.err {
+        display: block;
+        background: #fdecea;
+        color: var(--danger-text);
+      }
+      .status-msg.info {
+        display: block;
+        background: #eaf2fb;
+        color: var(--accent-hover);
+      }
+      a {
+        color: var(--accent);
+      }
+      .helper {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Screen 1: language -->
+    <section class="screen" id="screen-language">
+      <h1>Choose your language</h1>
+      <p class="lead">Escolhe o teu idioma</p>
+      <div class="lang-choice">
+        <button class="lang-btn" data-locale="en">English</button>
+        <button class="lang-btn" data-locale="pt">Português</button>
+      </div>
+    </section>
+
+    <!-- Screen 2: welcome / choose a path -->
+    <section class="screen" id="screen-welcome">
+      <h1 id="welcomeTitle">Welcome to Nexy</h1>
+      <p class="lead" id="welcomeIntro">
+        Nexy is a pretend social network for your classroom. Everything in it is fake — the
+        people, the photos, the arguments — so your students can practise spotting manipulation
+        somewhere it can't hurt anyone. Nexy is ready to use right now, with a complete made-up
+        world already inside it. Nothing is downloaded and nothing is sent anywhere.
+      </p>
+      <div class="path-cards">
+        <div class="path-card">
+          <h2 id="skipCardTitle">Start using Nexy</h2>
+          <p id="skipCardBody">
+            Explore the ready-made world. Perfect for your first lesson — your students can read
+            the feed, dig into the comments, and argue about what looks real.
+          </p>
+          <button class="secondary" id="skipKeyBtn">Start using Nexy</button>
+        </div>
+        <div class="path-card">
+          <h2 id="setupCardTitle">Set up AI content creation</h2>
+          <p id="setupCardBody">
+            Also let Nexy invent brand-new posts during the lesson. Needs a paid OpenAI account and
+            costs roughly 2 cents per post. You can always do this later instead.
+          </p>
+          <button class="primary" id="setupKeyBtn">Set up AI content creation</button>
+        </div>
+      </div>
+      <p class="helper" id="welcomeNote"></p>
+    </section>
+
+    <!-- Screen 3: admin password -->
+    <section class="screen" id="screen-password">
+      <h1 id="passwordTitle">A password just for you</h1>
+      <p class="lead" id="passwordIntro">
+        Nexy has a few teacher-only screens where you can delete posts or accounts you don't want
+        your students to see. They're locked so a curious student can't get in.
+      </p>
+      <label id="passwordGeneratedLabel">We've picked a password for you:</label>
+      <div class="row">
+        <input id="adminPasswordInput" type="password" autocomplete="off" />
+        <button id="togglePasswordVisibility" class="secondary" type="button">Show</button>
+        <button id="copyPasswordBtn" class="secondary" type="button">Copy</button>
+      </div>
+      <p class="helper" id="passwordHelper">
+        Write it down, or click Copy and paste it somewhere safe. You can change it later in
+        Settings.
+      </p>
+      <div id="passwordStatus" class="status-msg"></div>
+      <div class="footer-nav">
+        <span class="spacer"></span>
+        <button class="primary" id="passwordContinueBtn">Continue</button>
+      </div>
+    </section>
+
+    <!-- Screen 4: paste the key -->
+    <section class="screen" id="screen-key">
+      <h1 id="keyTitle">Paste your key here</h1>
+      <p class="lead" id="keyIntro">
+        Nothing is sent anywhere except to OpenAI, to check the key works. The key is saved on
+        this computer only.
+      </p>
+      <label for="apiKeyInput" id="keyLabel">OpenAI API key</label>
+      <div class="row">
+        <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+        <button id="toggleKeyVisibility" class="secondary" type="button">Show</button>
+      </div>
+      <p class="helper">
+        <a href="#" id="getKeyLink">Get a key from OpenAI &rarr;</a>
+      </p>
+      <div id="keyStatus" class="status-msg"></div>
+      <div class="footer-nav">
+        <button class="secondary" id="keyBackBtn">&larr; Back</button>
+        <span class="spacer"></span>
+        <button class="secondary" id="keySkipBtn">Skip for now</button>
+        <button class="primary" id="keyCheckBtn">Check and save</button>
+      </div>
+    </section>
+
+    <!-- Screen 5a: done (skip path) -->
+    <section class="screen" id="screen-done-skip">
+      <h1 id="doneSkipTitle">You're all set</h1>
+      <p class="lead" id="doneSkipBody">
+        Nexy is running on this computer. Your students' work stays on this machine — nothing goes
+        to the internet.
+      </p>
+      <p class="helper" id="doneSkipHint">
+        Want to add AI content creation later? It's in Settings, in the menu at the top.
+      </p>
+      <div class="footer-nav">
+        <span class="spacer"></span>
+        <button class="primary" id="openNexySkipBtn">Open Nexy</button>
+      </div>
+    </section>
+
+    <!-- Screen 5b: done (key configured) -->
+    <section class="screen" id="screen-done-key">
+      <h1 id="doneKeyTitle">Your key works</h1>
+      <p class="lead" id="doneKeyBody">
+        Nexy can now create new content. One more thing worth doing: set a spending limit on your
+        OpenAI account, so Nexy can never cost more than you decide.
+      </p>
+      <button class="secondary" id="openLimitsBtn">Open that page for me</button>
+      <div class="footer-nav">
+        <span class="spacer"></span>
+        <button class="primary" id="openNexyKeyBtn">Open Nexy</button>
+      </div>
+    </section>
+
+    <script src="shared.js"></script>
+    <script src="setup.js"></script>
+  </body>
+</html>

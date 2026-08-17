@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nexy Settings</title>
+    <style>
+      :root {
+        --accent: #1f6aa3;
+        --accent-hover: #15507c;
+        --success: #28a745;
+        --success-text: #1a7a3c;
+        --danger: #ff4d4d;
+        --danger-text: #c0392b;
+        --bg: #f4f6f8;
+        --card-bg: #ffffff;
+        --text: #1a2733;
+        --muted: #5b6b78;
+        --border: #dce3e8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          'Segoe UI',
+          system-ui,
+          -apple-system,
+          Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 24px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      p.subtitle {
+        margin: 0 0 20px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      section {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+      }
+      section h2 {
+        font-size: 15px;
+        margin: 0 0 10px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input[type='text'],
+      input[type='password'] {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .row > input {
+        flex: 1;
+      }
+      button {
+        border: none;
+        border-radius: 6px;
+        padding: 9px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      button.primary {
+        background: var(--accent);
+        color: white;
+      }
+      button.primary:hover {
+        background: var(--accent-hover);
+      }
+      button.secondary {
+        background: #eef2f5;
+        color: var(--text);
+      }
+      button.secondary:hover {
+        background: #e2e8ed;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .status-msg {
+        margin-top: 10px;
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 8px 10px;
+        display: none;
+      }
+      .status-msg.ok {
+        display: block;
+        background: #eaf7ec;
+        color: var(--success-text);
+      }
+      .status-msg.err {
+        display: block;
+        background: #fdecea;
+        color: var(--danger-text);
+      }
+      .status-msg.info {
+        display: block;
+        background: #eaf2fb;
+        color: var(--accent-hover);
+      }
+      .helper {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 8px;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--accent);
+      }
+      .footer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nexy Settings</h1>
+    <p class="subtitle">Changes here apply on this computer only.</p>
+
+    <section>
+      <h2>AI content creation</h2>
+      <label for="apiKeyInput" id="apiKeyLabel">OpenAI API key</label>
+      <p id="apiKeySavedNotice" class="helper" style="display: none">
+        A key is already saved. It can't be displayed again for security, but you can paste a new
+        one below to replace it, or remove it entirely.
+      </p>
+      <div class="row">
+        <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+        <button id="toggleKeyVisibility" class="secondary" type="button">Show</button>
+      </div>
+      <div class="footer-actions">
+        <button id="removeKeyBtn" class="secondary" type="button">Remove key</button>
+        <button id="checkAndSaveKeyBtn" class="primary" type="button">Check and save</button>
+      </div>
+      <div id="keyStatus" class="status-msg"></div>
+      <p class="helper">
+        Nothing is sent anywhere except to OpenAI, to check the key works. The key is saved on
+        this computer only, and is never shown again once saved.
+        <a href="#" id="getKeyLink">Get a key from OpenAI &rarr;</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Classroom mode</h2>
+      <p class="helper">
+        Let students on your Wi-Fi join from their own computers or phones and share this same
+        world with you.
+      </p>
+      <div class="row">
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 0">
+          <input id="classroomModeToggle" type="checkbox" style="width: auto" />
+          Turn on classroom mode
+        </label>
+      </div>
+      <div id="classroomJoinInfo" style="display: none; margin-top: 12px">
+        <label>Students should open this address:</label>
+        <div class="row">
+          <input id="joinUrlDisplay" type="text" readonly />
+          <button id="copyJoinUrlBtn" class="secondary" type="button">Copy</button>
+        </div>
+      </div>
+      <p class="helper" style="color: var(--danger-text)">
+        While this is on, anyone on this network can use Nexy, including creating posts that use
+        your OpenAI credit. Turn it off after the lesson.
+      </p>
+      <div id="classroomStatus" class="status-msg"></div>
+      <p class="helper">Nexy will restart to apply this change.</p>
+    </section>
+
+    <section>
+      <h2>Teacher password</h2>
+      <p class="helper">
+        Used to reach the teacher-only screens (deleting posts or accounts) so a curious student
+        can't get in. Hidden by default in case your screen is being projected.
+      </p>
+      <div class="row">
+        <input id="adminPasswordInput" type="password" autocomplete="off" />
+        <button id="togglePasswordVisibility" class="secondary" type="button">Show</button>
+        <button id="copyPasswordBtn" class="secondary" type="button">Copy</button>
+      </div>
+      <div class="footer-actions">
+        <button id="savePasswordBtn" class="primary" type="button">Save</button>
+      </div>
+      <div id="passwordStatus" class="status-msg"></div>
+      <p class="helper">Nexy will restart to apply a new teacher password.</p>
+    </section>
+
+    <div class="footer-actions">
+      <button id="closeBtn" class="secondary" type="button">Close</button>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="settings.js"></script>
+  </body>
+</html>

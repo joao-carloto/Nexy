@@ -1,6 +1,15 @@
 import sqlite3 from 'sqlite3';
+import { DB_PATH } from './paths.mjs';
 
-const db = new sqlite3.Database('./server/data/nexyDB.sqlite');
+const db = new sqlite3.Database(DB_PATH);
+// busy_timeout MUST be set before journal_mode: switching a database INTO WAL
+// mode takes a brief exclusive lock, and with three independent connections
+// (this file, app.mjs, post_creator.js) racing to open the same file at
+// startup, that lock is often already held by one of the others. Without a
+// busy_timeout already in effect, sqlite3 fails immediately with
+// SQLITE_BUSY instead of waiting -- reproduced during testing.
+db.run('PRAGMA busy_timeout = 5000');
+db.run('PRAGMA journal_mode = WAL');
 
 // Must match DELETED_USER_ID in server/app.mjs: the reserved placeholder author
 // that a deleted bot's posts/comments get reassigned to. Never eligible to be
