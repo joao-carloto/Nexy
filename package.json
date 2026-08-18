@@ -24,7 +24,7 @@
     "image-js": "^0.30.0",
     "multer": "^1.4.5-lts.2",
     "openai": "^4.104.0",
-    "sharp": "^0.34.2",
+    "sharp": "^0.35.3",
     "sqlite3": "^5.1.7"
   },
   "author": "https://github.com/joao-carloto/nexy",
@@ -73,11 +73,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
@@ -95,7 +99,10 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Nexy",
       "deleteAppDataOnUninstall": true,
-      "installerLanguages": ["en_US", "pt_PT"],
+      "installerLanguages": [
+        "en_US",
+        "pt_PT"
+      ],
       "language": "1033"
     }
   }

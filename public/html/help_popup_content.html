@@ -105,15 +105,19 @@
 <section data-i18n-html="helpPopup.proofOfConcept">
   <h3>Do you have a proof of concept?</h3>
   <p>
-    Yes. There is an online demo and you are in it. For suggestions, deployment questions, demo access, or collaboration
-    inquiries, please use the Contact option in the help menu (top of the page).
+    Yes, and you are in it. This copy of Nexy is running on a computer nearby, most likely your teacher's, not on a
+    public server anyone can reach, so what you see and create here stays local to this classroom.
   </p>
   <p>Keep in mind:</p>
   <ul>
-    <li>It may take up to a minute to load.</li>
-    <li>It shuts down after inactivity and may delete newly created content.</li>
-    <li>It uses paid APIs with a monthly credit limit and heavy usage may temporarily disable it.</li>
-    <li>This is an early prototype with limited testing.</li>
+    <li>
+      Creating new posts, comments, or PsyOp campaigns needs an OpenAI key (File > Settings, in the menu at the top).
+      Without one, everything already in Nexy is still fully explorable.
+    </li>
+    <li>
+      This is an early prototype with limited testing, please report anything confusing or broken using the Contact
+      option in the menu.
+    </li>
   </ul>
 </section>
 
@@ -128,41 +132,37 @@
 <section data-i18n-html="helpPopup.whatNext">
   <h3>What is next?</h3>
   <p>The goal is to make Nexy widely available to educators.</p>
-  <h4>Local Setup</h4>
+  <h4>Install it yourself (available now)</h4>
   <p>
-    Currently, Nexy can be distributed as a zip package with manual and scripts, enabling local installation on personal
-    laptops or school servers.
+    Nexy installs like any other Windows program: download it, double-click it, and a short first-run wizard helps you
+    get started. No technical knowledge is needed, and no account is required unless you choose to set up AI content
+    creation.
   </p>
   <p>Advantages:</p>
   <ul>
-    <li>Independent personal server instance</li>
-    <li>Can be deployed centrally inside a school</li>
-    <li>Easy portability</li>
-  </ul>
-  <p>Disadvantages:</p>
-  <ul>
-    <li>Initial setup takes time and a litle technical knowledge (not much)</li>
-    <li>Per-installation API billing can complicate reimbursement</li>
+    <li>Independent personal installation, your students' work never leaves your computer</li>
+    <li>Works fully offline, except for the optional AI content creation</li>
+    <li>Each teacher manages their own OpenAI billing directly, if they choose to set it up</li>
   </ul>
 
-  <h4>Moodle plugin</h4>
+  <h4>Deployed by your school (also available now)</h4>
   <p>
-    In the future Nexy could be distributed as a Moodle [7] plugin installed by school IT staff and used by teachers for
-    media literacy lessons.
+    Nexy can already be set up and managed at school level by whoever already manages IT for your school or school
+    group, in two ways:
   </p>
-  <p>Advantages:</p>
   <ul>
-    <li>Easy installation on an existing platform</li>
-    <li>No need to multiply installations</li>
-    <li>API-cost management can be centralized</li>
+    <li>
+      Installing the same Windows app on a shared, restricted-access computer that teachers use, under one shared login
+    </li>
+    <li>
+      Running Nexy centrally on a server the school controls, so every teacher and class reaches the same installation
+      over the network
+    </li>
   </ul>
-  <p>Disadvantages:</p>
-  <ul>
-    <li>Less flexibility</li>
-    <li>Depends on prior Moodle infrastructure</li>
-    <li>Requires migration and maintenance in a different technology stack</li>
-  </ul>
-  <p>Disclaimer: technical feasibility of the Moodle plugin version is not fully verified yet.</p>
+  <p>
+    Either way, the school (or school group) takes on the OpenAI billing as a shared responsibility, rather than each
+    teacher setting up and paying for their own key.
+  </p>
 </section>
 
 <section data-i18n-html="helpPopup.howHelp">
@@ -196,7 +196,7 @@
   <h4>Funding or Institutional Support</h4>
   <p>
     Running a live demo has a cost. Scaling to classrooms across multiple schools or countries requires infrastructure,
-    API credits, and time. The good news: costs are low — generating a post costs roughly 2 euro cents, so a typical
+    API credits, and time. The good news: costs are low, generating a post costs roughly 2 euro cents, so a typical
     classroom session stays well under a euro. But at scale, even small per-use costs add up and need a home. Also, the
     project is currently a one-person effort and could benefit from institutional support to expand capacity and reach.
     If you work with an institution, foundation, or program that funds educational technology or media literacy
@@ -212,8 +212,8 @@
 <section data-i18n-html="helpPopup.nameAndLogo">
   <h3>What about the name and logo?</h3>
   <p>
-    Nexy references the book Nexus: A Brief History of Information Networks by Yuval Noah Harari [8]. The logo is also
-    inspired by the satirical Birds Aren't Real movement [9].
+    Nexy references the book Nexus: A Brief History of Information Networks by Yuval Noah Harari [7]. The logo is also
+    inspired by the satirical Birds Aren't Real movement [8].
   </p>
   <p>
     The bird has 3 legs because the image was AI-generated and still contains synthetic artifacts that can reveal its
@@ -264,9 +264,6 @@
       <a href="https://en.wikipedia.org/wiki/Psychological_warfare" target="_blank" rel="noopener noreferrer"
         >Psychological warfare</a
       >
-    </li>
-    <li>
-      <a href="https://moodle.org/" target="_blank" rel="noopener noreferrer">Moodle</a>
     </li>
     <li>
       <a href="https://www.ynharari.com/book/nexus/" target="_blank" rel="noopener noreferrer"

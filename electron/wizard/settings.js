@@ -149,7 +149,7 @@ classroomModeToggle.addEventListener('change', async () => {
     classroomStatus,
     'ok',
     enabled
-      ? "Saved. Restarting Nexy — reopen Settings afterwards for the address to give your students."
+      ? 'Saved. Restarting Nexy, reopen Settings afterwards for the address to give your students.'
       : 'Saved. Restarting Nexy to go back to this computer only...'
   );
   setTimeout(() => window.nexySetup.relaunch(), 1200);

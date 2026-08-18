@@ -34,8 +34,11 @@ if (!gotSingleInstanceLock) {
   let setupWindow = null;
   let runningServer = null;
   // Set by createSetupWindow() while it's showing; called by the
-  // nexy:complete-setup handler to unblock the awaiting launch sequence.
-  let onSetupComplete = null;
+  // nexy:complete-setup handler once the teacher's choices are saved, so
+  // seeding/starting the server can happen in the background while the
+  // wizard is still showing its "done" screen -- there's no reason to make
+  // the teacher wait for that work before they even get to read it.
+  let onSetupConfigSaved = null;
 
   app.on('second-instance', () => {
     if (mainWindow) {
@@ -45,51 +48,63 @@ if (!gotSingleInstanceLock) {
   });
 
   // First-run wizard, shown BEFORE the server starts (unlike Settings, which
-  // opens from the running app's menu). Resolves once the teacher finishes or
-  // skips key setup -- main.cjs's launch sequence awaits this before proceeding
-  // to seed/start the server, since the wizard's choices (locale, key) affect
-  // both.
+  // opens from the running app's menu). Returns two separate signals:
+  //   - configSaved: the teacher's choices have been written, so seeding/
+  //     starting the server can proceed in the background.
+  //   - windowClosed: the wizard window has actually closed (via "Open Nexy"
+  //     or the teacher closing it manually) -- this is what gates showing the
+  //     main window, so it can't appear before the teacher is done reading
+  //     the wizard's final screen.
   function createSetupWindow() {
-    return new Promise((resolve) => {
-      setupWindow = new BrowserWindow({
-        width: 720,
-        height: 620,
-        autoHideMenuBar: true,
-        resizable: false,
-        webPreferences: {
-          contextIsolation: true,
-          nodeIntegration: false,
-          sandbox: true,
-          preload: path.join(__dirname, 'wizard', 'setup-preload.cjs'),
-          devTools: !app.isPackaged,
-        },
-      });
-      setupWindow.setMenuBarVisibility(false);
-      setupWindow.loadFile(path.join(__dirname, 'wizard', 'setup.html'));
-
-      let settled = false;
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        resolve();
-      };
-
-      // Set so the nexy:complete-setup handle() below can signal completion
-      // without relying on ipcMain's own EventEmitter internals -- a plain
-      // module-scope callback reference is simpler and more explicit than
-      // re-emitting a channel name that .handle() already consumed.
-      onSetupComplete = finish;
-
-      // The teacher might also just close the window (red X) before
-      // finishing. Either way the launch sequence must not hang forever: fall
-      // back to whatever got saved (possibly nothing beyond the generated
-      // admin password/token secret set before this window was shown).
-      setupWindow.on('closed', () => {
-        setupWindow = null;
-        onSetupComplete = null;
-        finish();
-      });
+    let resolveConfigSaved;
+    let resolveWindowClosed;
+    const configSaved = new Promise((resolve) => {
+      resolveConfigSaved = resolve;
     });
+    const windowClosed = new Promise((resolve) => {
+      resolveWindowClosed = resolve;
+    });
+
+    setupWindow = new BrowserWindow({
+      width: 720,
+      height: 620,
+      autoHideMenuBar: true,
+      resizable: false,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        preload: path.join(__dirname, 'wizard', 'setup-preload.cjs'),
+        devTools: !app.isPackaged,
+      },
+    });
+    setupWindow.setMenuBarVisibility(false);
+    setupWindow.loadFile(path.join(__dirname, 'wizard', 'setup.html'));
+
+    let configSettled = false;
+    // Set so the nexy:complete-setup handler below can signal completion
+    // without relying on ipcMain's own EventEmitter internals.
+    onSetupConfigSaved = () => {
+      if (configSettled) return;
+      configSettled = true;
+      resolveConfigSaved();
+    };
+
+    // Fires for both "Open Nexy" (window.close() in setup.js) and the
+    // teacher closing the wizard manually before finishing. Also resolves
+    // configSaved as a fallback, so the launch sequence never hangs if the
+    // config write never happened.
+    setupWindow.on('closed', () => {
+      setupWindow = null;
+      onSetupConfigSaved = null;
+      if (!configSettled) {
+        configSettled = true;
+        resolveConfigSaved();
+      }
+      resolveWindowClosed();
+    });
+
+    return { configSaved, windowClosed };
   }
 
   // Settings talks to the app exclusively through the nexySetup IPC bridge
@@ -149,6 +164,14 @@ if (!gotSingleInstanceLock) {
           {
             label: 'Nexy on GitHub',
             click: () => shell.openExternal('https://github.com/joao-carloto/nexy'),
+          },
+          {
+            label: 'Contact the maintainer (LinkedIn)',
+            // Kept here rather than in the served HTML (title.html), which any
+            // device reachable via classroom mode or a centrally hosted
+            // deployment can open -- these are personal contact links for the
+            // project maintainer, not something a student should be handed.
+            click: () => shell.openExternal('https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/'),
           },
         ],
       },
@@ -251,8 +274,11 @@ if (!gotSingleInstanceLock) {
     // must be known before seeding/starting the server. Every later launch
     // skips straight past this, including one where the teacher chose "skip
     // key setup" -- that's still setupCompleted:true, just with no key.
+    let waitForSetupWindowClosed = null;
     if (!config.setupCompleted) {
-      await createSetupWindow();
+      const setup = createSetupWindow();
+      await setup.configSaved;
+      waitForSetupWindowClosed = setup.windowClosed;
       config = loadConfig(userDataDir);
     }
 
@@ -269,6 +295,14 @@ if (!gotSingleInstanceLock) {
       },
     });
     runningServer = result;
+
+    // Don't show the main window until the teacher has actually closed the
+    // wizard (via "Open Nexy" or the window's own close button) -- otherwise
+    // it appears behind the wizard's "done" screen regardless of whether that
+    // button was ever clicked.
+    if (waitForSetupWindowClosed) {
+      await waitForSetupWindowClosed;
+    }
 
     // Loopback for the window regardless of classroom mode's HOST=0.0.0.0 --
     // the embedded window always talks to the server via its own machine's
@@ -354,23 +388,20 @@ if (!gotSingleInstanceLock) {
 
   ipcMain.handle('nexy:get-available-locales', () => getAvailableLocales());
 
-  // Persists the wizard's choices and unblocks createSetupWindow()'s promise
-  // (via the 'nexy:complete-setup' listener registered there), letting
-  // app.whenReady()'s launch sequence proceed to seeding/starting the server.
+  // Persists the wizard's choices and unblocks createSetupWindow()'s
+  // configSaved promise, letting app.whenReady()'s launch sequence proceed to
+  // seeding/starting the server WHILE the wizard is still showing its "done"
+  // screen. Deliberately does NOT close setupWindow or show the main window
+  // here -- the main window only appears once the wizard's windowClosed
+  // signal fires, i.e. once the teacher actually clicks "Open Nexy" (or
+  // closes the wizard some other way), not the instant the config is saved.
   ipcMain.handle('nexy:complete-setup', (_event, patch) => {
     const userDataDir = app.getPath('userData');
     const next = updateConfig(userDataDir, patch);
     if (Object.prototype.hasOwnProperty.call(patch, 'openaiApiKey') && patch.openaiApiKey) {
       process.env.OPENAI_API_KEY = patch.openaiApiKey;
     }
-    // Unblocks app.whenReady()'s awaited createSetupWindow() so seeding/server
-    // startup can proceed in the background WHILE the wizard is still showing
-    // its "done" screen. Deliberately does NOT close setupWindow here -- the
-    // teacher needs to actually read that screen (especially the "your key
-    // works" one) and click "Open Nexy" themselves; closing it immediately on
-    // save meant the window vanished the instant a key validated, before the
-    // teacher ever saw confirmation or the button that's supposed to trigger it.
-    if (onSetupComplete) onSetupComplete();
+    if (onSetupConfigSaved) onSetupConfigSaved();
     const { openaiApiKey, ...rest } = next;
     return { ...rest, hasApiKey: Boolean(openaiApiKey) };
   });

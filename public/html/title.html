@@ -30,7 +30,6 @@
     </button>
     <div class="icon-dropdown hidden" id="mainDropdown" role="menu" aria-label="Menu">
       <a href="#" id="openHelpAction" role="menuitem" data-i18n="title.help">Help</a>
-      <a href="#" id="openContactAction" role="menuitem" data-i18n="title.contact">Contact</a>
       <div class="icon-dropdown-divider admin-only-menu-item hidden" role="separator"></div>
       <a href="/manage_posts.html" class="admin-only-menu-item hidden" role="menuitem" data-i18n="title.managePosts"
         >Manage Posts</a
@@ -69,92 +68,6 @@
         <h3 data-i18n="title.loadingHelp">Loading Help</h3>
         <p data-i18n="title.loadingHelpMessage">Please wait while the help content is loaded.</p>
       </section>
-    </div>
-  </div>
-</div>
-
-<div
-  id="contactModal"
-  class="psyop-info-modal hidden"
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="contactModalTitle"
->
-  <div class="psyop-info-dialog" role="document">
-    <div class="psyop-info-header">
-      <h2 id="contactModalTitle" data-i18n="title.contactModalTitle">Contact</h2>
-      <button
-        type="button"
-        id="closeContactModal"
-        class="psyop-info-close"
-        aria-label="Close contact dialog"
-        data-i18n-aria-label="title.closeContactDialog"
-      >
-        &times;
-      </button>
-    </div>
-    <div class="psyop-info-content">
-      <div id="contactFormSection">
-        <p data-i18n="title.contactIntro">
-          Use this form to reach out about suggestions, deployment questions, demo access, translations, contributions, or
-          funding. It goes straight to the project maintainer.
-        </p>
-        <form id="helpContactForm" class="help-contact-form">
-          <label for="contactName" data-i18n="title.contactNameLabel">Name</label>
-          <input type="text" id="contactName" name="name" autocomplete="name" required />
-          <label for="contactEmail" data-i18n="title.contactEmailLabel">Your email</label>
-          <input type="email" id="contactEmail" name="email" autocomplete="email" required />
-          <label for="contactMessage" data-i18n="title.contactMessageLabel">Message</label>
-          <textarea id="contactMessage" name="message" rows="5" required></textarea>
-          <button type="submit" data-i18n="title.contactSubmit">Send</button>
-          <p id="contactFormStatus" class="help-contact-status" role="status" aria-live="polite"></p>
-        </form>
-      </div>
-      <div class="help-contact-alternatives">
-        <p id="contactAlternativesIntro" data-i18n="title.contactAlternativesIntro">Or reach out directly:</p>
-        <a
-          href="https://github.com/joao-carloto/nexy"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="help-contact-alt-link"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
-            ></path>
-          </svg>
-          <span data-i18n="title.contactGithub">GitHub repository</span>
-        </a>
-        <a
-          href="https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="help-contact-alt-link"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-            <rect x="2" y="9" width="4" height="12"></rect>
-            <circle cx="4" cy="4" r="2"></circle>
-          </svg>
-          <span data-i18n="title.contactLinkedin">LinkedIn</span>
-        </a>
-      </div>
     </div>
   </div>
 </div>

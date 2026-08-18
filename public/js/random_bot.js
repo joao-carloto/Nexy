@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     profilePicture.src = `/profile_pictures/${user.profilePictureName}`;
     fullName.textContent = user.fullName;
     userId.textContent = user.userId;
-    description.textContent = user.description + ". I don't really exist. But does it really matter?";
+    description.textContent = user.description;
   }
 
   // Function to fetch a random user from the server

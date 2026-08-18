@@ -59,9 +59,9 @@ latest release; two options are provided:
 - **Installer** (`Nexy-Setup-*.exe`): the normal choice. Installs to your own user folder, no
   administrator rights needed, adds a Start Menu and Desktop shortcut.
 - **Portable** (`Nexy-Portable-*.exe`): no installation at all. Runs directly from a USB stick
-  or your Desktop. Use this if your school's IT policy blocks installers.
+  or your Desktop. Takes longer to start, specially in the first run. Use this if your school's IT policy blocks installers.
 
-Both are around 130 MB.
+Both are around 130 MB due to pre-loaded sample content.
 
 ### If Windows tries to stop you
 
@@ -114,8 +114,27 @@ share the same world with you, instead of everyone crowding around one screen. T
    device, on the same Wi-Fi network.
 
 To turn it off again, uncheck the same box in Settings; Nexy restarts and goes back to being
-reachable only on this computer. Do this after the lesson: while classroom mode is on, anyone on
+reachable only on the computer where is installed. Do this after the lesson: while classroom mode is on, anyone on
 the network can use Nexy, including generating content that spends your OpenAI credit.
+
+Nexy limits each device to 20 AI content-creation requests every 15 minutes, but that limit is
+per device, not shared across the whole class, so it doesn't cap how much a full class could
+spend in total. Setting a spending limit on your OpenAI account (see "Optional: let Nexy invent
+new content" above) is what actually protects you from a surprise bill.
+
+#### Windows Firewall
+
+The first time you turn on classroom mode, Windows may show a firewall prompt asking whether to
+allow Nexy to communicate on the network. Allow access for **Private networks** (your home or
+school Wi-Fi), not Public networks.
+
+Nexy picks a different port every time it starts, so a firewall rule tied to one specific port
+stops working after a restart. If you, or your school's IT staff, create a firewall rule manually
+instead of relying on the automatic prompt, bind the rule to the Nexy program itself (its `.exe`
+path) rather than to a port number, so it keeps working across restarts. In Windows Defender
+Firewall with Advanced Security (`wf.msc`): Inbound Rules → New Rule → **Program** → browse to the
+Nexy executable (typically `%LOCALAPPDATA%\Programs\Nexy\Nexy.exe`) → Allow the connection →
+apply it to the **Private** profile only.
 
 ### Uninstalling Nexy
 
@@ -178,6 +197,25 @@ Optional PM2 process management:
 npm run start:pm2
 npm run stop
 ```
+
+### Rate limiting
+
+The server applies per-IP rate limits regardless of how it's run (`npm run start`, inside
+Electron, or hosted centrally):
+
+- 20 requests / 15 minutes per IP on the routes that call the OpenAI API (`/create_bot_post`,
+  `/create_psyop_post`, `/create_human_post`, `/human_comment`, `/generate-comment`).
+- 120 requests / 15 minutes per IP on `/comments` (no OpenAI cost, but still unauthenticated).
+- 10 requests / 15 minutes per IP on `/login`, to slow down password guessing.
+
+These limits are per IP address, not per deployment. On a single teacher's machine with
+classroom mode off, this is moot, since only that machine can reach the server. Once the server
+is reachable from more than one device, whether via classroom mode or a centrally hosted
+deployment with `HOST=0.0.0.0`, each device gets its own 20-per-15-minutes budget against the
+same OpenAI key. There is currently no limit shared across the whole deployment, so the total
+possible spend scales with how many devices are active. Setting a spending limit directly on the
+OpenAI account (see the in-app Help, or platform.openai.com/settings/organization/limits) is the
+only hard backstop against that today.
 
 ### Running as a desktop app (Electron)
 
@@ -259,12 +297,12 @@ channel is [GitHub Issues](https://github.com/joao-carloto/nexy/issues):
 1. Go to the [Issues tab](https://github.com/joao-carloto/nexy/issues) of this repository.
 2. Click **New issue**.
 3. Give it a short, descriptive title and include a short note about your use case and expected audience.
-4. Submit. No fork or clone required — just a free GitHub account.
+4. Submit. No fork or clone required, just a free GitHub account.
 
 This keeps requests public and trackable, so others can follow along or find an answer that already exists. Note that
 GitHub has no private messaging between users, so anything posted as an Issue is visible to everyone.
 
-For anything private (e.g. collaboration inquiries), use linkedin instead:
+For anything private (e.g. collaboration inquiries or access to an internet live demo), use linkedin instead:
 
 - [LinkedIn](https://www.linkedin.com/in/jo%C3%A3o-carloto-7993b164/)
 

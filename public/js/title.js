@@ -32,63 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
       .catch(() => {});
   }
 
-  // Personal installations typically don't set up Resend, so the contact form has
-  // nowhere to send its message; hide it and keep only the GitHub/LinkedIn links.
-  function applyContactAvailability(root, available) {
-    if (available) {
-      return;
-    }
-    const section = root.querySelector('#contactFormSection');
-    if (section) {
-      section.classList.add('hidden');
-    }
-    const alternativesIntro = root.querySelector('#contactAlternativesIntro');
-    if (alternativesIntro) {
-      alternativesIntro.setAttribute('data-i18n', 'title.contactAlternativesOnlyIntro');
-      alternativesIntro.textContent = t('title.contactAlternativesOnlyIntro', 'Reach out directly:');
-    }
-  }
-
-  function bindContactForm(root) {
-    const form = root.querySelector('#helpContactForm');
-    const status = root.querySelector('#contactFormStatus');
-    if (!form || !status) {
-      return;
-    }
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const button = form.querySelector('button[type="submit"]');
-      status.textContent = '';
-      status.className = 'help-contact-status';
-      button.disabled = true;
-
-      const formData = new FormData(form);
-      try {
-        const response = await fetch('/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: formData.get('name'),
-            email: formData.get('email'),
-            message: formData.get('message'),
-          }),
-        });
-        if (!response.ok) {
-          throw new Error('Contact form submission failed');
-        }
-        form.reset();
-        status.textContent = t('helpPopup.contactSuccess', 'Thanks! Your message has been sent.');
-        status.classList.add('success');
-      } catch {
-        status.textContent = t('helpPopup.contactError', 'Something went wrong. Please try again later.');
-        status.classList.add('error');
-      } finally {
-        button.disabled = false;
-      }
-    });
-  }
-
   const container = document.getElementById('title-container');
   if (container) {
     fetch('/title.html')
@@ -100,13 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
           window.NexyI18n.applyTranslations(container);
         }
         refreshAdminAuthAction();
-        // The contact form lives directly in title.html (not lazily fetched like the
-        // help FAQ), so bind it once, right after this injection.
-        bindContactForm(container);
-        fetch('/contact/status')
-          .then((response) => response.json())
-          .then(({ available }) => applyContactAvailability(container, available))
-          .catch(() => applyContactAvailability(container, false));
       });
   }
 
@@ -225,25 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.style.overflow = '';
   }
 
-  function openContactModal() {
-    const modal = document.getElementById('contactModal');
-    if (!modal) {
-      return;
-    }
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeContactModal() {
-    const modal = document.getElementById('contactModal');
-    if (!modal) {
-      return;
-    }
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
-
-  // Toggle/close logic for the single Help/Contact/Admin icon dropdown in the title bar.
+  // Toggle/close logic for the single Help/Admin icon dropdown in the title bar.
   function closeMenu() {
     const button = document.getElementById('mainMenuButton');
     const dropdown = document.getElementById('mainDropdown');
@@ -282,31 +200,18 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    if (target.id === 'openContactAction') {
-      event.preventDefault();
-      closeMenu();
-      openContactModal();
-      return;
-    }
-
     if (!closest('.main-menu')) {
       closeMenu();
     }
 
     if (target.id === 'closeHelpInfo' || target.id === 'helpInfoModal') {
       closeHelpModal();
-      return;
-    }
-
-    if (target.id === 'closeContactModal' || target.id === 'contactModal') {
-      closeContactModal();
     }
   });
 
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
       closeHelpModal();
-      closeContactModal();
       closeMenu();
     }
   });
