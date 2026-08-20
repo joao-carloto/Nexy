@@ -125,16 +125,23 @@ new content" above) is what actually protects you from a surprise bill.
 #### Windows Firewall
 
 The first time you turn on classroom mode, Windows may show a firewall prompt asking whether to
-allow Nexy to communicate on the network. Allow access for **Private networks** (your home or
-school Wi-Fi), not Public networks.
+allow Nexy to communicate on the network. Allow access for **Private networks** (your home
+Wi-Fi) and **Domain networks** (a school's managed network, if applicable).
 
 Nexy picks a different port every time it starts, so a firewall rule tied to one specific port
-stops working after a restart. If you, or your school's IT staff, create a firewall rule manually
-instead of relying on the automatic prompt, bind the rule to the Nexy program itself (its `.exe`
-path) rather than to a port number, so it keeps working across restarts. In Windows Defender
-Firewall with Advanced Security (`wf.msc`): Inbound Rules → New Rule → **Program** → browse to the
-Nexy executable (typically `%LOCALAPPDATA%\Programs\Nexy\Nexy.exe`) → Allow the connection →
-apply it to the **Private** profile only.
+stops working after a restart. If you need to add the rule manually instead of relying on the
+automatic prompt: search **"Defender"** on the Windows search bar → select **Windows Defender
+Firewall** → click **Allow an app or feature through Windows Defender Firewall** → find **Nexy**
+in the list (or **Allow another app...** and browse to its `.exe` if it's not listed — right-click
+the Nexy shortcut on the Start menu or Desktop → **Open file location** to find it) → check the
+**Private** and **Domain** columns.
+
+<img src="public/images/defender_config.png" alt="Windows Defender Firewall allowed apps screen with Nexy checked for Domain, Private, and Public" width="700" />
+
+Windows sometimes categorizes home and school networks as **Public** rather than **Private**, even
+though they're networks you trust, so if Nexy still isn't reachable after the steps above,
+reclassify it manually or go back and also check the **Public** column for Nexy. This is safe to do: only devices already on the same network can reach Nexy's address, so allowing Public here doesn't expose Nexy to the
+wider internet.
 
 ### Uninstalling Nexy
 
