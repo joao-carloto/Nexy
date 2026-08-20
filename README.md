@@ -43,21 +43,20 @@ The application supports activities such as:
 7. Human post creation with machine manipulation of text/image.
 8. PsyOp/disinformation campaign simulation (white/grey/black).
 
-Note: the two activities above involving text/image manipulation and PsyOp campaigns require an
-OpenAI key to be configured (see below). Everything else is fully explorable in the ready-made
-demo world with no key at all.
+Note: activities 4 to 6 require an OpenAI key to be configured (see below).
+Everything else is fully explorable in the ready-made demo world with no key at all.
 
 ---
 
-## For Teachers: Install and Use It
+## For Teachers or School IT staff: Install and Use It
 
 ### Download
 
 **[⬇ Download Nexy for Windows](https://github.com/joao-carloto/nexy/releases)**. Pick the
 latest release; two options are provided:
 
-- **Installer** (`Nexy-Setup-*.exe`): the normal choice. Installs to your own user folder, no
-  administrator rights needed, adds a Start Menu and Desktop shortcut.
+- **Installer** (`Nexy-Setup-*.exe`): the normal choice. Installs to your PC, no administrator rights needed,
+  adds a Start Menu and Desktop shortcut.
 - **Portable** (`Nexy-Portable-*.exe`): no installation at all. Runs directly from a USB stick
   or your Desktop. Takes longer to start, specially in the first run. Use this if your school's IT policy blocks installers.
 
@@ -82,27 +81,26 @@ it to [virustotal.com](https://www.virustotal.com) before running it.
 
 Nexy installs on your own computer and opens like any other program. It comes with a complete
 made-up social network already inside it: dozens of invented accounts, over a hundred posts, and
-hundreds of comments, pictures included. No account, no sign-up, and no internet connection is
-needed to explore it. Your students' work never leaves your computer.
+hundreds of comments, pictures included. No account and no sign-up is needed to explore it.
+Your students' work never leaves your computer.
 
 The first time you open Nexy, a short wizard walks you through the (optional) setup:
 
-1. Choose a language.
-2. Decide whether to set up AI content creation now, later, or not at all. You can always come
+1. Decide whether to set up AI content creation now, later, or not at all. You can always come
    back to this afterwards: open **File → Settings** from the menu bar along the top of the Nexy
    window.
-3. A teacher-only password is generated for you, so students can't reach the admin screens.
+2. A teacher-only password is generated for you, so students can't reach the admin screens.
 
-### Optional: let Nexy invent new content
+### Let Nexy invent new content
 
-Nexy can also create brand-new posts, comments, and disinformation campaigns live in your lesson.
+Nexy can create brand-new posts, comments, and disinformation campaigns live in your lesson.
 That needs a paid OpenAI account and costs roughly 2 euro cents per post, around 30 cents for a
 full lesson. It's entirely optional, and you can turn it on or off at any time: open **File →
 Settings** from the menu bar along the top of the Nexy window.
 
 ### Letting students join from their own devices
 
-Classroom mode lets students on the same Wi-Fi open Nexy from their own computers or phones and
+Classroom mode lets students on the same local network to open Nexy from their own computers or phones and
 share the same world with you, instead of everyone crowding around one screen. To turn it on:
 
 1. Open **File → Settings** from the menu bar along the top of the Nexy window.
@@ -111,7 +109,9 @@ share the same world with you, instead of everyone crowding around one screen. T
 4. Reopen **File → Settings** afterwards. Under **Classroom mode**, it now shows the address your
    students should open (for example `http://192.168.1.23:51234`), with a **Copy** button next to
    it. Share that address with your students; each of them types it into a browser on their own
-   device, on the same Wi-Fi network.
+   device, on the same local network.
+
+<img src="public/images/settings.png" alt="Nexy Settings window" width="700" />
 
 To turn it off again, uncheck the same box in Settings; Nexy restarts and goes back to being
 reachable only on the computer where is installed. Do this after the lesson: while classroom mode is on, anyone on
@@ -119,8 +119,9 @@ the network can use Nexy, including generating content that spends your OpenAI c
 
 Nexy limits each device to 20 AI content-creation requests every 15 minutes, but that limit is
 per device, not shared across the whole class, so it doesn't cap how much a full class could
-spend in total. Setting a spending limit on your OpenAI account (see "Optional: let Nexy invent
-new content" above) is what actually protects you from a surprise bill.
+spend in total. Setting a spending limit on your OpenAI account is what actually protects you from a surprise bill.
+
+<img src="public/images/project_limits.png" alt="OpenAI project settings page showing the spend limit and spend alerts" width="700" />
 
 #### Windows Firewall
 
@@ -152,8 +153,8 @@ Uninstalling removes everything: your saved OpenAI key, your teacher password, a
 comments your class created beyond the ready-made demo world. There's no way to recover any of
 this afterwards, and Nexy has no way to show you your saved key again to copy it out (that's
 deliberate, so it can't be read off your screen by anyone else). If you might reinstall later and
-want to reuse the same key, keep a copy of it somewhere safe yourself, such as your OpenAI account
-at platform.openai.com/api-keys, rather than relying on Nexy to remember it for you.
+want to reuse the same key, keep a copy of it somewhere safe yourself, rather than relying on Nexy
+to remember it for you.
 
 If you're only installing a newer version of Nexy, you don't need to uninstall first: running the
 new installer over an existing install updates it in place and keeps everything.
@@ -221,8 +222,8 @@ is reachable from more than one device, whether via classroom mode or a centrall
 deployment with `HOST=0.0.0.0`, each device gets its own 20-per-15-minutes budget against the
 same OpenAI key. There is currently no limit shared across the whole deployment, so the total
 possible spend scales with how many devices are active. Setting a spending limit directly on the
-OpenAI account (see the in-app Help, or platform.openai.com/settings/organization/limits) is the
-only hard backstop against that today.
+OpenAI account is the only hard backstop against that today (limits can be defined per
+organization or per project).
 
 ### Running as a desktop app (Electron)
 
