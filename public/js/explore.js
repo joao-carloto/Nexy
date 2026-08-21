@@ -26,11 +26,12 @@ async function loadThumbnails(search = '', limit = 1000) {
         const postElement = document.createElement('div');
         postElement.className = 'post-thumbnail';
         postElement.innerHTML = `
-            <img 
-              src="/thumbnails/post_images/${thumbnailFileName}" 
-              alt="${t('explore.thumbnailAlt', 'Post Thumbnail')}" 
+            <img
+              src="/thumbnails/post_images/${thumbnailFileName}"
+              alt="${t('explore.thumbnailAlt', 'Post Thumbnail')}"
               class="thumbnail-image"
               onclick="viewPost('${post.id}')"
+              onerror="this.closest('.post-thumbnail').remove()"
             >
           `;
         postsContainer.appendChild(postElement);

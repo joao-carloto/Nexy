@@ -37,7 +37,7 @@ async function loadPosts() {
           </div>
         </div>
         <p class="post-card-text">${post.postText.substring(0, 250)}...</p>
-        <img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-card-image" onclick="viewPost('${post.id}')" />
+        <img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-card-image" onclick="viewPost('${post.id}')" onerror="this.remove()" />
         <div class="post-card-footer">
           <button class="post-card-view-btn" onclick="viewPost('${post.id}')">${t('latestPosts.viewPost', 'View Post')}</button>
         </div>

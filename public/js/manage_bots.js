@@ -14,7 +14,7 @@ async function loadBots() {
         ? `/thumbnails/profile_pictures/${bot.userId}-thumbnail.png`
         : 'images/logo.png';
       botElement.innerHTML = `
-        <img src="${thumbSrc}" alt="${bot.fullName}" class="thumbnail-image" style="border-radius: 50%; cursor: pointer;" />
+        <img src="${thumbSrc}" alt="${bot.fullName}" class="thumbnail-image" style="border-radius: 50%; cursor: pointer;" onerror="this.src='images/logo.png'" />
         <p style="color: #333; font-weight: 600; margin: 8px 0 2px; cursor: pointer;">${bot.fullName}</p>
         <p style="color: #666; font-size: 0.85em; margin: 0 0 4px;">@${bot.userId}</p>
         <button class="delete-post-button">Delete</button>

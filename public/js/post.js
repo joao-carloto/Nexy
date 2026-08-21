@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="post-text">${post.postText}</p>
           ${
             post.imageFileName
-              ? `<img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-image">`
+              ? `<img src="/post_images/${post.imageFileName}" alt="Post Image" class="post-image" onerror="this.remove()">`
               : ''
           }
           <p class="post-date">Created at: ${formatDate(post.createdAt)}</p>

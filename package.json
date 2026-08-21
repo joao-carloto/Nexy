@@ -8,6 +8,8 @@
     "start:pm2": "pm2 start server/app.mjs --name nexy",
     "stop": "pm2 stop nexy",
     "start:electron": "electron .",
+    "check:seed": "node scripts/check-seed-integrity.mjs",
+    "prebuild:seed": "npm run check:seed",
     "build:seed": "node scripts/build-seed.mjs",
     "dist": "npm run build:seed && electron-builder",
     "dist:dir": "npm run build:seed && electron-builder --dir",

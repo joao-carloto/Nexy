@@ -16,10 +16,11 @@ async function loadPostsWithDeleteButtons() {
         const postElement = document.createElement('div');
         postElement.className = 'post-thumbnail';
         postElement.innerHTML = `
-            <img 
-              src="/thumbnails/post_images/${thumbnailFileName}" 
-              alt="Post Thumbnail" 
+            <img
+              src="/thumbnails/post_images/${thumbnailFileName}"
+              alt="Post Thumbnail"
               class="thumbnail-image"
+              onerror="this.remove()"
             >
             <button class="delete-post-button" onclick="deletePost('${post.id}')">Delete</button>
           `;
