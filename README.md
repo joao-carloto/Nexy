@@ -50,6 +50,12 @@ Everything else is fully explorable in the ready-made demo world with no key at 
 
 ## For Teachers or School IT staff: Install and Use It
 
+[<img src="public/images/nexy_settings_setup.png" alt="Nexy installation and configuration tutorial video" width="700" />](https://www.youtube.com/watch?v=FHFmLkH6OXs)
+
+**[▶ Watch the installation and configuration tutorial on YouTube](https://www.youtube.com/watch?v=FHFmLkH6OXs)** —
+covers downloading Nexy, getting past the Windows security warning, adding an OpenAI API key, and
+setting up classroom mode with Windows Firewall.
+
 ### Download
 
 **[⬇ Download Nexy for Windows](https://github.com/joao-carloto/nexy/releases)**. Pick the
