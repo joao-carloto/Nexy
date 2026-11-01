@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { toFile } from 'openai';
 import { Image } from 'image-js';
 import sharp from 'sharp';
-import { getOpenAI } from './openai_client.mjs';
+import { getOpenAI, TEXT_MODEL, IMAGE_MODEL, IMAGE_EDIT_MODEL } from './openai_client.mjs';
 import {
   POST_IMAGES_DIR as postImagesDir,
   POST_THUMBNAILS_DIR as postThumbnailsDir,
@@ -40,7 +40,7 @@ async function assertValidImageFile(filePath) {
 async function generateImage(contents, postId) {
   try {
     const image = await getOpenAI().images.generate({
-      model: 'gpt-image-1.5',
+      model: IMAGE_MODEL,
       prompt: typeof contents === 'string' ? contents : String(contents),
       size: '1024x1024',
       quality: 'low',
@@ -84,7 +84,7 @@ async function editImage(inputImagePath, outputImagePath) {
     const pngFile = await toFile(pngBuffer, 'image.png', { type: 'image/png' });
 
     const response = await getOpenAI().images.edit({
-      model: 'gpt-image-1.5',
+      model: IMAGE_EDIT_MODEL,
       image: pngFile,
       prompt: `Add a pigeon to the image.
               Preserve the entire original photo exactly. 
@@ -137,7 +137,7 @@ async function createUserImage(userId, fullName, description) {
 
   try {
     const image = await getOpenAI().images.generate({
-      model: 'gpt-image-1.5',
+      model: IMAGE_MODEL,
       prompt: contents,
       size: '1024x1024',
       quality: 'low',
@@ -279,7 +279,7 @@ async function describeImage(imagePath, locale = 'en') {
       : 'Describe this image. Respond only in English.';
 
   const response = await getOpenAI().responses.create({
-    model: 'gpt-4.1-mini',
+    model: TEXT_MODEL,
     input: [
       {
         role: 'user',

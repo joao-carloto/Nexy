@@ -1,5 +1,14 @@
 import OpenAI from 'openai';
 
+// Single place to change the OpenAI models Nexy uses. Picked for lowest cost at
+// acceptable quality: gpt-6-luna is the cheapest GPT-6 tier; Flare is the fast
+// everyday image generator and Sunburst the one OpenAI recommends for edits.
+// electron/api-key-validation.cjs keeps its own copy of TEXT_MODEL (CommonJS
+// can't import this ESM module), so update both together.
+export const TEXT_MODEL = 'gpt-6-luna';
+export const IMAGE_MODEL = 'gpt-image-2.5-flare';
+export const IMAGE_EDIT_MODEL = 'gpt-image-2.5-sunburst';
+
 // Lazily constructs (and caches) the OpenAI client, instead of constructing it at
 // module load. openai v4 throws in its constructor when apiKey is undefined, and
 // this module is imported (directly or transitively) by app.mjs, so a missing key

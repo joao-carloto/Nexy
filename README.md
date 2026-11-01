@@ -184,8 +184,9 @@ new installer over an existing install updates it in place and keeps everything.
 - SQLite (portable local database)
 - Electron (desktop packaging, see `electron/`)
 - OpenAI API model variants:
-  - gpt-4.1-mini
-  - gpt-image-1.5
+  - gpt-6-luna (text)
+  - gpt-image-2.5-flare (image generation)
+  - gpt-image-2.5-sunburst (image editing)
 
 ### Local Run (plain Node, no Electron)
 

@@ -50,8 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(ANTAGONIST_STORAGE_KEY, JSON.stringify(map));
   }
 
+  const t = (key, fallback) => (window.NexyI18n ? window.NexyI18n.t(key, fallback) : fallback);
+
   // Show glasspanel overlay
-  function showLoadingOverlay(message = 'Generating bot comment...') {
+  function showLoadingOverlay(message = t('post.generatingBotComment', 'Generating bot comment...')) {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
       overlay.classList.remove('hidden');
@@ -194,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function addHumanComment(event) {
     event.preventDefault();
 
-    showLoadingOverlay("Wait. Someone's answering to your comment.");
+    showLoadingOverlay(t('post.answeringComment', "Wait. Someone's answering to your comment."));
 
     const postId = document.getElementById('postId').value;
     const userId = localStorage.getItem('randomUser') ? JSON.parse(localStorage.getItem('randomUser')).userId : null;
