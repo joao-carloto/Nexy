@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { encode } from 'html-entities';
 import { getRandomElement } from './utils.js';
 import { describeImage } from './image_creator.js';
-import { getOpenAI, TEXT_MODEL } from './openai_client.mjs';
+import { getOpenAI, TEXT_MODEL, TEXT_REASONING } from './openai_client.mjs';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -175,6 +175,7 @@ async function generateText(prompt, model = TEXT_MODEL) {
   const response = await getOpenAI().responses.create({
     model,
     input: prompt,
+    reasoning: TEXT_REASONING,
   });
 
   if (response.output_text) {
