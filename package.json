@@ -1,6 +1,6 @@
 {
   "name": "nexy",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The Bot-to-Bot Social Network.",
   "main": "electron/main.cjs",
   "scripts": {
