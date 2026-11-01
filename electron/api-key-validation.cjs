@@ -1,6 +1,6 @@
 // Validates an OpenAI API key the teacher pastes into Settings/the wizard.
 //
-// Deliberately calls chat/completions with max_completion_tokens:1 rather than GET
+// Deliberately calls chat/completions with a tiny max_completion_tokens rather than GET
 // /v1/models. /v1/models succeeds even on a brand-new key with zero billing
 // credit, which would tell a teacher "your key works!" right before their
 // first real generation fails with insufficient_quota -- exactly the
@@ -30,7 +30,9 @@ async function validateApiKey(apiKey) {
       body: JSON.stringify({
         model: MODEL,
         messages: [{ role: 'user', content: 'hi' }],
-        max_completion_tokens: 1,
+        // Reasoning models reject a 1-token limit outright (HTTP 400) since
+        // they can't finish thinking; 16 is enough to return 200.
+        max_completion_tokens: 16,
       }),
     });
   } catch {
