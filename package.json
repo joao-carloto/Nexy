@@ -27,7 +27,7 @@
     "multer": "^1.4.5-lts.2",
     "openai": "^4.104.0",
     "sharp": "^0.35.3",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^6.0.1"
   },
   "author": "https://github.com/joao-carloto/nexy",
   "license": "MIT",
@@ -35,8 +35,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "electron": "^43.4.0",
-    "electron-builder": "^26.15.3",
-    "eslint": "^10.0.3",
+    "electron-builder": "^26.18.0",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
     "prettier": "^3.8.1"
@@ -107,5 +107,9 @@
       ],
       "language": "1033"
     }
+  },
+  "allowScripts": {
+    "ejs@2.7.4": true,
+    "sqlite3@6.0.1": true
   }
 }
