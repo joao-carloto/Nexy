@@ -255,8 +255,10 @@ if (!gotSingleInstanceLock) {
     // (the click handler doesn't await/catch the rejected promise, so the
     // button still showed "Copied!" while the clipboard kept its old,
     // unrelated content, e.g. the join URL after copying it once).
+    // Electron 43.8 requests writeText() as 'clipboard-sanitized-write';
+    // older versions used 'clipboard-write'. Allow both.
     session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) =>
-      callback(permission === 'clipboard-write')
+      callback(permission === 'clipboard-write' || permission === 'clipboard-sanitized-write')
     );
 
     const userDataDir = app.getPath('userData');
