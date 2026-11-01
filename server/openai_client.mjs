@@ -8,6 +8,9 @@ import OpenAI from 'openai';
 export const TEXT_MODEL = 'gpt-6-luna';
 export const IMAGE_MODEL = 'gpt-image-2.5-flare';
 export const IMAGE_EDIT_MODEL = 'gpt-image-2.5-sunburst';
+// gpt-6-luna reasons at 'medium' effort by default, and reasoning tokens are
+// billed as output. Short social media posts don't need it.
+export const TEXT_REASONING = { effort: 'none' };
 
 // Lazily constructs (and caches) the OpenAI client, instead of constructing it at
 // module load. openai v4 throws in its constructor when apiKey is undefined, and
