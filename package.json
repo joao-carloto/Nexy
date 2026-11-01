@@ -110,6 +110,7 @@
   },
   "allowScripts": {
     "ejs@2.7.4": true,
-    "sqlite3@6.0.1": true
+    "sqlite3@6.0.1": true,
+    "electron-winstaller@5.4.0": true
   }
 }
