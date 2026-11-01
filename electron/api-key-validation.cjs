@@ -1,12 +1,13 @@
 // Validates an OpenAI API key the teacher pastes into Settings/the wizard.
 //
-// Deliberately calls chat/completions with max_tokens:1 rather than GET
+// Deliberately calls chat/completions with max_completion_tokens:1 rather than GET
 // /v1/models. /v1/models succeeds even on a brand-new key with zero billing
 // credit, which would tell a teacher "your key works!" right before their
 // first real generation fails with insufficient_quota -- exactly the
 // confusing failure this validation step exists to prevent. A minimal
 // chat/completions call actually exercises billing.
-const MODEL = 'gpt-4.1-mini';
+// Keep in sync with TEXT_MODEL in server/openai_client.mjs.
+const MODEL = 'gpt-6-luna';
 
 async function validateApiKey(apiKey) {
   if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim()) {
@@ -29,7 +30,7 @@ async function validateApiKey(apiKey) {
       body: JSON.stringify({
         model: MODEL,
         messages: [{ role: 'user', content: 'hi' }],
-        max_tokens: 1,
+        max_completion_tokens: 1,
       }),
     });
   } catch {

@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { encode } from 'html-entities';
 import { getRandomElement } from './utils.js';
 import { describeImage } from './image_creator.js';
-import { getOpenAI } from './openai_client.mjs';
+import { getOpenAI, TEXT_MODEL } from './openai_client.mjs';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -34,7 +34,7 @@ function languageInstructionFromText(...texts) {
 }
 
 async function createPostText(topic, isFakeNews, locale = 'en') {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
 
   let options = '';
 
@@ -60,7 +60,7 @@ async function createPostText(topic, isFakeNews, locale = 'en') {
 }
 
 async function editText(originalPostText, locale = 'en') {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
   // Used by createHumanPost to intentionally change the original author tone.
   // Generate in the user's selected language to maintain linguistic consistency.
   const postPrompt = `Write a small text that disagrees with this one: "${originalPostText}".${languageInstructionFor(locale)} Keep the response concise and natural for social media.`;
@@ -72,7 +72,7 @@ async function editText(originalPostText, locale = 'en') {
 }
 
 async function createCommentText(postText, tone = undefined, locale = 'en') {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
   let options = '';
   // If not defined, pick a tone for variability in generated threads.
   if (tone === undefined) {
@@ -89,7 +89,7 @@ async function createCommentText(postText, tone = undefined, locale = 'en') {
 }
 
 async function createCommentReply(postText, postCommentText, locale = 'en') {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
 
   const languageInstructions = languageInstructionFor(locale);
 
@@ -143,7 +143,7 @@ async function mockImage(imagePath, locale = 'en') {
   // Image-to-text caption is generated first, then converted to short mocking text.
   // Pass locale so description is generated in the appropriate language.
   const description = await describeImage(imagePath, locale);
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
 
   const prompt = `Create a small text making fun of an image described in this manner: ${description}.${languageInstructionFor(locale)} Keep it concise and natural for social media. Don't explain it, just give me the content.`;
   const mockingText = await generateText(prompt, model);
@@ -156,7 +156,7 @@ async function mockImage(imagePath, locale = 'en') {
 
 async function mockPost(originalText, imagePath) {
   const description = await describeImage(imagePath);
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
 
   const languageInstructions = languageInstructionFromText(originalText);
 
@@ -170,7 +170,7 @@ async function mockPost(originalText, imagePath) {
   return cleanUpPost(mockingText);
 }
 
-async function generateText(prompt, model = 'gpt-4.1-mini') {
+async function generateText(prompt, model = TEXT_MODEL) {
   // Wrapper kept minimal so callers can fully control prompt shape.
   const response = await getOpenAI().responses.create({
     model,
@@ -178,16 +178,34 @@ async function generateText(prompt, model = 'gpt-4.1-mini') {
   });
 
   if (response.output_text) {
-    return response.output_text;
+    return removeDashes(response.output_text);
   }
 
   return '';
 }
 
+// Em/en dashes are a well-known tell of AI-written text, which would make the
+// fake posts too easy to spot. Done in code rather than the prompt because
+// models don't reliably follow "don't use dashes".
+function removeDashes(str) {
+  return (
+    str
+      // Number ranges (2020–2021) keep a plain hyphen.
+      .replace(/(\d)\s*[–—]\s*(\d)/g, '$1-$2')
+      // Dialogue/list dashes at the start of a line are dropped.
+      .replace(/^[ \t]*[–—]+[ \t]*/gm, '')
+      // Anything else becomes a comma.
+      .replace(/[ \t]*[–—]+[ \t]*/g, ', ')
+      // Tidy up a comma left right before other punctuation or a line end.
+      .replace(/, ([,.!?;:])/g, '$1')
+      .replace(/, $/gm, '')
+  );
+}
+
 const psyopCommentTypes = ['supportive', 'strawman_opposition'];
 
 async function createPsyopCommentText(postText, objective, type = undefined) {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
   if (type === undefined) {
     type = getRandomElement(psyopCommentTypes);
   }
@@ -216,7 +234,7 @@ async function createPsyopCommentText(postText, objective, type = undefined) {
 }
 
 async function createPsyopDemolisherReply(postText, strawmanComment, _objective, commentUserId) {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
 
   const languageInstructions = languageInstructionFromText(postText, strawmanComment);
 
@@ -242,7 +260,7 @@ async function createPsyopDemolisherReply(postText, strawmanComment, _objective,
 }
 
 async function createPsyopPostText(objective, target, strategy) {
-  const model = 'gpt-4.1-mini';
+  const model = TEXT_MODEL;
 
   // Strategy guide maps UI-selected strategy to generation constraints.
   const strategyGuide = {
@@ -266,7 +284,7 @@ async function createPsyopPostText(objective, target, strategy) {
     `You are crafting a social media post as part of a psychological operation (PsyOp).\n\n` +
     `Objective: ${objective}\n` +
     `Target audience: ${target}\n` +
-    `Strategy: ${strategy} — ${guide}\n\n` +
+    `Strategy: ${strategy}: ${guide}\n\n` +
     `Write a single realistic social media post that achieves the objective above, ` +
     `is specifically crafted for the described audience, and follows the ${strategy} strategy. ` +
     `Include relevant emojis. Make it feel completely natural, as if written by a real person.${languageInstructions} ` +
