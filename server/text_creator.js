@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { encode } from 'html-entities';
 import { getRandomElement } from './utils.js';
 import { describeImage } from './image_creator.js';
-import { getOpenAI, TEXT_MODEL, TEXT_REASONING } from './openai_client.mjs';
+import { getOpenAI, TEXT_MODEL, TEXT_REASONING, TEXT_INSTRUCTIONS } from './openai_client.mjs';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -39,7 +39,7 @@ async function createPostText(topic, isFakeNews, locale = 'en') {
   let options = '';
 
   if (isFakeNews) {
-    options = options + ' It should be a fictious story about real people.';
+    options = options + ' It should be fake news: a false or misleading claim, presented as if it were true.';
   }
 
   const languageInstructions = languageInstructionFor(locale);
@@ -176,6 +176,7 @@ async function generateText(prompt, model = TEXT_MODEL) {
     model,
     input: prompt,
     reasoning: TEXT_REASONING,
+    instructions: TEXT_INSTRUCTIONS,
   });
 
   if (response.output_text) {
@@ -282,7 +283,9 @@ async function createPsyopPostText(objective, target, strategy) {
   const languageInstructions = languageInstructionFromText(objective, target);
 
   const prompt =
-    `You are crafting a social media post as part of a psychological operation (PsyOp).\n\n` +
+    `In Nexy's PsyOp activity, students design a simulated psychological operation (PsyOp) ` +
+    `campaign and then study how it plays out in the fictional feed. Write the campaign's post ` +
+    `as an example of the ${strategy} propaganda technique.\n\n` +
     `Objective: ${objective}\n` +
     `Target audience: ${target}\n` +
     `Strategy: ${strategy}: ${guide}\n\n` +
