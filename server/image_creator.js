@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { toFile } from 'openai';
 import { Image } from 'image-js';
 import sharp from 'sharp';
-import { getOpenAI, TEXT_MODEL, TEXT_REASONING, IMAGE_MODEL, IMAGE_EDIT_MODEL } from './openai_client.mjs';
+import { getOpenAI, TEXT_MODEL, TEXT_REASONING, TEXT_INSTRUCTIONS, IMAGE_MODEL, IMAGE_EDIT_MODEL } from './openai_client.mjs';
 import {
   POST_IMAGES_DIR as postImagesDir,
   POST_THUMBNAILS_DIR as postThumbnailsDir,
@@ -281,6 +281,7 @@ async function describeImage(imagePath, locale = 'en') {
   const response = await getOpenAI().responses.create({
     model: TEXT_MODEL,
     reasoning: TEXT_REASONING,
+    instructions: TEXT_INSTRUCTIONS,
     input: [
       {
         role: 'user',

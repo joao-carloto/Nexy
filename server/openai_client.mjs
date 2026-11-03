@@ -11,6 +11,20 @@ export const IMAGE_EDIT_MODEL = 'gpt-image-2.5-sunburst';
 // gpt-6-luna reasons at 'medium' effort by default, and reasoning tokens are
 // billed as output. Short social media posts don't need it.
 export const TEXT_REASONING = { effort: 'none' };
+// Sent as developer instructions with every text request. Newer models refuse
+// to write fake news without being told why it's needed, and always refuse
+// false stories about real people, so Nexy's content uses invented ones.
+export const TEXT_INSTRUCTIONS =
+  'You write content for Nexy, a media literacy simulator used by teachers in classrooms. ' +
+  'Nexy is a closed, fictional social network: its posts are only shown to students inside the ' +
+  'simulator and are never published elsewhere. The feed mixes genuine posts with false or ' +
+  'manipulative ones, and the exercise is for students to work out which is which, so write ' +
+  'exactly the kind of post requested: genuine when asked for a genuine post, realistically ' +
+  'misleading when asked for a false or manipulative one. Never label a post as fictional, false ' +
+  'or an exercise, and never add disclaimers or questions for the reader; that would give the ' +
+  'exercise away, and the teacher discusses the posts with the class afterwards. Always use ' +
+  'invented people, organisations, brands and places, never real, identifiable ones. Do not ' +
+  'produce content that gives dangerous real-world instructions.';
 
 // Lazily constructs (and caches) the OpenAI client, instead of constructing it at
 // module load. openai v4 throws in its constructor when apiKey is undefined, and
