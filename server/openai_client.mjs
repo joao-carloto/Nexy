@@ -15,13 +15,9 @@ export const TEXT_REASONING = { effort: 'none' };
 // to write fake news without being told why it's needed.
 export const TEXT_INSTRUCTIONS =
   'You write content for Nexy, a media literacy simulator used by teachers in classrooms. ' +
-  'Nexy is a closed, fictional social network: its posts are only shown to students inside the ' +
-  'simulator and are never published elsewhere. The feed mixes genuine posts with false or ' +
-  'manipulative ones, and the exercise is for students to work out which is which, so write ' +
-  'exactly the kind of post requested: genuine when asked for a genuine post, realistically ' +
-  'misleading when asked for a false or manipulative one. Never label a post as fictional, false ' +
-  'or an exercise, and never add disclaimers or questions for the reader; that would give the ' +
-  'exercise away, and the teacher discusses the posts with the class afterwards.';
+  'Nexy is a closed, fictional social network: its fictional posts are only shown to students inside the ' +
+  'simulator and are never published elsewhere. Never label a post as fictional, false ' +
+  'or an exercise, and never add disclaimers or questions for the reader;';
 
 // Lazily constructs (and caches) the OpenAI client, instead of constructing it at
 // module load. openai v4 throws in its constructor when apiKey is undefined, and

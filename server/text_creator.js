@@ -14,7 +14,7 @@ const tones = ['positive', 'neutral', 'negative'];
 // PT locale must always resolve to European Portuguese, not PT-BR — the target audience is Portugal.
 function languageInstructionFor(locale) {
   return locale === 'pt'
-    ? ' Respond only in European Portuguese (Portugal Portuguese, not Brazilian Portuguese).'
+    ? ' Respond only in European Portuguese (Portugal Portuguese, not Brazilian Portuguese). Do not use flag emojis.'
     : ' Respond only in English.';
 }
 
@@ -27,7 +27,7 @@ function looksLikePortuguese(text) {
 }
 
 // Same PT-PT enforcement as languageInstructionFor, but derived from free-text input instead
-// of an explicit locale — for callers (PsyOp, mockPost) that have no locale parameter.
+// of an explicit locale — for callers (PsyOp) that have no locale parameter.
 function languageInstructionFromText(...texts) {
   const isPt = texts.some(looksLikePortuguese);
   return isPt ? languageInstructionFor('pt') : '';
@@ -39,19 +39,16 @@ async function createPostText(topic, isFakeNews, locale = 'en') {
   let options = '';
 
   if (isFakeNews) {
-    options = options + ' It should be fake news: a false or misleading claim, presented as if it were true.';
+    options = options + ' It should be a fictional text.';
   }
 
   const languageInstructions = languageInstructionFor(locale);
 
-  // Two-step generation: first an inspiration snippet, then final user-facing post.
-  let topicPrompt = `Provide me with a specific topic from the news or social media, about ${topic}, 
-  that can serve as inspiration for a social media post. ${options}. ${languageInstructions} Don't explain it, just give me the content.`;
-  let topicText = await generateText(topicPrompt, model);
-  console.log(`\nResponse 1: ${topicText}`);
-
-  let postPrompt = `Social media post inspired on this text: "${topicText}". Just one option. Include some emoji. 
+  // Length is asked in sentences because models follow that far better than a
+  // character count. "Small text" alone gave ~160-character posts, too thin.
+  let postPrompt = `Text of 3 to 4 sentences inspired on this topic: "${topic}".${options} Just one option. Include some emoji.
   ${languageInstructions} Don't explain it, just give me the content.`;
+
   let postTextRaw = await generateText(postPrompt, model);
   console.log(`\nResponse 2: ${postTextRaw}`);
 
@@ -82,8 +79,8 @@ async function createCommentText(postText, tone = undefined, locale = 'en') {
 
   const languageInstructions = languageInstructionFor(locale);
 
-  const commentPrompt = `Small social media comment responding to ${postText}.
-  Just one option. Include some emoji.${options}${languageInstructions} Don't explain it, just give me the content.`;
+  const commentPrompt = `Social media comment responding to ${postText}.
+  Just one option. Include some emoji, different from the ones in the post.${options}${languageInstructions} Don't explain it, just give me the content.`;
   const commentText = await generateText(commentPrompt, model);
   return commentText;
 }
@@ -154,22 +151,6 @@ async function mockImage(imagePath, locale = 'en') {
   return cleanUpPost(mockingText);
 }
 
-async function mockPost(originalText, imagePath) {
-  const description = await describeImage(imagePath);
-  const model = TEXT_MODEL;
-
-  const languageInstructions = languageInstructionFromText(originalText);
-
-  const prompt = `Create a small text making fun of a social media post with the following text: "${originalText}"
-   and with an associated image described in this manner: "${description}".${languageInstructions} Don't explain it, just give me the content.`;
-  const mockingText = await generateText(prompt, model);
-
-  console.log('');
-  console.log(mockingText);
-
-  return cleanUpPost(mockingText);
-}
-
 async function generateText(prompt, model = TEXT_MODEL) {
   // Wrapper kept minimal so callers can fully control prompt shape.
   const response = await getOpenAI().responses.create({
@@ -177,13 +158,25 @@ async function generateText(prompt, model = TEXT_MODEL) {
     input: prompt,
     reasoning: TEXT_REASONING,
     instructions: TEXT_INSTRUCTIONS,
+    store: false,
   });
 
   if (response.output_text) {
-    return removeDashes(response.output_text);
+    return removeFlagEmojis(removeDashes(response.output_text));
   }
 
   return '';
+}
+
+// Flag emojis are pairs of regional indicator letters, which Windows shows as
+// plain letters ("PT") instead of a flag. In PT the model keeps tacking 🇵🇹 onto
+// posts despite being told not to, so strip them in code like the dashes.
+function removeFlagEmojis(str) {
+  return str
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, '')
+    .replace(/[ \t]+$/gm, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
 }
 
 // Em/en dashes are a well-known tell of AI-written text, which would make the
@@ -218,17 +211,17 @@ async function createPsyopCommentText(postText, objective, type = undefined) {
   let prompt;
   if (type === 'strawman_opposition') {
     prompt =
-      `Write a short social media comment that disagrees with or criticises this post: "${postText}". ` +
+      `Write a social media comment that disagrees with or criticises this post: "${postText}". ` +
       `However, the comment must be poorly written and unconvincing: use clumsy phrasing, weak logic, ` +
       `emotional outbursts, spelling mistakes, incoherent reasoning, or conspiracy-like rhetoric. ` +
       `It should make the person opposing the post look foolish or unreasonable. ` +
-      `Include some emoji.${languageInstructions} Output only the comment text with no explanation.`;
+      `Include some emoji, different from the ones in the post.${languageInstructions} Output only the comment text with no explanation.`;
   } else {
     // supportive
     prompt =
-      `Write a short social media comment that enthusiastically agrees with this post: "${postText}". ` +
+      `Write a social media comment that enthusiastically agrees with this post: "${postText}". ` +
       `The comment should reinforce the post's message and feel natural, as if written by a real person. ` +
-      `Include some emoji.${languageInstructions} Output only the comment text with no explanation.`;
+      `Include some emoji, different from the ones in the post.${languageInstructions} Output only the comment text with no explanation.`;
   }
 
   const commentText = await generateText(prompt, model);
@@ -247,7 +240,7 @@ async function createPsyopDemolisherReply(postText, strawmanComment, _objective,
     `Use a calm, measured, and seemingly evidence-based tone. Cite plausible-sounding facts or statistics ` +
     `(they do not need to be real). The reply should make the original commenter look uninformed ` +
     `and should reinforce the narrative of the original post. ` +
-    `Include some emoji.${languageInstructions} Output only the reply text with no explanation.`;
+    `Include some emoji, different from the ones in the post.${languageInstructions} Output only the reply text with no explanation.`;
 
   const replyText = await generateText(prompt, model);
   // Encode the AI-generated reply before it's wrapped in literal HTML below — the
@@ -274,25 +267,21 @@ async function createPsyopPostText(objective, target, strategy) {
       'but selectively framed to advance the objective. Use strategic omissions and emotional framing ' +
       'without outright lying.',
     Black:
-      'The post should appear completely organic and authentic while spreading misleading or false ' +
-      'information that advances the objective. The true intent must be entirely hidden. ' +
-      'Use emotional manipulation, fabricated context, or disinformation as needed.',
+      'The source should be ambiguous or implied, never stated. Information may be technically true or not ' +
+      'but selectively framed to advance the objective. Use strategic omissions and emotional framing.',
   };
 
   const guide = strategyGuide[strategy] || strategyGuide['White'];
   const languageInstructions = languageInstructionFromText(objective, target);
 
   const prompt =
-    `In Nexy's PsyOp activity, students design a simulated psychological operation (PsyOp) ` +
-    `campaign and then study how it plays out in the fictional feed. Write the campaign's post ` +
-    `as an example of the ${strategy} propaganda technique.\n\n` +
     `Objective: ${objective}\n` +
     `Target audience: ${target}\n` +
     `Strategy: ${strategy}: ${guide}\n\n` +
-    `Write a single realistic social media post that achieves the objective above, ` +
+    `Write a single realistic text of 3 to 4 sentences that achieves the objective above, ` +
     `is specifically crafted for the described audience, and follows the ${strategy} strategy. ` +
     `Include relevant emojis. Make it feel completely natural, as if written by a real person.${languageInstructions} ` +
-    `Output only the post text with no explanation or commentary.`;
+    `Output only the post text with no explanation or commentary.`;  
 
   const postTextRaw = await generateText(prompt, model);
   console.log(`\nPsyOp Post (${strategy}): ${postTextRaw}`);
