@@ -174,26 +174,6 @@ async function createUserImage(userId, fullName, description, persona = null, us
   }
 }
 
-async function resizeImages(inputFolder, outputFolder, width, height) {
-  // Ensure the output folder exists
-  if (!fs.existsSync(outputFolder)) {
-    fs.mkdirSync(outputFolder, { recursive: true });
-  }
-
-  // Read all files in the input folder
-  const files = fs.readdirSync(inputFolder);
-
-  for (const imageFileName of files) {
-    // Skip non-image files
-    if (!/\.(jpg|jpeg|png|gif)$/i.test(imageFileName)) {
-      continue;
-    }
-    // Resize the image
-
-    resizeImage(imageFileName, inputFolder, outputFolder, null, width, height);
-  }
-}
-
 async function cropAndResizeToThumbnail(
   inputFileName,
   inputFolder,
@@ -288,6 +268,7 @@ async function describeImage(imagePath, locale = 'en') {
     model: TEXT_MODEL,
     reasoning: TEXT_REASONING,
     instructions: TEXT_INSTRUCTIONS,
+    store: false,
     input: [
       {
         role: 'user',
@@ -315,26 +296,7 @@ export {
   generateImage,
   editImage,
   resizeImage,
-  resizeImages,
   describeImage,
   cropAndResizeToThumbnail,
   assertValidImageFile,
 };
-
-// editImage("C:/Users/joao-carloto/Downloads/img_2.jpg", "edited.png");
-
-// resizeImages("./public/images", "./data/thumbnails/images", 200, 200);
-
-/*
-The strange thing is that they happen randomly. I am sure I am not hitting the rate limits or any other networking restrictions.
-
-What worked for me—I’ve wrapped Gemini’s calls (like sendMessage and generateContent) with this simple withRetry function: withRetry.js · GitHub
-
-
-
-cropAndResizeToThumbnail(
-  "dec98590-23b4-42b9-80fa-0a21110d5779.png",
-  "./data/images",
-  "./data/thumbnails/post_images"
-);
-*/
