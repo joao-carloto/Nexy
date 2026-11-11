@@ -40,7 +40,7 @@ const STRINGS = {
       'Explore the ready-made world. Perfect for your first lesson, your students can read the feed, dig into the comments, and argue about what looks real.',
     setupCardTitle: 'Set up AI content creation',
     setupCardBody:
-      'Also let Nexy invent brand-new posts during the lesson. Needs a paid OpenAI account and costs roughly 2 cents per post. You can always do this later instead.',
+      'Also let Nexy invent brand-new posts during the lesson. Needs a paid OpenAI account and costs under 1 euro cent per post, under 50 cents for a full lesson (an estimate: the real cost depends on how much you use it during the lesson). You can always do this later instead.',
     welcomeNote:
       "Without AI set-up you can explore everything that's already there, but Nexy can't create anything new, no new posts, no new comments, no disinformation campaigns.",
     passwordTitle: 'A password just for you',
@@ -73,7 +73,7 @@ const STRINGS = {
       'Explora o mundo já pronto. Perfeito para a tua primeira aula, os teus alunos podem ler o feed, explorar os comentários e discutir o que parece real.',
     setupCardTitle: 'Configurar criação de conteúdo por IA',
     setupCardBody:
-      'Deixa também a Nexy inventar publicações novas durante a aula. Precisa de uma conta paga da OpenAI e custa cerca de 2 cêntimos por publicação. Podes sempre fazer isto mais tarde.',
+      'Deixa também a Nexy inventar publicações novas durante a aula. Precisa de uma conta paga da OpenAI e custa menos de 1 cêntimo de euro por publicação, menos de 50 cêntimos por aula (valor estimado: o custo real depende da utilização durante a aula). Podes sempre fazer isto mais tarde.',
     welcomeNote:
       'Sem configurar isto, podes explorar tudo o que já lá está, mas a Nexy não consegue criar nada de novo, sem publicações novas, sem comentários novos, sem campanhas de desinformação.',
     passwordTitle: 'Uma palavra-passe só para ti',
