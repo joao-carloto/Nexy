@@ -124,15 +124,21 @@ async function editImage(inputImagePath, outputImagePath) {
   }
 }
 
-async function createUserImage(userId, fullName, description) {
-  const contents = `Create a realistic square photo of a person to be used as a social media profile picture. 
-  It should look like a casual, everyday selfie or photo taken with a smartphone — not a professional headshot. 
+// persona comes from random_persona.mjs. Gender and origin are only forced when
+// the name was generated from them too; otherwise the model infers them from a
+// name the teacher typed, so the face matches it.
+async function createUserImage(userId, fullName, description, persona = null, useIdentity = false) {
+  const traits = persona
+    ? `${useIdentity ? `The person is a ${persona.age}-year-old ${persona.origin} ${persona.gender}.` : `The person is about ${persona.age} years old.`}
+  They have ${persona.hair} and wear ${persona.outfit}, ${persona.extra}.
+  The photo is ${persona.shot}, with ${persona.background} in the background.`
+    : `Pick a random gender, age (16 to 100), ethnicity, outfit and background.`;
+
+  const contents = `Create a realistic square photo of a person to be used as a social media profile picture.
+  It should look like a casual, everyday selfie or photo taken with a smartphone, not a professional headshot.
   Slightly imperfect framing, natural lighting, no filters or heavy editing. The person should look like a normal, average person.
   Not pretty. Just a believable, ordinary profile picture that could belong to a real user.
-  Pick a random age (16 to 100 years of age).
-  Pick a random ethnicity not always white.
-  Pick some random outfit with random color, by some reason you always tend to go with khaki/green, don't do it.
-  Pick a random background that would be typical for a profile picture, but keep it simple and realistic.
+  ${traits}
   The name of the person is ${fullName}. Use this bio as inspiration: "${description}".`;
 
   try {
