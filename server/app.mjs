@@ -7,7 +7,7 @@ import multer from 'multer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import { encode } from 'html-entities';
+import { encode, decode } from 'html-entities';
 import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
 import { createCommentText, createCommentReply } from './text_creator.js';
 import { getRandomUserIdFromDB } from './utils.js';
@@ -415,6 +415,19 @@ function resolvePostIdentifier(identifier, cb) {
   });
 }
 
+// Promise wrappers over the callback sqlite3 API, for async route handlers.
+function dbGet(sql, params) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
+  });
+}
+
+function dbAll(sql, params) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows || [])));
+  });
+}
+
 // Helper: resolve user identifier -> { userId }
 function resolveUserIdentifier(identifier, cb) {
   db.get('SELECT userId FROM users WHERE userId = ?', [identifier], (e, row) => {
@@ -478,7 +491,10 @@ app.post('/human_comment', aiGenerationLimiter, requireAI, (req, res) => {
           }
 
           const locale = post.languageCode && post.languageCode.toLowerCase() === 'pt' ? 'pt' : 'en';
-          const reply = await createCommentReply(post.postText, commentText, locale);
+          // Bot replies are stored as "<span ...>@human</span> text", so this
+          // marker identifies the antagonist comments addressed to this human.
+          const escapedUserId = encode(userId);
+          const replyMarker = `>@${escapedUserId}</span>`;
           let randomOponentId = null;
 
           const candidateAntagonistUserId =
@@ -501,6 +517,19 @@ app.post('/human_comment', aiGenerationLimiter, requireAI, (req, res) => {
           }
 
           if (randomOponentId === null) {
+            // The browser remembers the opponent in localStorage; if that was
+            // lost (other device, cleared storage), resume with whoever already
+            // argued with this human on this post instead of switching bots.
+            const previous = await dbGet(
+              `SELECT userId FROM comments
+               WHERE postId = ? AND sourceType = 'bot' AND userId != ? AND instr(commentText, ?) > 0
+               ORDER BY createdAt DESC, commentId DESC LIMIT 1`,
+              [ids.id, userId, replyMarker]
+            );
+            if (previous) randomOponentId = previous.userId;
+          }
+
+          if (randomOponentId === null) {
             try {
               // Excludes userId in the query itself so this can't loop forever
               // when userId is the only (or only remaining) user in the DB.
@@ -510,9 +539,30 @@ app.post('/human_comment', aiGenerationLimiter, requireAI, (req, res) => {
             }
           }
 
+          // The argument so far on this post: the human's comments plus the
+          // antagonist's replies to them, oldest first. The human comment just
+          // inserted above is the last entry.
+          const threadRows = await dbAll(
+            `SELECT userId, commentText, sourceType FROM comments
+             WHERE postId = ?
+               AND ((userId = ? AND sourceType = 'human')
+                 OR (userId = ? AND sourceType = 'bot' AND instr(commentText, ?) > 0))
+             ORDER BY createdAt ASC, commentId ASC`,
+            [ids.id, userId, randomOponentId, replyMarker]
+          );
+          const history = threadRows.map((row) => ({
+            role: row.sourceType === 'bot' ? 'assistant' : 'user',
+            text: decode(row.commentText.replace(/^<span[^>]*>.*?<\/span>\s*/, '')),
+          }));
+          if (history.length === 0 || history[history.length - 1].role !== 'user') {
+            history.push({ role: 'user', text: commentText });
+          }
+
+          const persona = await dbGet('SELECT fullName, description FROM users WHERE userId = ?', [randomOponentId]);
+          const reply = await createCommentReply(post.postText, history, locale, persona);
+
           const botCreatedAt = new Date().toISOString();
-          // Escape HTML entities for user ID and AI-generated reply to prevent XSS injection
-          const escapedUserId = encode(userId);
+          // Escape HTML entities for the AI-generated reply to prevent XSS injection
           const escapedReply = encode(reply);
           db.run(
             'INSERT INTO comments (postId, userId, commentText, createdAt, sourceType) VALUES (?, ?, ?, ?, ?)',
