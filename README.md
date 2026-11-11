@@ -100,8 +100,9 @@ The first time you open Nexy, a short wizard walks you through the (optional) se
 ### Let Nexy invent new content
 
 Nexy can create brand-new posts, comments, and disinformation campaigns live in your lesson.
-That needs a paid OpenAI account and costs roughly 2 euro cents per post, around 30 cents for a
-full lesson. It's entirely optional, and you can turn it on or off at any time: open **File →
+That needs a paid OpenAI account and costs under 1 euro cent per post, under 50 cents for a
+full lesson (an estimate: the real cost depends on how much you use it during the lesson).
+It's entirely optional, and you can turn it on or off at any time: open **File →
 Settings** from the menu bar along the top of the Nexy window.
 
 ### Letting students join from their own devices
