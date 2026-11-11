@@ -10,8 +10,9 @@ import rateLimit from 'express-rate-limit';
 import { encode } from 'html-entities';
 import { createAIPost, createHumanPost, createPsyopPost } from './post_creator.js';
 import { createCommentText, createCommentReply } from './text_creator.js';
-import { getPostTextFromDB, getRandomUserIdFromDB } from './utils.js';
+import { getRandomUserIdFromDB } from './utils.js';
 import { createUserImage } from './image_creator.js';
+import { randomPersona } from './random_persona.mjs';
 import { isAIAvailable } from './openai_client.mjs';
 import {
   PUBLIC_DIR,
@@ -716,13 +717,21 @@ app.post('/bots', async (req, res) => {
     return res.status(400).json({ error: 'Description must not exceed 500 characters' });
   }
 
+  // Traits rolled in code, since the model alone keeps inventing the same people.
+  const persona = randomPersona(countryRegion);
+  let nameWasGenerated = false;
+
   try {
     const { generateText } = await import('./text_creator.js');
 
     // Auto-generate missing fields
     if (!fullName) {
+      nameWasGenerated = true;
       fullName = await generateText(
-        'Invent a realistic full name for a fictional social media user. Just the name, nothing else.'
+        `Invent a realistic full name for a fictional ${persona.age}-year-old ${persona.origin} ${persona.gender}. ` +
+          `The first name starts with "${persona.initial}" and the surname with "${persona.surnameInitial}". ` +
+          'Use a name typical of that background and generation, not one of the most common ones. ' +
+          'Just the name, nothing else.'
       );
       fullName = fullName.replace(/["']/g, '').trim();
     }
@@ -745,9 +754,10 @@ app.post('/bots', async (req, res) => {
 
     if (!description) {
       description = await generateText(
-        `Write a social media bio for a fictional person named "${fullName}". 
-        Just the bio text, no explanation, no quotes. 
-        Make it interesting and realistic but keep it concise (under 200 characters).`
+        `Write a social media bio for a person named "${fullName}".
+        ${nameWasGenerated ? `They are ${persona.age}, ${persona.origin}, a ${persona.occupation}, and into ${persona.interest}.` : `They are a ${persona.occupation} and into ${persona.interest}.`}
+        Just the bio text, no explanation, no quotes.
+        Make it interesting and realistic but keep it concise (under 300 characters).`
       );
     }
   } catch (e) {
@@ -756,7 +766,7 @@ app.post('/bots', async (req, res) => {
   }
 
   try {
-    const profilePictureName = await createUserImage(userId, fullName, description);
+    const profilePictureName = await createUserImage(userId, fullName, description, persona, nameWasGenerated);
     // Escape user-entered fields to prevent XSS
     const escapedUserId = encode(userId);
     const escapedFullName = encode(fullName);
