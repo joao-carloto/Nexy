@@ -85,15 +85,50 @@ async function createCommentText(postText, tone = undefined, locale = 'en') {
   return commentText;
 }
 
-async function createCommentReply(postText, postCommentText, locale = 'en') {
+// How many past turns of the human/bot exchange are replayed to the model.
+// Enough for the bot to remember and escalate its own claims without the
+// prompt growing unbounded on long arguments.
+const REPLY_HISTORY_LIMIT = 12;
+
+// Antagonist reply in an ongoing argument with a human. `history` is the
+// exchange so far on this post, oldest first, ending with the human's latest
+// comment: [{ role: 'user' | 'assistant', text }]. The bot's own earlier
+// comments are replayed as assistant turns so it stays consistent with them,
+// which a fresh one-shot prompt per comment can't do. Kept stateless
+// (store: false): the thread lives in our DB, so the model sees exactly what
+// is on screen and the memory never expires.
+async function createCommentReply(postText, history, locale = 'en', persona = null) {
   const model = TEXT_MODEL;
 
-  const languageInstructions = languageInstructionFor(locale);
+  const personaText = persona?.fullName
+    ? ` You are ${persona.fullName}${persona.description ? `, ${persona.description}` : ''}. Stay in character.`
+    : '';
 
-  const commentPrompt = `Small social media comment, responding in a confrontational manner,
-   to this comment: "${postCommentText}", made on this social media post: "${postText}". 
-   Just one option. Include some emoji.${languageInstructions} Don't explain it, just give me the content.`;
-  const commentText = cleanUpPost(await generateText(commentPrompt, model));
+  const isFollowUp = history.some((turn) => turn.role === 'assistant');
+
+  const instructions =
+    `${TEXT_INSTRUCTIONS} ` +
+    `You are a user of this social network arguing in the comments under this post: "${postText}".${personaText} ` +
+    'The user messages are comments by the person you are arguing with; your previous messages are your own earlier replies. ' +
+    'Reply confrontationally to their latest comment: provoke, push back and try to get a rise out of them. ' +
+    (isFollowUp
+      ? 'Stay consistent with what you said before: defend or double down on your earlier points, react to what they actually said, and do not repeat earlier replies word for word. '
+      : '') +
+    'Write one short comment as it would appear on social media, with some emoji different from the ones in the post. ' +
+    "Don't explain it, just give the comment." +
+    languageInstructionFor(locale);
+
+  const input = history.slice(-REPLY_HISTORY_LIMIT).map((turn) => ({ role: turn.role, content: turn.text }));
+
+  const response = await getOpenAI().responses.create({
+    model,
+    input,
+    reasoning: TEXT_REASONING,
+    instructions,
+    store: false,
+  });
+
+  const commentText = cleanUpPost(removeFlagEmojis(removeDashes(response.output_text || '')));
 
   console.log(commentText);
 
