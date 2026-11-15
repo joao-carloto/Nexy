@@ -42,7 +42,7 @@
     "prettier": "^3.8.1"
   },
   "build": {
-    "appId": "pt.criticalsoftware.nexy",
+    "appId": "io.github.joao-carloto.nexy",
     "productName": "Nexy",
     "asar": true,
     "directories": {
@@ -93,6 +93,7 @@
       "artifactName": "Nexy-Portable-${version}.${ext}"
     },
     "nsis": {
+      "guid": "2d96ef56-5084-54d3-86ce-4757fa01fc9a",
       "oneClick": false,
       "perMachine": false,
       "allowElevation": false,
