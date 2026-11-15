@@ -1,0 +1,87 @@
+# Builds the Windows installer and portable exe in CI, so every release binary
+# is a verifiable, automated build of the source in this repository. This is a
+# requirement for free code signing through the SignPath Foundation
+# (https://signpath.org/terms).
+#
+# Triggers:
+#   - pushing a tag like v0.0.5 (the tag must match "version" in package.json)
+#   - manually, from the Actions tab ("Run workflow")
+#
+# Signing: the "Sign with SignPath" step stays skipped until the repository
+# variable SIGNPATH_ORGANIZATION_ID is set (Settings -> Secrets and variables ->
+# Actions -> Variables), together with the SIGNPATH_API_TOKEN secret. Before
+# that, the workflow only produces unsigned artifacts.
+
+name: Build Windows
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+
+      - name: Check tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$PKG_VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build installer and portable exe
+        # --publish never: electron-builder would otherwise try to publish to
+        # GitHub Releases on its own when it detects a tag build in CI.
+        run: npm run dist -- --publish never
+
+      - name: Upload unsigned build
+        id: upload-unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexy-windows-unsigned
+          path: |
+            dist/Nexy-Setup-*.exe
+            dist/Nexy-Portable-*.exe
+          if-no-files-found: error
+
+      - name: Sign with SignPath
+        if: vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'nexy' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          # Every release needs manual approval in SignPath, so allow time for it.
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed
+
+      - name: Upload signed build
+        if: vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexy-windows-signed
+          path: signed/
+          if-no-files-found: error

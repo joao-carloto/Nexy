@@ -66,7 +66,8 @@ latest release; two options are provided:
 - **Portable** (`Nexy-Portable-*.exe`): no installation at all. Runs directly from a USB stick
   or your Desktop. Takes longer to start, specially in the first run. Use this if your school's IT policy blocks installers.
 
-Both are around 130 MB due to pre-loaded sample content.
+Both are around 130 MB due to pre-loaded sample content. See the
+[code signing policy](#code-signing-policy) for how release binaries are built and signed.
 
 ### If Windows tries to stop you
 
@@ -304,6 +305,36 @@ Related server-only routes:
   identically under plain `node` and inside a packaged Electron app.
 
 </details>
+
+## Code signing policy
+
+Windows release binaries (`Nexy-Setup-*.exe` and `Nexy-Portable-*.exe`) are built automatically by
+[GitHub Actions](.github/workflows/build-windows.yml) from the source code in this repository.
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
+[SignPath Foundation](https://signpath.org).
+
+Team roles:
+
+- Committers and reviewers: [João Carloto](https://github.com/joao-carloto)
+- Approvers: [João Carloto](https://github.com/joao-carloto)
+
+Every signing request is approved manually by an approver. Changes from people outside the team
+are reviewed by a team member before they are merged.
+
+### Privacy policy
+
+This program will not transfer any information to other networked systems unless specifically
+requested by the user or the person installing or operating it.
+
+Specifically: Nexy only contacts an outside service if a teacher enters an OpenAI API key (in the
+first-run wizard or in **File → Settings**). When a key is entered, Nexy sends one small test
+request to OpenAI to check that the key works. Once a key is set, Nexy sends text prompts and
+images to the [OpenAI API](https://openai.com/policies/privacy-policy) only when someone uses one
+of the AI content-creation features (activities 4 to 8 above).
+Without a key, Nexy makes no outside network connections. Classroom mode, when a teacher turns it
+on, only makes Nexy reachable from devices on the same local network. All posts, comments,
+settings and the API key are stored only on the computer where Nexy is installed.
 
 ## Contact
 

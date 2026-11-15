@@ -46,3 +46,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # which IS tracked (see .gitignore note there is none -- it's intentional).
 /dist/
 /resources/seed/
+# Private planning notes (not for the repo)
+PROMOTION_PLAN.md
