@@ -106,16 +106,27 @@ async function recompressImages() {
   return { processed, totalBefore, totalAfter };
 }
 
+// The database runs in WAL mode, so recent changes can live only in the
+// git-ignored nexyDB.sqlite-wal file. Copying the .sqlite file alone once
+// shipped deleted test posts and missed new bots. So: first checkpoint the
+// WAL into the main file (which also keeps the committed file current),
+// then VACUUM INTO, which reads through SQLite and so always sees every change.
 function vacuumDatabase() {
   return new Promise((resolve, reject) => {
-    fs.copyFileSync(SOURCE_DB, OUTPUT_DB);
-    const db = new sqlite3.Database(OUTPUT_DB, (err) => {
+    if (fs.existsSync(OUTPUT_DB)) fs.unlinkSync(OUTPUT_DB);
+    const db = new sqlite3.Database(SOURCE_DB, (err) => {
       if (err) return reject(err);
-      db.run('VACUUM', (vErr) => {
-        db.close((closeErr) => {
-          if (vErr) return reject(vErr);
-          if (closeErr) return reject(closeErr);
-          resolve();
+      db.get('PRAGMA wal_checkpoint(TRUNCATE)', (cErr, row) => {
+        if (cErr) return db.close(() => reject(cErr));
+        if (row && row.busy) {
+          console.warn('Warning: database busy, WAL not fully checkpointed; the seed is still complete.');
+        }
+        db.run('VACUUM INTO ?', [OUTPUT_DB], (vErr) => {
+          db.close((closeErr) => {
+            if (vErr) return reject(vErr);
+            if (closeErr) return reject(closeErr);
+            resolve();
+          });
         });
       });
     });
