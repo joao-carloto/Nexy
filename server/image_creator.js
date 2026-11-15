@@ -12,6 +12,7 @@ import {
   PROFILE_PICTURES_DIR as profilePicturesDir,
   PROFILE_THUMBNAILS_DIR as profileThumbnailsDir,
 } from './paths.mjs';
+import { AI_GENERATED, AI_COMPOSITE, saveAiImage, markAiImageFile, withAiProvenance } from './ai_provenance.mjs';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -58,14 +59,21 @@ async function generateImage(contents, postId) {
     fs.mkdirSync(postImagesDir, { recursive: true });
     const imagePath = path.join(postImagesDir, imageFileName);
 
-    fs.writeFileSync(imagePath, buffer);
+    await saveAiImage(buffer, imagePath, AI_GENERATED);
     console.log(`Image saved as ${imageFileName}`);
 
     const fileExt = path.extname(imageFileName);
     const thumbnailFileName = `${safeId}-thumbnail${fileExt}`;
 
     // Post feeds load thumbnails; full post view loads /post_images/<id>.png.
-    await cropAndResizeToThumbnail(imageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200, null);
+    await cropAndResizeToThumbnail(
+      imageFileName,
+      postImagesDir,
+      postThumbnailsDir,
+      thumbnailFileName,
+      200,
+      AI_GENERATED
+    );
 
     return imageFileName;
   } catch (error) {
@@ -74,6 +82,8 @@ async function generateImage(contents, postId) {
   }
 }
 
+// Returns true if the AI edit was applied, false if the safety system refused it
+// and the original (real, unedited) photo was kept instead.
 async function editImage(inputImagePath, outputImagePath) {
   const tempPngInputPath = `${outputImagePath}.edit-input.png`;
   try {
@@ -100,20 +110,22 @@ async function editImage(inputImagePath, outputImagePath) {
     }
 
     const buffer = Buffer.from(imageData, 'base64');
-    fs.writeFileSync(outputImagePath, buffer);
+    await saveAiImage(buffer, outputImagePath, AI_COMPOSITE);
     if (inputImagePath !== outputImagePath && fs.existsSync(inputImagePath)) {
       fs.unlinkSync(inputImagePath);
     }
     console.log(`Image saved as ${outputImagePath}`);
+    return true;
   } catch (error) {
     if (isSafetyRejection(error) && inputImagePath) {
       // If edit is blocked, keep workflow running by using the original image.
+      // It's a real photo, so it gets no AI marking.
       await sharp(inputImagePath).png().toFile(outputImagePath);
       console.warn('Image edit rejected by safety system; using original image instead.');
       if (inputImagePath !== outputImagePath && fs.existsSync(inputImagePath)) {
         fs.unlinkSync(inputImagePath);
       }
-      return;
+      return false;
     }
     console.error('Error generating content:', error);
     throw error;
@@ -160,12 +172,17 @@ async function createUserImage(userId, fullName, description, persona = null, us
     fs.mkdirSync(profilePicturesDir, { recursive: true });
     const imagePath = path.join(profilePicturesDir, imageFileName);
 
-    fs.writeFileSync(imagePath, buffer);
+    await saveAiImage(buffer, imagePath, AI_GENERATED);
     console.log(`Image saved as ${imageFileName}`);
 
     // Keep avatar thumbnail naming predictable for frontend lookup by userId.
     const thumbnailFileName = `${userId}-thumbnail.png`;
     await resizeImage(imageFileName, profilePicturesDir, profileThumbnailsDir, thumbnailFileName, 200, null);
+    // image-js can't write metadata, so mark the resized copy afterwards.
+    const thumbnailPath = path.join(profileThumbnailsDir, thumbnailFileName);
+    if (fs.existsSync(thumbnailPath)) {
+      await markAiImageFile(thumbnailPath, AI_GENERATED);
+    }
 
     return imageFileName;
   } catch (error) {
@@ -179,7 +196,8 @@ async function cropAndResizeToThumbnail(
   inputFolder,
   outputFolder,
   outputFileName = null,
-  thumbnailSize = 200
+  thumbnailSize = 200,
+  digitalSourceType = null // AI_GENERATED / AI_COMPOSITE to mark the thumbnail; null for real photos
 ) {
   // Ensure the output folder exists
   if (!fs.existsSync(outputFolder)) {
@@ -207,7 +225,11 @@ async function cropAndResizeToThumbnail(
     pipeline = pipeline.extract({ left, top, width: size, height: size });
   }
 
-  await pipeline.resize(thumbnailSize, thumbnailSize, { fit: 'cover', position: 'centre' }).toFile(outputFilePath);
+  pipeline = pipeline.resize(thumbnailSize, thumbnailSize, { fit: 'cover', position: 'centre' });
+  if (digitalSourceType) {
+    pipeline = withAiProvenance(pipeline, digitalSourceType);
+  }
+  await pipeline.toFile(outputFilePath);
 }
 
 async function resizeImage(

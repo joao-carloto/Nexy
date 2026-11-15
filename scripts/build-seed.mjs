@@ -19,6 +19,7 @@ import path from 'path';
 import sqlite3 from 'sqlite3';
 import sharp from 'sharp';
 import { fileURLToPath } from 'url';
+import { AI_GENERATED, AI_COMPOSITE, withAiProvenance } from '../server/ai_provenance.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..');
@@ -57,7 +58,28 @@ async function listFilesRecursive(dir, baseDir = dir) {
   return files;
 }
 
+// Human posts in the demo world are real photos altered by the AI edit (the
+// pigeon); everything else is fully AI-generated. Recompressing destroys OpenAI's
+// C2PA manifests, so each seed image gets the XMP/EXIF marking instead.
+function loadHumanPostIds() {
+  return new Promise((resolve, reject) => {
+    const db = new sqlite3.Database(SOURCE_DB, sqlite3.OPEN_READONLY, (err) => {
+      if (err) return reject(err);
+      db.all("SELECT id FROM posts WHERE sourceType = 'human'", (qErr, rows) => {
+        db.close(() => (qErr ? reject(qErr) : resolve(new Set(rows.map((r) => r.id)))));
+      });
+    });
+  });
+}
+
+function digitalSourceTypeFor(relativePath, humanPostIds) {
+  const isPostImage = relativePath.startsWith('post_images/') || relativePath.startsWith('thumbnails/post_images/');
+  const id = path.parse(relativePath).name.replace(/-thumbnail$/, '');
+  return isPostImage && humanPostIds.has(id) ? AI_COMPOSITE : AI_GENERATED;
+}
+
 async function recompressImages() {
+  const humanPostIds = await loadHumanPostIds();
   const relativeFiles = await listFilesRecursive(SOURCE_UPLOADS);
   const included = relativeFiles.filter((f) => !EXCLUDED_FILES.has(f));
   const skipped = relativeFiles.filter((f) => EXCLUDED_FILES.has(f));
@@ -93,6 +115,7 @@ async function recompressImages() {
     // opaque AI-generated photos, so this is a no-op in practice -- flag it here
     // so it's easy to find if a future non-photo asset needs different handling.
     pipeline = pipeline.flatten({ background: '#ffffff' });
+    pipeline = withAiProvenance(pipeline, digitalSourceTypeFor(relativePath, humanPostIds));
 
     const buffer = await pipeline.toBuffer();
     await fs.promises.writeFile(destPath, buffer);

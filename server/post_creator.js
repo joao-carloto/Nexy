@@ -11,6 +11,7 @@ import {
   cropAndResizeToThumbnail,
   assertValidImageFile,
 } from './image_creator.js';
+import { AI_COMPOSITE } from './ai_provenance.mjs';
 import { getRandomElement, getRandomBoolean, getRandomUserIdFromDB } from './utils.js';
 import {
   createPostText,
@@ -269,8 +270,9 @@ async function createHumanPost(userId, postText, originalImageFileName, locale =
     const editedImagePath = path.join(postImagesDir, editedImageFileName);
 
     // Edit the image and save it
+    let imageWasEdited;
     try {
-      await editImage(originalImagePath, editedImagePath);
+      imageWasEdited = await editImage(originalImagePath, editedImagePath);
     } catch (error) {
       throw new Error('Failed to edit the image: ' + error.message, { cause: error });
     }
@@ -282,7 +284,14 @@ async function createHumanPost(userId, postText, originalImageFileName, locale =
     const thumbnailFileName = `${fileNameWithoutExt}-thumbnail${fileExt}`;
 
     try {
-      await cropAndResizeToThumbnail(editedImageFileName, postImagesDir, postThumbnailsDir, thumbnailFileName, 200);
+      await cropAndResizeToThumbnail(
+        editedImageFileName,
+        postImagesDir,
+        postThumbnailsDir,
+        thumbnailFileName,
+        200,
+        imageWasEdited ? AI_COMPOSITE : null
+      );
     } catch (error) {
       throw new Error('Failed to create a thumbnail for the image.', { cause: error });
     }
