@@ -58,6 +58,46 @@ async function performFreshSeed(seedRoot, dataDir) {
   await fs.promises.rename(dbPartial, dbDest);
 }
 
+// Marker written by scripts/build-seed.mjs into every seed image's XMP (the IPTC
+// Digital Source Type URI, see server/ai_provenance.mjs).
+function hasProvenanceMarker(buffer) {
+  return buffer.includes('cv.iptc.org/newscodes/digitalsourcetype/', 0, 'latin1');
+}
+
+// One-time upgrade for installs seeded before seed images carried AI-provenance
+// metadata: replaces each demo image still present in userData with the marked
+// copy from the bundled seed. This is the one exception to "images never change
+// once written" -- it's safe because it's the same picture (same filename, same
+// recompression), only with metadata added. Never adds back images a teacher
+// deleted, and never touches class-created images (their filenames aren't in
+// the seed). Runs before the server starts, so nothing is serving these files.
+async function markExistingSeedImages(seedUploads, uploadsDest) {
+  let replaced = 0;
+  const walk = async (relDir) => {
+    const entries = await fs.promises.readdir(path.join(seedUploads, relDir), { withFileTypes: true });
+    for (const entry of entries) {
+      const rel = path.join(relDir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(rel);
+        continue;
+      }
+      const destPath = path.join(uploadsDest, rel);
+      if (!fs.existsSync(destPath)) continue;
+      const existing = await fs.promises.readFile(destPath);
+      if (hasProvenanceMarker(existing)) continue;
+      const marked = await fs.promises.readFile(path.join(seedUploads, rel));
+      if (!hasProvenanceMarker(marked)) continue;
+      // Write-then-rename so an interrupted launch never leaves a half-written image.
+      const tmpPath = `${destPath}.partial`;
+      await fs.promises.writeFile(tmpPath, marked);
+      await fs.promises.rename(tmpPath, destPath);
+      replaced += 1;
+    }
+  };
+  await walk('');
+  return replaced;
+}
+
 // Decides what to do on launch:
 //  - no DB yet in userData -> fresh seed (first run, or a previous run that was
 //    interrupted before the .partial rename committed)
@@ -81,9 +121,20 @@ async function runSeedIfNeeded({ userDataDir, config, updateConfig, locale }) {
   if (!fs.existsSync(dbPath)) {
     console.log(`No existing database at ${dbPath}; copying seed (v${manifest.seedVersion}, ${seedLocale})...`);
     await performFreshSeed(seedRoot, dataDir);
-    updateConfig(userDataDir, { seedVersion: manifest.seedVersion, locale: seedLocale });
+    updateConfig(userDataDir, { seedVersion: manifest.seedVersion, locale: seedLocale, seedImagesMarked: true });
     console.log('Seed copy complete.');
     return;
+  }
+
+  if (!config.seedImagesMarked) {
+    try {
+      const replaced = await markExistingSeedImages(path.join(seedRoot, 'uploads'), path.join(dataDir, 'uploads'));
+      console.log(`Added AI-provenance metadata to ${replaced} existing demo image(s).`);
+      updateConfig(userDataDir, { seedImagesMarked: true });
+    } catch (err) {
+      // Not worth blocking startup over; it will retry on the next launch.
+      console.warn('Could not add AI-provenance metadata to existing demo images:', err);
+    }
   }
 
   if (manifest.seedVersion > (config.seedVersion || 0)) {
