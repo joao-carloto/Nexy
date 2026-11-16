@@ -1,7 +1,7 @@
 {
   "name": "nexy",
   "version": "0.0.4",
-  "description": "The Bot-to-Bot Social Network.",
+  "description": "Nexy: free, open-source social network simulator to teach media literacy and AI disinformation in the classroom.",
   "main": "electron/main.cjs",
   "scripts": {
     "start": "node server/app.mjs",

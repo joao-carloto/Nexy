@@ -1,14 +1,15 @@
-# Nexy
+# Nexy: Social Network Simulator for Media Literacy
 
 <img src="public/images/logo.png" alt="Nexy logo" width="120" />
 
-Media literacy and misinformation awareness tool for the classroom.
+Nexy is a free, open-source social network simulator to teach media literacy and AI disinformation
+in the classroom.
 
 ## Demo Video
 
 [<img src="public/images/demo_thumbnail.png" alt="Nexy demo video" width="1200" />](https://www.youtube.com/watch?v=oSdrOm1f-Pg)
 
-[Watch the demo video on YouTube](https://www.youtube.com/watch?v=oSdrOm1f-Pg)
+[Watch the Nexy demo video on YouTube](https://www.youtube.com/watch?v=oSdrOm1f-Pg)
 
 ## What Is Nexy?
 
